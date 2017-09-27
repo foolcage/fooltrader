@@ -1,6 +1,12 @@
+import json
+import logging
+
 from kafka import KafkaConsumer
 
-from fooltrader.fooltrader import Account, Order
+from fooltrader.domain.Account import Account, Order
+from fooltrader.utils.data_contract import get_kafka_kdata_topic
+
+logger = logging.getLogger(__name__)
 
 
 class Trader(object):
@@ -14,7 +20,9 @@ class Trader(object):
     start = '2015-1-1'
     end = '2017-9-25'
 
-    universe = ('sz_stock_000338', 'sz_stock_000778')
+    universe = ('sh_stock_600000', 'sz_stock_600004')
+
+    trader_id = 'fool1'
 
     def buy(self, security_id, amount, current_price=0, order_price=0):
         # 市价交易
@@ -24,6 +32,14 @@ class Trader(object):
 
     def run(self):
         for security_id in self.universe:
-            consumer = KafkaConsumer('my-topic',
-                                     group_id='my-group',
+            consumer = KafkaConsumer(get_kafka_kdata_topic(security_id),
+                                     auto_offset_reset='earliest',
+                                     group_id=self.trader_id,
+                                     value_deserializer=lambda m: json.loads(m.decode('ascii')),
                                      bootstrap_servers=['localhost:9092'])
+            for message in consumer:
+                logger.info(message.value)
+
+
+trader = Trader()
+trader.run()
