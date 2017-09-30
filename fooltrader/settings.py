@@ -104,6 +104,8 @@ DOWNLOAD_TXT_ENCODING = 'GB2312'
 
 AUTO_KAFKA = False
 KAFKA_HOST = 'localhost:9092'
+KAFKA_PATH = '/home/xuanqi/software/kafka_2.11-0.11.0.1'
+ZK_KAFKA_HOST = 'localhost:2181'
 # LOG_FILE = 'log.txt'
 
 DG_PATH = '/Users/xuanqi/software/delegate/DGROOT/bin/delegate'
@@ -115,3 +117,8 @@ SUPPORT_SOCKS2HTTP = False
 g_socks_proxy_items = []
 g_http_proxy_items = []
 g_socks2http_proxy_items = {}
+
+TIME_FORMAT_SEC='%Y-%m-%d %H:%M:%S'
+
+TIME_FORMAT_DAY='%Y-%m-%d'
+
