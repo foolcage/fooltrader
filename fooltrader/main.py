@@ -1,14 +1,13 @@
 from scrapy.crawler import CrawlerRunner
 from scrapy.utils.log import configure_logging
+from scrapy.utils.project import get_project_settings
 from twisted.internet import defer
 from twisted.internet import reactor
 
 from fooltrader.proxy.proxy_manager import int_proxy
-from fooltrader.spiders.proxy_spider import ProxySpider
 from fooltrader.spiders.security_list_spider import SecurityListSpider
-from fooltrader.spiders.stock_finance_spider import StockFinanceSpider
-from fooltrader.spiders.stock_forecast_spider import StockForecastSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
+from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.utils.utils import setup_env
 
@@ -18,15 +17,16 @@ setup_env()
 
 int_proxy()
 
-runner = CrawlerRunner()
+runner = CrawlerRunner(get_project_settings())
 
 
 @defer.inlineCallbacks
 def crawl():
     # yield runner.crawl(SecurityListSpider)
+    yield runner.crawl(StockKDataSpiderTHS)
     # yield runner.crawl(StockKDataSpider)
 
-    yield runner.crawl(StockTickSpider)
+    # yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)
     # yield runner.crawl(StockGNSpider)
     # yield runner.crawl(StockForecastSpider)

@@ -243,6 +243,10 @@ def get_kdata_fuquan_dir(item):
     return os.path.join(get_kdata_dir(item), 'fuquan')
 
 
+def get_kdata_all(item):
+    return os.path.join(get_kdata_dir(item), 'all_dayk.json')
+
+
 def get_kdata_path(item, year, quarter, fuquan):
     if fuquan:
         return os.path.join(get_kdata_fuquan_dir(item), '{}_{}_fuquan_dayk.json'.format(year, quarter))
@@ -252,6 +256,10 @@ def get_kdata_path(item, year, quarter, fuquan):
 
 def get_trading_dates_path(item):
     return os.path.join(get_security_dir(item), 'trading_dates.json')
+
+
+def get_trading_dates_path_ths(item):
+    return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
 
 
 def get_trading_dates(item):

@@ -20,8 +20,8 @@ class StockTickSpider(scrapy.Spider):
     name = "stock_tick"
 
     custom_settings = {
-        # 'DOWNLOAD_DELAY': 2,
-        # 'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
+        'DOWNLOAD_DELAY': 2,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
 
         'SPIDER_MIDDLEWARES': {
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
@@ -47,11 +47,11 @@ class StockTickSpider(scrapy.Spider):
 
                     if os.path.isfile(path) and is_available_tick(path):
                         continue
-                    proxy_json = settings.g_http_proxy_items[count % proxy_count]
-                    count += 1
-                    proxy = 'http://{}:{}'.format(proxy_json['ip'], proxy_json['port'])
+                    # proxy_json = settings.g_http_proxy_items[count % proxy_count]
+                    # count += 1
+                    # proxy = 'http://{}:{}'.format(proxy_json['ip'], proxy_json['port'])
                     yield Request(url=self.get_tick_url(trading_date, item['exchange'] + item['code']),
-                                  meta={'proxy': proxy,
+                                  meta={'proxy': None,
                                         'path': path,
                                         'trading_date': trading_date,
                                         'item': item},
@@ -59,7 +59,7 @@ class StockTickSpider(scrapy.Spider):
                                   callback=self.download_tick)
 
     def download_tick(self, response):
-        self.logger.info('using proxy:{}'.format(response.meta['proxy']))
+        # self.logger.info('using proxy:{}'.format(response.meta['proxy']))
         content_type_header = response.headers.get('content-type', None)
         if content_type_header.decode("utf-8") == 'application/vnd.ms-excel' or "当天没有数据" in response.body.decode(
                 'GB2312'):
