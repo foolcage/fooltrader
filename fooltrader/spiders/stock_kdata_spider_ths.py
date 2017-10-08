@@ -10,7 +10,7 @@ from fooltrader.items import KDataItem
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import get_security_item, mkdir_for_security, get_sh_stock_list_path, \
     get_sz_stock_list_path, \
-    get_kdata_all, get_trading_dates_path_ths
+    get_kdata_path_ths, get_trading_dates_path_ths
 
 
 class StockKDataSpiderTHS(scrapy.Spider):
@@ -33,7 +33,7 @@ class StockKDataSpiderTHS(scrapy.Spider):
                 if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
                     mkdir_for_security(item)
 
-                    data_path = get_kdata_all(item)
+                    data_path = get_kdata_path_ths(item)
                     data_exist = os.path.isfile(data_path)
                     if not data_exist:
                         # get day k data

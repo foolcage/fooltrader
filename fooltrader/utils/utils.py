@@ -153,6 +153,11 @@ def get_kdata_items(security_item, houfuquan=False):
                     yield kdata_json
 
 
+def get_downloaded_tick_dates(security_item):
+    dir = get_tick_dir(security_item)
+    return [f[:f.index('.')] for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+
+
 def get_tick_item(path, the_date, security_item):
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
@@ -243,7 +248,7 @@ def get_kdata_fuquan_dir(item):
     return os.path.join(get_kdata_dir(item), 'fuquan')
 
 
-def get_kdata_all(item):
+def get_kdata_path_ths(item):
     return os.path.join(get_kdata_dir(item), 'all_dayk.json')
 
 
@@ -262,9 +267,16 @@ def get_trading_dates_path_ths(item):
     return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
 
 
-def get_trading_dates(item):
+def get_status_path():
+    return os.path.join(settings.FILES_STORE, "status.json")
+
+
+def get_trading_dates(item, ths=True):
     dates = []
-    dates_path = get_trading_dates_path(item)
+    if ths:
+        dates_path = get_trading_dates_path_ths(item)
+    else:
+        dates_path = get_trading_dates_path(item)
     try:
         with open(dates_path) as data_file:
             dates = json.load(data_file)
