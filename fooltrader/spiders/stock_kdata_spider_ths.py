@@ -1,4 +1,5 @@
 import json
+import os
 
 import scrapy
 from scrapy import Request
@@ -33,11 +34,15 @@ class StockKDataSpiderTHS(scrapy.Spider):
                     mkdir_for_security(item)
 
                     data_path = get_kdata_all(item)
-                    # get day k data
-                    url = self.get_k_data_url(item['code'])
-                    yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
-                                  meta={'path': data_path, 'item': item},
-                                  callback=self.download_day_k_data)
+                    data_exist = os.path.isfile(data_path)
+                    if not data_exist:
+                        # get day k data
+                        url = self.get_k_data_url(item['code'])
+                        yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
+                                      meta={'path': data_path, 'item': item},
+                                      callback=self.download_day_k_data)
+                    else:
+                        self.logger.info("{} kdata existed".format(item['code']))
 
     def download_day_k_data(self, response):
         path = response.meta['path']
