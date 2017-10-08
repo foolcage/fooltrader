@@ -52,7 +52,7 @@ ROBOTSTXT_OBEY = True
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-   'fooltrader.middlewares.ForbiddenHandleMiddleware': 1000,
+    'fooltrader.middlewares.ForbiddenHandleMiddleware': 1000,
 }
 
 # Enable or disable extensions
@@ -118,7 +118,8 @@ g_socks_proxy_items = []
 g_http_proxy_items = []
 g_socks2http_proxy_items = {}
 
-TIME_FORMAT_SEC='%Y-%m-%d %H:%M:%S'
+TIME_FORMAT_SEC = '%Y-%m-%d %H:%M:%S'
 
-TIME_FORMAT_DAY='%Y-%m-%d'
+TIME_FORMAT_DAY = '%Y-%m-%d'
 
+STATUS_SHOW_NOT_OK_DATE = False

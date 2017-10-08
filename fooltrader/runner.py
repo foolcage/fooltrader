@@ -6,6 +6,7 @@ import os
 from jsonmerge import merge
 from scrapy.crawler import CrawlerProcess
 
+from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
@@ -35,21 +36,32 @@ def generate_status():
             dates = set(get_trading_dates(security_item, False))
             diff1 = ths_dates - dates
             if diff1:
-                status[security_item['code']] = {'sina kdata': 'not ok:{}'.format(diff1)}
+                if STATUS_SHOW_NOT_OK_DATE:
+                    status[security_item['code']] = {'sina kdata': 'not ok:{}'.format(diff1)}
+                else:
+                    status[security_item['code']] = {'sina kdata': 'not ok'}
             else:
                 diff2 = dates - ths_dates
                 # this should not happen
                 if diff2:
-                    status[security_item['code']] = {'ths kdata': 'not ok?:{}'.format(diff2)}
+                    if STATUS_SHOW_NOT_OK_DATE:
+                        status[security_item['code']] = {'ths kdata': 'not ok?:{}'.format(diff2)}
+                    else:
+                        status[security_item['code']] = {'ths kdata': 'not ok?'}
 
             diff3 = ths_dates - set(get_downloaded_tick_dates(security_item))
             if diff3:
-                status[security_item['code']] = merge(status[security_item['code']],
-                                                      {'tick': 'not ok:{}'.format(diff3)})
-        logger.info(status[security_item['code']])
+                if STATUS_SHOW_NOT_OK_DATE:
+                    status[security_item['code']] = merge(status[security_item['code']],
+                                                          {'tick': 'not ok:{}'.format(diff3)})
+                else:
+                    status[security_item['code']] = merge(status[security_item['code']],
+                                                          {'tick': 'not ok'})
 
-    with open(get_status_path(), "w") as f:
-        json.dump(status, f)
+        logger.info('{}:{}'.format(security_item['code'], status[security_item['code']]))
+
+        with open(get_status_path(), "w") as f:
+            json.dump(status, f)
 
 
 parser = argparse.ArgumentParser()
