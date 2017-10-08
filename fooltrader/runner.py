@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 
 from jsonmerge import merge
@@ -9,6 +10,8 @@ from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
     get_kdata_path_ths, get_trading_dates_path_ths, get_trading_dates, get_downloaded_tick_dates, get_status_path
+
+logger = logging.getLogger(__name__)
 
 
 def crawl(*spiders):
@@ -43,6 +46,7 @@ def generate_status():
             if diff3:
                 status[security_item['code']] = merge(status[security_item['code']],
                                                       {'tick': 'not ok:{}'.format(diff3)})
+        logger.info(status[security_item['code']])
 
     with open(get_status_path(), "w") as f:
         json.dump(status, f)
