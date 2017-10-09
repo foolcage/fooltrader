@@ -267,14 +267,18 @@ def get_trading_dates_path_ths(item):
     return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
 
 
+def get_trading_dates_path_sse(item):
+    return os.path.join(get_security_dir(item), 'trading_dates_sse.json')
+
+
 def get_status_path():
     return os.path.join(settings.FILES_STORE, "status.json")
 
 
-def get_trading_dates(item, ths=True):
+def get_trading_dates(item, sse=True):
     dates = []
-    if ths:
-        dates_path = get_trading_dates_path_ths(item)
+    if sse:
+        dates_path = get_trading_dates_path_sse(item)
     else:
         dates_path = get_trading_dates_path(item)
     try:

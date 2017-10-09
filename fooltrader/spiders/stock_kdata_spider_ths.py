@@ -53,8 +53,8 @@ class StockKDataSpiderTHS(scrapy.Spider):
         price_json = []
 
         try:
-            str = response.text
-            json_str = str[str.index('{'):str.index('}') + 1]
+            tmp_str = response.text
+            json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]
             tmp_json = json.loads(json_str)
 
             # parse the trading dates

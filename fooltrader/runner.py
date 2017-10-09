@@ -10,7 +10,7 @@ from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
-    get_kdata_path_ths, get_trading_dates_path_ths, get_trading_dates, get_downloaded_tick_dates, get_status_path
+    get_trading_dates, get_downloaded_tick_dates, get_status_path, get_trading_dates_path_sse
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +22,16 @@ def crawl(*spiders):
     process.start()
 
 
-def generate_status():
+def check_data_integrity():
     status = {}
     if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()):
-        return {'status': 'stock list not ok'}
-    for security_item in get_security_items():
+        logger.info('------download stock list at first------')
+        crawl(SecurityListSpider)
+
+    for security_item in get_security_items('000001', '666666'):
         status.setdefault(security_item['code'], {})
-        if not os.path.exists(get_kdata_path_ths(security_item)) or not os.path.exists(
-                get_trading_dates_path_ths(security_item)):
-            status[security_item['code']] = {'ths kdata': 'not ok'}
+        if not os.path.exists(get_trading_dates_path_sse(security_item)):
+            status[security_item['code']] = {'sse trading date': 'not ok'}
         else:
             ths_dates = set(get_trading_dates(security_item, True))
             dates = set(get_trading_dates(security_item, False))
@@ -81,4 +82,4 @@ if args.kdata:
     crawl(StockKDataSpider)
 
 if args.check:
-    generate_status()
+    check_data_integrity()

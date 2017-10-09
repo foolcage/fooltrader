@@ -9,6 +9,7 @@ from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
+from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
 from fooltrader.utils.utils import setup_env
 
 configure_logging()
@@ -23,6 +24,7 @@ runner = CrawlerRunner(get_project_settings())
 @defer.inlineCallbacks
 def crawl():
     # yield runner.crawl(SecurityListSpider)
+    yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
     # yield runner.crawl(StockKDataSpider)
 
