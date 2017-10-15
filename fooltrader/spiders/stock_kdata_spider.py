@@ -31,29 +31,47 @@ class StockKDataSpider(scrapy.Spider):
     if AUTO_KAFKA:
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
+    def yield_request(self, item, start_date, end_date):
+        if not start_date:
+            start_date = item['listDate']
+        if not end_date:
+            end_date = datetime.date.today().strftime(settings.TIME_FORMAT_DAY)
+
+        mkdir_for_security(item)
+        current_year, current_quarter = get_year_quarter(datetime.date.today())
+
+        # get day k data
+        for year, quarter in get_quarters(
+                datetime.datetime.strptime(start_date, settings.TIME_FORMAT_DAY),
+                datetime.datetime.strptime(end_date, settings.TIME_FORMAT_DAY)):
+            for fuquan in (False, True):
+                data_path = get_kdata_path(item, year, quarter, fuquan)
+                data_exist = os.path.isfile(data_path)
+
+                # 该爬虫每天一次,一个季度一个文件，增量的数据在当前季度，所以总是下载
+                if (current_quarter == quarter and current_year == year) \
+                        or not data_exist \
+                        or settings.FORCE_DOWNLOAD_KDATA:
+                    url = self.get_k_data_url(item['code'], year, quarter, fuquan)
+                    yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
+                                  meta={'path': data_path, 'item': item, 'fuquan': fuquan},
+                                  callback=self.download_day_k_data)
+
     def start_requests(self):
-        stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
-        for stock_file in stock_files:
-            for item in get_security_item(stock_file):
-                # 设置抓取的股票范围
-                if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                    mkdir_for_security(item)
-
-                    current_year, current_quarter = get_year_quarter(datetime.date.today())
-                    # get day k data
-                    for year, quarter in get_quarters(item['listDate']):
-                        for fuquan in (False, True):
-                            data_path = get_kdata_path(item, year, quarter, fuquan)
-                            data_exist = os.path.isfile(data_path)
-
-                            # 该爬虫每天一次,一个季度一个文件，增量的数据在当前季度，所以总是下载
-                            if (current_quarter == quarter and current_year == year) \
-                                    or not data_exist \
-                                    or settings.FORCE_DOWNLOAD_KDATA:
-                                url = self.get_k_data_url(item['code'], year, quarter, fuquan)
-                                yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
-                                              meta={'path': data_path, 'item': item, 'fuquan': fuquan},
-                                              callback=self.download_day_k_data)
+        item = self.settings.get("security_item")
+        start_date = self.settings.get("start_date")
+        end_date = self.settings.get("end_date")
+        if item:
+            for request in self.yield_request(item, start_date, end_date):
+                yield request
+        else:
+            stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
+            for stock_file in stock_files:
+                for item in get_security_item(stock_file):
+                    # 设置抓取的股票范围
+                    if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
+                        for request in self.yield_request(item, item['listDate']):
+                            yield request
 
     def download_day_k_data(self, response):
         path = response.meta['path']

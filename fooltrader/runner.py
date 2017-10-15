@@ -3,45 +3,59 @@ import json
 import logging
 import os
 
-from jsonmerge import merge
 from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
 
+from fooltrader import settings
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
+from fooltrader.spiders.stock_tick_spider import StockTickSpider
+from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
-    get_kdata_path_ths, get_trading_dates_path_ths, get_trading_dates, get_downloaded_tick_dates, get_status_path
+    get_trading_dates, get_downloaded_tick_dates, get_status_path, get_trading_dates_path_sse
 
 logger = logging.getLogger(__name__)
 
 
-def crawl(*spiders):
-    process = CrawlerProcess()
-    for spider in spiders:
-        process.crawl(spider)
+def crawl(spider, setting):
+    process = CrawlerProcess({**get_project_settings(), **setting})
+    process.crawl(spider)
     process.start()
 
 
-def generate_status():
+def check_data_integrity():
     status = {}
+    # check security list
     if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()):
-        return {'status': 'stock list not ok'}
-    for security_item in get_security_items():
+        logger.info('------download stock list at first------')
+        crawl(SecurityListSpider)
+
+    for security_item in get_security_items('000001', '666666'):
         status.setdefault(security_item['code'], {})
-        if not os.path.exists(get_kdata_path_ths(security_item)) or not os.path.exists(
-                get_trading_dates_path_ths(security_item)):
-            status[security_item['code']] = {'ths kdata': 'not ok'}
+        # check trading date
+        if not os.path.exists(get_trading_dates_path_sse(security_item)):
+            logger.info("------need to download {} trading date------".format(security_item['code']))
+            crawl(StockTradingDateSpider, {"security_item": security_item})
         else:
-            ths_dates = set(get_trading_dates(security_item, True))
+            base_dates = set(get_trading_dates(security_item, True))
             dates = set(get_trading_dates(security_item, False))
-            diff1 = ths_dates - dates
+            diff1 = base_dates - dates
             if diff1:
                 if STATUS_SHOW_NOT_OK_DATE:
-                    status[security_item['code']] = {'sina kdata': 'not ok:{}'.format(diff1)}
+                    logger.info("------{} kdata not ok for dates:{}------".format(security_item['code'], diff1))
                 else:
-                    status[security_item['code']] = {'sina kdata': 'not ok'}
+                    logger.info("------{} kdata not ok------".format(security_item['code']))
+
+                logger.info("------try to fix {} kdata------".format(security_item['code']))
+
+                the_dates = list(diff1)
+                the_dates.sort()
+                crawl(StockKDataSpider, {"security_item": security_item,
+                                         "start_date": the_dates[0],
+                                         "end_date": the_dates[-1]})
             else:
-                diff2 = dates - ths_dates
+                diff2 = dates - base_dates
                 # this should not happen
                 if diff2:
                     if STATUS_SHOW_NOT_OK_DATE:
@@ -49,14 +63,18 @@ def generate_status():
                     else:
                         status[security_item['code']] = {'ths kdata': 'not ok?'}
 
-            diff3 = ths_dates - set(get_downloaded_tick_dates(security_item))
+            tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
+            diff3 = tick_dates - set(get_downloaded_tick_dates(security_item))
             if diff3:
                 if STATUS_SHOW_NOT_OK_DATE:
-                    status[security_item['code']] = merge(status[security_item['code']],
-                                                          {'tick': 'not ok:{}'.format(diff3)})
+                    logger.info("------{} tick not ok for dates:{}------".format(security_item['code'], diff3))
                 else:
-                    status[security_item['code']] = merge(status[security_item['code']],
-                                                          {'tick': 'not ok'})
+                    logger.info("------{} tick not ok------".format(security_item['code']))
+
+                logger.info("------try to fix {} tick------".format(security_item['code']))
+
+                crawl(StockTickSpider, {"security_item": security_item,
+                                        "trading_dates": diff3})
 
         logger.info('{}:{}'.format(security_item['code'], status[security_item['code']]))
 
@@ -81,4 +99,4 @@ if args.kdata:
     crawl(StockKDataSpider)
 
 if args.check:
-    generate_status()
+    check_data_integrity()
