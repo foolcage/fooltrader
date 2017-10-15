@@ -24,19 +24,26 @@ class StockTradingDateSpider(scrapy.Spider):
         }
     }
 
-    def start_requests(self):
-        stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
-        for stock_file in stock_files:
-            for item in get_security_item(stock_file):
-                # 设置抓取的股票范围
-                if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                    mkdir_for_security(item)
+    def yield_request(self, item):
+        mkdir_for_security(item)
 
-                    data_path = get_trading_dates_path_sse(item)  # get day k data
-                    url = self.get_k_data_url(item['exchange'], item['code'])
-                    yield Request(url=url, headers=SSE_KDATA_HEADER,
-                                  meta={'path': data_path, 'item': item},
-                                  callback=self.download_day_k_data)
+        data_path = get_trading_dates_path_sse(item)  # get day k data
+        url = self.get_k_data_url(item['exchange'], item['code'])
+        yield Request(url=url, headers=SSE_KDATA_HEADER,
+                      meta={'path': data_path, 'item': item},
+                      callback=self.download_day_k_data)
+
+    def start_requests(self):
+        item = self.settings.get("security_item")
+        if item:
+            self.yield_request(item)
+        else:
+            stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
+            for stock_file in stock_files:
+                for item in get_security_item(stock_file):
+                    # 设置抓取的股票范围
+                    if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
+                        self.yield_request(item)
 
     def download_day_k_data(self, response):
         path = response.meta['path']

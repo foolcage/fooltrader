@@ -31,32 +31,45 @@ class StockTickSpider(scrapy.Spider):
     if AUTO_KAFKA:
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
+    def yield_request(self, item, trading_dates=None):
+        mkdir_for_security(item)
+        if not trading_dates:
+            trading_dates = get_trading_dates(item)
+
+        for trading_date in trading_dates:
+            if get_datetime(trading_date) < get_datetime(settings.START_TICK_DATE) or get_datetime(
+                    trading_date) < get_datetime(settings.AVAILABLE_TICK_DATE):
+                continue
+            path = get_tick_path(item, trading_date)
+
+            if os.path.isfile(path) and is_available_tick(path):
+                continue
+            # proxy_json = settings.g_http_proxy_items[count % proxy_count]
+            # count += 1
+            # proxy = 'http://{}:{}'.format(proxy_json['ip'], proxy_json['port'])
+            yield Request(url=self.get_tick_url(trading_date, item['exchange'] + item['code']),
+                          meta={'proxy': None,
+                                'path': path,
+                                'trading_date': trading_date,
+                                'item': item},
+                          headers=DEFAULT_TICK_HEADER,
+                          callback=self.download_tick)
+
     def start_requests(self):
-        proxy_count = len(settings.g_http_proxy_items)
-        count = 0
+        item = self.settings.get("security_item")
+        trading_dates = self.settings.get("trading_dates")
+        if item:
+            for request in self.yield_request(item, trading_dates):
+                yield request
+        else:
+            proxy_count = len(settings.g_http_proxy_items)
+            count = 0
 
-        for item in itertools.chain(get_security_item(get_sh_stock_list_path()),
-                                    get_security_item(get_sz_stock_list_path())):
-            if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                mkdir_for_security(item)
-                for trading_date in get_trading_dates(item):
-                    if get_datetime(trading_date) < get_datetime(settings.START_TICK_DATE) or get_datetime(
-                            trading_date) < get_datetime(settings.AVAILABLE_TICK_DATE):
-                        continue
-                    path = get_tick_path(item, trading_date)
-
-                    if os.path.isfile(path) and is_available_tick(path):
-                        continue
-                    # proxy_json = settings.g_http_proxy_items[count % proxy_count]
-                    # count += 1
-                    # proxy = 'http://{}:{}'.format(proxy_json['ip'], proxy_json['port'])
-                    yield Request(url=self.get_tick_url(trading_date, item['exchange'] + item['code']),
-                                  meta={'proxy': None,
-                                        'path': path,
-                                        'trading_date': trading_date,
-                                        'item': item},
-                                  headers=DEFAULT_TICK_HEADER,
-                                  callback=self.download_tick)
+            for item in itertools.chain(get_security_item(get_sh_stock_list_path()),
+                                        get_security_item(get_sz_stock_list_path())):
+                if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
+                    for request in self.yield_request(item):
+                        yield request
 
     def download_tick(self, response):
         # self.logger.info('using proxy:{}'.format(response.meta['proxy']))

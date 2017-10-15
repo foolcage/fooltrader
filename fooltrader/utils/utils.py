@@ -275,15 +275,27 @@ def get_status_path():
     return os.path.join(settings.FILES_STORE, "status.json")
 
 
-def get_trading_dates(item, sse=True):
+def get_trading_dates(item, base=True):
     dates = []
-    if sse:
-        dates_path = get_trading_dates_path_sse(item)
+    if base:
+        dates_path_sse = get_trading_dates_path_sse(item)
+        dates_path_ths = get_trading_dates_path_ths(item)
     else:
-        dates_path = get_trading_dates_path(item)
+        dates_path_sina = get_trading_dates_path(item)
     try:
-        with open(dates_path) as data_file:
-            dates = json.load(data_file)
+        if dates_path_sse:
+            with open(dates_path_sse) as data_file:
+                dates_sse = json.load(data_file)
+        if dates_path_ths:
+            with open(dates_path_ths) as data_file:
+                dates_ths = json.load(data_file)
+        if dates_sse and dates_ths:
+            dates_tmp = set(dates_sse) & set(dates_ths)
+            dates = list(dates_tmp)
+        elif dates_path_sina:
+            with open(dates_path_sina) as data_file:
+                dates = json.load(data_file)
+
     except Exception as e:
         pass
 
@@ -353,11 +365,9 @@ def get_year_quarter(time):
     return time.year, (time.month // 3) + 1
 
 
-def get_quarters(start):
-    start_time = get_datetime(start)
-    today = datetime.date.today()
-    start_year_quarter = get_year_quarter(start_time)
-    current_year_quarter = get_year_quarter(today)
+def get_quarters(start, end=datetime.date.today()):
+    start_year_quarter = get_year_quarter(start)
+    current_year_quarter = get_year_quarter(end)
     if current_year_quarter[0] == start_year_quarter[0]:
         return [(current_year_quarter[0], x) for x in range(start_year_quarter[1], current_year_quarter[1] + 1)]
     elif current_year_quarter[0] - start_year_quarter[0] == 1:
