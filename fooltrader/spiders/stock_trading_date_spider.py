@@ -16,8 +16,8 @@ class StockTradingDateSpider(scrapy.Spider):
     name = "stock_trading_date"
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
+        # 'DOWNLOAD_DELAY': 2,
+        # 'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
 
         'SPIDER_MIDDLEWARES': {
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
@@ -36,14 +36,16 @@ class StockTradingDateSpider(scrapy.Spider):
     def start_requests(self):
         item = self.settings.get("security_item")
         if item:
-            self.yield_request(item)
+            for request in self.yield_request(item):
+                yield request
         else:
             stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
             for stock_file in stock_files:
                 for item in get_security_item(stock_file):
                     # 设置抓取的股票范围
                     if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                        self.yield_request(item)
+                        for request in self.yield_request(item):
+                            yield request
 
     def download_day_k_data(self, response):
         path = response.meta['path']

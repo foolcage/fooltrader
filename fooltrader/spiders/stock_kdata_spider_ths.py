@@ -17,8 +17,8 @@ class StockKDataSpiderTHS(scrapy.Spider):
     name = "stock_kdata_ths"
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 2,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
+        # 'DOWNLOAD_DELAY': 2,
+        # 'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
 
         'SPIDER_MIDDLEWARES': {
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
@@ -35,7 +35,7 @@ class StockKDataSpiderTHS(scrapy.Spider):
 
                     data_path = get_kdata_path_ths(item)
                     data_exist = os.path.isfile(data_path)
-                    if not data_exist:
+                    if not data_exist or True:
                         # get day k data
                         url = self.get_k_data_url(item['code'])
                         yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
