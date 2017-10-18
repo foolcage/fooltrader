@@ -14,7 +14,8 @@ from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
-    get_trading_dates, get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths
+    get_trading_dates, get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
+    get_base_trading_dates
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +50,8 @@ def check_data_integrity():
             process_crawl(StockKDataSpiderTHS, {"security_item": security_item})
 
         # compare kdata/tick with base trading dates and fix them
-        base_dates = set(get_trading_dates(security_item, True))
-        dates = set(get_trading_dates(security_item, False))
+        base_dates = set(get_base_trading_dates(security_item))
+        dates = set(get_trading_dates(security_item))
         diff1 = base_dates - dates
         if diff1:
             if STATUS_SHOW_NOT_OK_DATE:

@@ -275,34 +275,47 @@ def get_status_path():
     return os.path.join(settings.FILES_STORE, "status.json")
 
 
-def get_trading_dates(item, base=True):
+def get_base_trading_dates(item):
     dates = []
-    if base:
-        dates_path_sse = get_trading_dates_path_sse(item)
-        dates_path_ths = get_trading_dates_path_ths(item)
-    else:
-        dates_path_sina = get_trading_dates_path(item)
+
+    dates_path_sse = get_trading_dates_path_sse(item)
+    dates_path_ths = get_trading_dates_path_ths(item)
+
     try:
+        dates_sse = []
+        dates_ths = []
         if dates_path_sse:
             with open(dates_path_sse) as data_file:
                 dates_sse = json.load(data_file)
         if dates_path_ths:
             with open(dates_path_ths) as data_file:
                 dates_ths = json.load(data_file)
-        if dates_sse and dates_ths:
-            dates_tmp = set(dates_sse) & set(dates_ths)
-            dates = list(dates_tmp)
-        elif dates_path_sina:
-            with open(dates_path_sina) as data_file:
-                dates = json.load(data_file)
+
+        dates_tmp = set(dates_sse) & set(dates_ths)
+        dates = list(dates_tmp)
 
     except Exception as e:
-        pass
+        logger.error(e)
+
+    dates.sort()
+    return dates
+
+
+def get_trading_dates(item):
+    dates = []
+    dates_path_sina = get_trading_dates_path(item)
+    try:
+        with open(dates_path_sina) as data_file:
+            dates = json.load(data_file)
+
+    except Exception as e:
+        logger.error(e)
 
     if not dates:
         dir = get_kdata_dir(item)
         if os.path.exists(dir):
-            files = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+            files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                     (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
 
             for f in files:
                 with open(f) as data_file:
