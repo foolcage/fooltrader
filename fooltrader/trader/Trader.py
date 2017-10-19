@@ -87,7 +87,7 @@ class Trader(object):
                 self.__consume_topic_with_func(topic, 'on_tick')
             for level in ('month', 'week', 'day', 'hour', '60', '30', '15', '5', '1'):
                 the_func = 'on_{}_bar'.format(level)
-                topic = get_kafka_kdata_topic(security_id, level)
+                topic = get_kafka_kdata_topic(security_id, True, level)
                 self.__consume_topic_with_func(topic, the_func)
 
 

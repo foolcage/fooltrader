@@ -33,16 +33,22 @@ class StockKDataSpiderTHS(scrapy.Spider):
                 if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
                     mkdir_for_security(item)
 
-                    data_path = get_kdata_path_ths(item)
-                    data_exist = os.path.isfile(data_path)
-                    if not data_exist or True:
-                        # get day k data
-                        url = self.get_k_data_url(item['code'])
-                        yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
-                                      meta={'path': data_path, 'item': item},
-                                      callback=self.download_day_k_data)
-                    else:
-                        self.logger.info("{} kdata existed".format(item['code']))
+                    for fuquan in [True, False]:
+                        data_path = get_kdata_path_ths(item, fuquan)
+                        data_exist = os.path.isfile(data_path)
+                        if not data_exist or True:
+                            # get day k data
+                            if fuquan:
+                                flag = 2
+                            else:
+                                flag = 0
+                            url = self.get_k_data_url(item['code'], flag)
+                            yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
+                                          meta={'path': data_path, 'item': item},
+                                          callback=self.download_day_k_data)
+
+                        else:
+                            self.logger.info("{} kdata existed".format(item['code']))
 
     def download_day_k_data(self, response):
         path = response.meta['path']

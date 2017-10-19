@@ -32,10 +32,6 @@ class StockKDataSpider(scrapy.Spider):
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
     def yield_request(self, item, start_date, end_date):
-        force_download = False
-        if start_date and end_date:
-            force_download = True
-
         if not start_date:
             start_date = item['listDate']
         if not end_date:
@@ -55,8 +51,7 @@ class StockKDataSpider(scrapy.Spider):
                 # 该爬虫每天一次,一个季度一个文件，增量的数据在当前季度，所以总是下载
                 if (current_quarter == quarter and current_year == year) \
                         or not data_exist \
-                        or settings.FORCE_DOWNLOAD_KDATA\
-                        or force_download:
+                        or settings.FORCE_DOWNLOAD_KDATA:
                     url = self.get_k_data_url(item['code'], year, quarter, fuquan)
                     yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
                                   meta={'path': data_path, 'item': item, 'fuquan': fuquan},

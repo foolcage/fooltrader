@@ -76,13 +76,10 @@ TONGHUASHUN_KDATA_HEADER = chrome_copy_header_to_dict('''
 Accept:*/*
 Accept-Encoding:gzip, deflate
 Accept-Language:zh-CN,zh;q=0.8,en;q=0.6
-Cache-Control:no-cache
 Connection:keep-alive
-Cookie:__utma=156575163.1922704476.1477986834.1477986834.1499613503.2; __utmc=156575163; __utmz=156575163.1499613503.2.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); spversion=20130314; Hm_lvt_78c58f01938e4d85eaf619eae71b4ed1=1507383457,1507384400; Hm_lpvt_78c58f01938e4d85eaf619eae71b4ed1=1507384400; log=portal-personal-r4c1-click-stock-603559; v=AdrpgoYKVw3YYduhyJc7UWNmLYv5C17I0I7SuORThbc5gHQ_zJuu9aAfIp20; historystock=603559%7C*%7C601818%7C*%7C600572%7C*%7C000868
 Host:d.10jqka.com.cn
-Pragma:no-cache
 Referer:http://stockpage.10jqka.com.cn/HQ_v4.html
-User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
+User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
 ''')
 
 DEFAULT_BALANCE_SHEET_HEADER = chrome_copy_header_to_dict('''

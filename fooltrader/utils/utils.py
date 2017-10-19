@@ -144,7 +144,8 @@ def get_kdata_items(security_item, houfuquan=False):
     else:
         dir = get_kdata_dir(security_item)
     if os.path.exists(dir):
-        files = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+        files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                 (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
 
         for f in sorted(files):
             with open(f) as data_file:
@@ -248,8 +249,56 @@ def get_kdata_fuquan_dir(item):
     return os.path.join(get_kdata_dir(item), 'fuquan')
 
 
-def get_kdata_path_ths(item):
-    return os.path.join(get_kdata_dir(item), 'all_dayk.json')
+# TODO:change path
+def get_kdata_path_ths(item, fuquan=False):
+    if fuquan:
+        return os.path.join(get_security_dir(item), 'ths_fuquan_dayk.json')
+    else:
+        return os.path.join(get_kdata_dir(item), 'ths_dayk.json')
+
+
+def merge_ths_kdata(item, dates):
+    ths_kdata = {}
+    ths_fuquan_kdata = {}
+
+    try:
+        with open(get_kdata_path_ths(item)) as data_file:
+            ths_items = json.load(data_file)
+            for item in ths_items:
+                if item["timestamp"] in dates:
+                    ths_kdata[item["timestamp"]] = item
+
+        with open(get_kdata_path_ths(item, True)) as data_file:
+            ths_items = json.load(data_file)
+            for item in ths_items:
+                if item["timestamp"] in dates:
+                    ths_fuquan_kdata[item["timestamp"]] = item
+
+        year_quarter_map_dates = {}
+        for the_date in dates:
+            year, quarter = get_year_quarter(get_datetime(the_date))
+            year_quarter_map_dates.setdefault((year, quarter), [])
+            year_quarter_map_dates.get((year, quarter)).append(the_date)
+
+        for year, quarter in year_quarter_map_dates.keys():
+            for fuquan in (False, True):
+                data_path = get_kdata_path(item, year, quarter, fuquan)
+                data_exist = os.path.isfile(data_path)
+                if data_exist:
+                    with open(data_path) as data_file:
+                        items = json.load(data_file)
+                        if fuquan:
+                            for the_date in year_quarter_map_dates.get((year, quarter)):
+                                items.append(ths_fuquan_kdata[the_date])
+                        else:
+                            for the_date in year_quarter_map_dates.get((year, quarter)):
+                                items.append(ths_kdata[the_date])
+                    sorted(items, key=lambda item: item["timestamp"], reverse=True)
+
+                    with open(data_path, "w") as f:
+                        json.dump(items, f)
+    except Exception as e:
+        logger.error(e)
 
 
 def get_kdata_path(item, year, quarter, fuquan):

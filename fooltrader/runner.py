@@ -15,7 +15,7 @@ from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
     get_trading_dates, get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
-    get_base_trading_dates
+    get_base_trading_dates, merge_ths_kdata
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ def check_data_integrity():
     for security_item in get_security_items():
         status.setdefault(security_item['code'], {})
         # download base trading dates at first
-        if not os.path.exists(get_trading_dates_path_sse(security_item)):
+        if not os.path.exists(get_trading_dates_path_sse(security_item)) or True:
             logger.info("------need to download {} sse trading date------".format(security_item['code']))
             process_crawl(StockTradingDateSpider, {"security_item": security_item})
-        if not os.path.exists(get_trading_dates_path_ths(security_item)):
+        if not os.path.exists(get_trading_dates_path_ths(security_item)) or True:
             logger.info("------need to download {} ths trading date------".format(security_item['code']))
             process_crawl(StockKDataSpiderTHS, {"security_item": security_item})
 
@@ -63,9 +63,12 @@ def check_data_integrity():
 
             the_dates = list(diff1)
             the_dates.sort()
+            merge_ths_kdata(security_item, the_dates)
+
             process_crawl(StockKDataSpider, {"security_item": security_item,
                                              "start_date": the_dates[0],
                                              "end_date": the_dates[-1]})
+
         else:
             logger.info("------{} kdata ok------".format(security_item['code']))
             diff2 = dates - base_dates
@@ -94,19 +97,11 @@ def check_data_integrity():
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("-s", "--stock_list", action="store_true", help="download the stock list")
-
-parser.add_argument("-k", "--kdata", action="store_true", help="download the stock kdata")
-
-parser.add_argument("-c", "--check", action="store_true", help="check data")
+parser.add_argument("cmd", choices=['check_data', 'check_kafka', 'check_es'])
 
 args = parser.parse_args()
 
-if args.stock_list:
-    crawl(SecurityListSpider)
-
-if args.kdata:
-    crawl(StockKDataSpider)
-
-if args.check:
+if args.cmd == 'check_data':
+    check_data_integrity()
+elif args.cmd == 'check_kafka':
     check_data_integrity()

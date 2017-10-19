@@ -22,10 +22,10 @@ def tick_to_kafka():
                                                                           TIME_FORMAT_SEC).timestamp()))
 
 
-def kdata_to_kafka():
+def kdata_to_kafka(houfuquan):
     for security_item in get_security_items():
-        for kdata_item in get_kdata_items(security_item):
-            producer.send(get_kafka_kdata_topic(security_item['id']),
+        for kdata_item in get_kdata_items(security_item,houfuquan):
+            producer.send(get_kafka_kdata_topic(security_item['id'], houfuquan),
                           bytes(json.dumps(kdata_item, ensure_ascii=False), encoding='utf8'),
                           timestamp_ms=int(datetime.datetime.strptime(kdata_item['timestamp'],
                                                                       TIME_FORMAT_DAY).timestamp()))
@@ -49,10 +49,10 @@ def list_topics():
     finally:
         consumer.close()
 
+
 def delete_all_topics():
     for topic in list_topics():
         delete_topic(topic)
 
-
 # consume_topic('stock_sh_600000_day_kdata')
-# kdata_to_kafka()
+kdata_to_kafka(True)
