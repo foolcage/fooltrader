@@ -73,13 +73,13 @@ User-Agent:Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/53
 ''')
 
 TONGHUASHUN_KDATA_HEADER = chrome_copy_header_to_dict('''
-Accept:*/*
-Accept-Encoding:gzip, deflate
-Accept-Language:zh-CN,zh;q=0.8,en;q=0.6
-Connection:keep-alive
-Host:d.10jqka.com.cn
-Referer:http://stockpage.10jqka.com.cn/HQ_v4.html
-User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.8,en;q=0.6
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
+Accept: */*
+Referer: http://stockpage.10jqka.com.cn/HQ_v4.html
+Cookie: __utma=156575163.1843700306.1488352720.1499234323.1502172029.4; __utmc=156575163; __utmz=156575163.1488352720.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); spversion=20130314; Hm_lvt_78c58f01938e4d85eaf619eae71b4ed1=1507300869; Hm_lpvt_78c58f01938e4d85eaf619eae71b4ed1=1508464591; historystock=603189%7C*%7C300295%7C*%7C600839%7C*%7C000338%7C*%7C002194; log=; v=AREjaxfGLPcJoUDd5wHRp1QiKRaufoSAL_MpD_OlDDL35T_CO86VwL9CPa2D
+Connection: keep-alive
 ''')
 
 DEFAULT_BALANCE_SHEET_HEADER = chrome_copy_header_to_dict('''

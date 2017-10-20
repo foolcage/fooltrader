@@ -27,12 +27,12 @@ User-Agent:Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/53
             'User-Agent') == 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.76 Mobile Safari/537.36'
 
     def test_get_quarters(self):
-        set1 = set(get_quarters('2014-4-1'))
+        set1 = set(get_quarters(get_datetime('2014-4-1'),get_datetime('2016-12-1')))
         assert set1 == {(2014, 2), (2014, 3), (2014, 4), (2015, 1), (2015, 2), (2015, 3), (2015, 4),
                         (2016, 1), (2016, 2), (2016, 3), (2016, 4)}
-        set2 = set(get_quarters('2015-4-1'))
+        set2 = set(get_quarters(get_datetime('2015-4-1'),get_datetime('2016-12-1')))
         assert set2 == {(2015, 2), (2015, 3), (2015, 4), (2016, 1), (2016, 2), (2016, 3), (2016, 4)}
-        set3 = set(get_quarters('2016-4-1'))
+        set3 = set(get_quarters(get_datetime('2016-4-1'),get_datetime('2016-12-1')))
         assert set3 == {(2016, 2), (2016, 3), (2016, 4)}
 
     def test_get_trading_dates(self):

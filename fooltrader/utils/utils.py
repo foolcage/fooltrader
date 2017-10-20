@@ -254,21 +254,21 @@ def get_kdata_path_ths(item, fuquan=False):
     if fuquan:
         return os.path.join(get_security_dir(item), 'ths_fuquan_dayk.json')
     else:
-        return os.path.join(get_kdata_dir(item), 'ths_dayk.json')
+        return os.path.join(get_security_dir(item), 'ths_dayk.json')
 
 
-def merge_ths_kdata(item, dates):
+def merge_ths_kdata(security_item, dates):
     ths_kdata = {}
     ths_fuquan_kdata = {}
 
     try:
-        with open(get_kdata_path_ths(item)) as data_file:
+        with open(get_kdata_path_ths(security_item)) as data_file:
             ths_items = json.load(data_file)
             for item in ths_items:
                 if item["timestamp"] in dates:
                     ths_kdata[item["timestamp"]] = item
 
-        with open(get_kdata_path_ths(item, True)) as data_file:
+        with open(get_kdata_path_ths(security_item, True)) as data_file:
             ths_items = json.load(data_file)
             for item in ths_items:
                 if item["timestamp"] in dates:
@@ -282,21 +282,23 @@ def merge_ths_kdata(item, dates):
 
         for year, quarter in year_quarter_map_dates.keys():
             for fuquan in (False, True):
-                data_path = get_kdata_path(item, year, quarter, fuquan)
+                data_path = get_kdata_path(security_item, year, quarter, fuquan)
                 data_exist = os.path.isfile(data_path)
                 if data_exist:
                     with open(data_path) as data_file:
-                        items = json.load(data_file)
+                        k_items = json.load(data_file)
                         if fuquan:
                             for the_date in year_quarter_map_dates.get((year, quarter)):
-                                items.append(ths_fuquan_kdata[the_date])
+                                k_items.append(ths_fuquan_kdata[the_date])
                         else:
                             for the_date in year_quarter_map_dates.get((year, quarter)):
-                                items.append(ths_kdata[the_date])
-                    sorted(items, key=lambda item: item["timestamp"], reverse=True)
+                                k_items.append(ths_kdata[the_date])
+                    k_items = sorted(k_items, key=lambda item: item["timestamp"], reverse=True)
 
                     with open(data_path, "w") as f:
-                        json.dump(items, f)
+                        json.dump(k_items, f)
+
+
     except Exception as e:
         logger.error(e)
 
@@ -350,9 +352,9 @@ def get_base_trading_dates(item):
     return dates
 
 
-def get_trading_dates(item):
+def get_trading_dates(security_item):
     dates = []
-    dates_path_sina = get_trading_dates_path(item)
+    dates_path_sina = get_trading_dates_path(security_item)
     try:
         with open(dates_path_sina) as data_file:
             dates = json.load(data_file)
@@ -361,7 +363,7 @@ def get_trading_dates(item):
         logger.error(e)
 
     if not dates:
-        dir = get_kdata_dir(item)
+        dir = get_kdata_dir(security_item)
         if os.path.exists(dir):
             files = [os.path.join(dir, f) for f in os.listdir(dir) if
                      (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
@@ -424,7 +426,7 @@ def get_datetime(str):
 
 
 def get_year_quarter(time):
-    return time.year, (time.month // 3) + 1
+    return time.year, ((time.month - 1) // 3) + 1
 
 
 def get_quarters(start, end=datetime.date.today()):

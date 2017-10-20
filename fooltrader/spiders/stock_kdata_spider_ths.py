@@ -22,6 +22,18 @@ class StockKDataSpiderTHS(scrapy.Spider):
 
         'SPIDER_MIDDLEWARES': {
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
+        },
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': None,
+            'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': None,
+            'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': None,
+            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+            'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+            'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware': None,
+            'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': None,
+            'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': None,
+            'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': None,
+            'scrapy.downloadermiddlewares.stats.DownloaderStats': None,
         }
     }
 

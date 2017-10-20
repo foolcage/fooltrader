@@ -42,10 +42,10 @@ def check_data_integrity():
     for security_item in get_security_items():
         status.setdefault(security_item['code'], {})
         # download base trading dates at first
-        if not os.path.exists(get_trading_dates_path_sse(security_item)) or True:
+        if not os.path.exists(get_trading_dates_path_sse(security_item)):
             logger.info("------need to download {} sse trading date------".format(security_item['code']))
             process_crawl(StockTradingDateSpider, {"security_item": security_item})
-        if not os.path.exists(get_trading_dates_path_ths(security_item)) or True:
+        if not os.path.exists(get_trading_dates_path_ths(security_item)):
             logger.info("------need to download {} ths trading date------".format(security_item['code']))
             process_crawl(StockKDataSpiderTHS, {"security_item": security_item})
 

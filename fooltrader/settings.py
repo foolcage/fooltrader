@@ -18,7 +18,9 @@ NEWSPIDER_MODULE = 'fooltrader.spiders'
 # USER_AGENT = 'fospider (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+# ROBOTSTXT_OBEY = True
+
+COMPRESSION_ENABLED = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32

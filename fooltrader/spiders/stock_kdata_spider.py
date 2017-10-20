@@ -31,7 +31,7 @@ class StockKDataSpider(scrapy.Spider):
     if AUTO_KAFKA:
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
-    def yield_request(self, item, start_date, end_date):
+    def yield_request(self, item, start_date, end_date=None):
         if not start_date:
             start_date = item['listDate']
         if not end_date:
