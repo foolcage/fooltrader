@@ -77,26 +77,11 @@ def chrome_copy_header_to_dict(src):
     return header
 
 
-def is_sh_stock_file(path):
-    return path.endswith(settings.SH_STOCK_FILE)
-
-
-def is_sz_stock_file(path):
-    return path.endswith(settings.SZ_STOCK_FILE)
-
-
 def get_security_items(start=STOCK_START_CODE, end=STOCK_END_CODE):
-    for item in itertools.chain(get_security_item(get_sh_stock_list_path()),
-                                get_security_item(get_sz_stock_list_path())):
+    for item in itertools.chain(get_sh_security_item(),
+                                get_sz_security_item()):
         if start <= item['code'] <= end:
             yield item
-
-
-def get_security_item(path):
-    if is_sh_stock_file(path):
-        return get_sh_security_item(path)
-    elif is_sz_stock_file(path):
-        return get_sz_security_item(path)
 
 
 def generate_csv_line(*items):
@@ -108,7 +93,8 @@ def generate_csv_line(*items):
     return ''
 
 
-def get_sz_security_item(path):
+def get_sz_security_item():
+    path = get_sz_stock_list_path()
     wb = openpyxl.load_workbook(path)
     for name in wb.get_sheet_names():
         sheet = wb.get_sheet_by_name(name)
@@ -128,7 +114,15 @@ def gen_security_id(type, exchange, code):
     return type + '_' + exchange + '_' + code;
 
 
-def get_sh_security_item(path):
+def get_security_item(exchange):
+    if exchange == 'sz':
+        return get_sz_security_item()
+    elif exchange == 'sh':
+        return get_sh_security_item()
+
+
+def get_sh_security_item():
+    path = get_sh_stock_list_path()
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
     with open(path, encoding=encoding) as fr:
