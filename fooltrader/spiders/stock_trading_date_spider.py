@@ -6,10 +6,8 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader.consts import SSE_KDATA_HEADER
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, TIME_FORMAT_DAY
-from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, \
-    get_sz_stock_list_path, \
-    get_trading_dates_path_sse
+from fooltrader.settings import TIME_FORMAT_DAY
+from fooltrader.utils.utils import get_trading_dates_path_sse, get_security_items
 
 
 class StockTradingDateSpider(scrapy.Spider):
@@ -38,13 +36,9 @@ class StockTradingDateSpider(scrapy.Spider):
             for request in self.yield_request(item):
                 yield request
         else:
-            stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
-            for stock_file in stock_files:
-                for item in get_security_item(stock_file):
-                    # 设置抓取的股票范围
-                    if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                        for request in self.yield_request(item):
-                            yield request
+            for item in get_security_items():
+                for request in self.yield_request(item):
+                    yield request
 
     def download_day_k_data(self, response):
         path = response.meta['path']

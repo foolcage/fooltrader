@@ -8,9 +8,7 @@ from scrapy import signals
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
 from fooltrader.items import KDataItem
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, \
-    get_sz_stock_list_path, \
-    get_kdata_path_ths, get_trading_dates_path_ths
+from fooltrader.utils.utils import get_kdata_path_ths, get_trading_dates_path_ths, get_security_items
 
 
 class StockKDataSpiderTHS(scrapy.Spider):
@@ -38,28 +36,26 @@ class StockKDataSpiderTHS(scrapy.Spider):
     }
 
     def start_requests(self):
-        stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
-        for stock_file in stock_files:
-            for item in get_security_item(stock_file):
-                # 设置抓取的股票范围
-                if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
+        for item in get_security_items():
+            # 设置抓取的股票范围
+            if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
 
-                    for fuquan in [True, False]:
-                        data_path = get_kdata_path_ths(item, fuquan)
-                        data_exist = os.path.isfile(data_path)
-                        if not data_exist or True:
-                            # get day k data
-                            if fuquan:
-                                flag = 2
-                            else:
-                                flag = 0
-                            url = self.get_k_data_url(item['code'], flag)
-                            yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
-                                          meta={'path': data_path, 'item': item},
-                                          callback=self.download_day_k_data)
-
+                for fuquan in [True, False]:
+                    data_path = get_kdata_path_ths(item, fuquan)
+                    data_exist = os.path.isfile(data_path)
+                    if not data_exist or True:
+                        # get day k data
+                        if fuquan:
+                            flag = 2
                         else:
-                            self.logger.info("{} kdata existed".format(item['code']))
+                            flag = 0
+                        url = self.get_k_data_url(item['code'], flag)
+                        yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
+                                      meta={'path': data_path, 'item': item},
+                                      callback=self.download_day_k_data)
+
+                    else:
+                        self.logger.info("{} kdata existed".format(item['code']))
 
     def download_day_k_data(self, response):
         path = response.meta['path']

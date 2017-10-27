@@ -2,9 +2,8 @@ import json
 import logging
 import os
 
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_item, get_kdata_dir, \
-    get_trading_dates_path
+from fooltrader.utils.utils import get_kdata_dir, \
+    get_trading_dates_path, get_security_items
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +31,8 @@ def init_trading_dates(security_item):
 
 
 def init_all_traing_dates():
-    stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
-    for stock_file in stock_files:
-        for security_item in get_security_item(stock_file):
-            if STOCK_START_CODE <= security_item['code'] <= STOCK_END_CODE:
-                init_trading_dates(security_item)
+    for item in get_security_items():
+        init_trading_dates(item)
 
 
 if __name__ == '__main__':

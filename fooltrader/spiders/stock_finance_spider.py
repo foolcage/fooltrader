@@ -1,5 +1,3 @@
-import itertools
-
 import scrapy
 from kafka import KafkaProducer
 from scrapy import Request
@@ -8,8 +6,8 @@ from scrapy import signals
 from fooltrader.consts import DEFAULT_BALANCE_SHEET_HEADER
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
-from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, get_sz_stock_list_path
+from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
+from fooltrader.utils.utils import get_security_items
 
 
 class StockFinanceSpider(scrapy.Spider):
@@ -28,18 +26,16 @@ class StockFinanceSpider(scrapy.Spider):
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
     def start_requests(self):
-        for item in itertools.chain(get_security_item(get_sh_stock_list_path()),
-                                    get_security_item(get_sz_stock_list_path())):
-            if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                for (data_url, data_path) in (
-                        (self.get_balance_sheet_url(item['code']), get_balance_sheet_path(item)),
-                        (self.get_income_statement_url(item['code']), get_income_statement_path(item)),
-                        (self.get_cash_flow_statement_url(item['code']), get_cash_flow_statement_path(item))):
-                    yield Request(url=data_url,
-                                  meta={'path': data_path,
-                                        'item': item},
-                                  headers=DEFAULT_BALANCE_SHEET_HEADER,
-                                  callback=self.download_finance_sheet)
+        for item in get_security_items():
+            for (data_url, data_path) in (
+                    (self.get_balance_sheet_url(item['code']), get_balance_sheet_path(item)),
+                    (self.get_income_statement_url(item['code']), get_income_statement_path(item)),
+                    (self.get_cash_flow_statement_url(item['code']), get_cash_flow_statement_path(item))):
+                yield Request(url=data_url,
+                              meta={'path': data_path,
+                                    'item': item},
+                              headers=DEFAULT_BALANCE_SHEET_HEADER,
+                              callback=self.download_finance_sheet)
 
     def download_finance_sheet(self, response):
         content_type_header = response.headers.get('content-type', None)

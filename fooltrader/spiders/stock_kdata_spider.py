@@ -13,7 +13,8 @@ from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.items import KDataFuquanItem, KDataItem
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import get_security_item, get_quarters, get_year_quarter, \
-    get_sh_stock_list_path, get_sz_stock_list_path, get_kdata_path, get_trading_dates_path, get_trading_dates
+    get_sh_stock_list_path, get_sz_stock_list_path, get_kdata_path, get_trading_dates_path, get_trading_dates, \
+    get_security_items
 
 
 class StockKDataSpider(scrapy.Spider):
@@ -64,13 +65,9 @@ class StockKDataSpider(scrapy.Spider):
             for request in self.yield_request(item, start_date, end_date):
                 yield request
         else:
-            stock_files = (get_sh_stock_list_path(), get_sz_stock_list_path())
-            for stock_file in stock_files:
-                for item in get_security_item(stock_file):
-                    # 设置抓取的股票范围
-                    if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                        for request in self.yield_request(item, item['listDate']):
-                            yield request
+            for item in get_security_items():
+                for request in self.yield_request(item, item['listDate']):
+                    yield request
 
     def download_day_k_data(self, response):
         path = response.meta['path']

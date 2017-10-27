@@ -13,7 +13,7 @@ from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_
 from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, get_trading_dates, get_tick_path, \
     is_available_tick, get_sz_stock_list_path, get_datetime, get_tick_item, \
     get_kdata_item_with_date, \
-    kdata_to_tick
+    kdata_to_tick, get_security_items
 
 
 class StockTickSpider(scrapy.Spider):
@@ -64,11 +64,9 @@ class StockTickSpider(scrapy.Spider):
             proxy_count = len(settings.g_http_proxy_items)
             count = 0
 
-            for item in itertools.chain(get_security_item(get_sh_stock_list_path()),
-                                        get_security_item(get_sz_stock_list_path())):
-                if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                    for request in self.yield_request(item):
-                        yield request
+            for item in get_security_items():
+                for request in self.yield_request(item):
+                    yield request
 
     def download_tick(self, response):
         # self.logger.info('using proxy:{}'.format(response.meta['proxy']))

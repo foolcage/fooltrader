@@ -25,12 +25,10 @@ class StockForecastSpider(scrapy.Spider):
 
     def start_requests(self):
         for item in get_security_items():
-            # 设置抓取的股票范围
-            if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                url = self.get_forecast_url(item['code'])
-                yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
-                              meta={'item': item, },
-                              callback=self.download_forecast_data)
+            url = self.get_forecast_url(item['code'])
+            yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
+                          meta={'item': item, },
+                          callback=self.download_forecast_data)
 
     def download_forecast_data(self, response):
         security_item = response.meta['item']
