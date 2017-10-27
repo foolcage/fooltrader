@@ -7,10 +7,38 @@ import os
 import openpyxl
 
 from fooltrader import settings
+from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
+    get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
+    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_finance_dir, get_event_dir
 from fooltrader.items import SecurityItem
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
+from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
+
+
+def mkdir_for_security(item):
+    fuquan_kdata_dir = get_kdata_dir(item, True)
+    if not os.path.exists(fuquan_kdata_dir):
+        os.makedirs(fuquan_kdata_dir)
+
+    finance_dir = get_finance_dir(item)
+    if not os.path.exists(finance_dir):
+        os.makedirs(finance_dir)
+
+    tick_dir = get_tick_dir(item)
+    if not os.path.exists(tick_dir):
+        os.makedirs(tick_dir)
+
+    event_dir = get_event_dir(item)
+    if not os.path.exists(event_dir):
+        os.makedirs(event_dir)
+
+
+def init_env():
+    if not os.path.exists(settings.FILES_STORE):
+        os.makedirs(settings.FILES_STORE)
+    for item in get_security_items():
+        mkdir_for_security(item)
 
 
 def init_log():
@@ -139,10 +167,7 @@ def kdata_to_tick(security_item, kdata_json):
 
 
 def get_kdata_items(security_item, houfuquan=False):
-    if houfuquan:
-        dir = get_kdata_fuquan_dir(security_item)
-    else:
-        dir = get_kdata_dir(security_item)
+    dir = get_kdata_dir(security_item, houfuquan)
     if os.path.exists(dir):
         files = [os.path.join(dir, f) for f in os.listdir(dir) if
                  (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
@@ -205,56 +230,7 @@ def detect_encoding(url):
 
 
 def setup_env():
-    if not os.path.exists('data'):
-        os.makedirs('data')
     pass
-    # db_setup()
-
-
-def mkdir_for_security(item):
-    fuquan_kdata_dir = get_kdata_fuquan_dir(item)
-    if not os.path.exists(fuquan_kdata_dir):
-        os.makedirs(fuquan_kdata_dir)
-
-    finance_dir = get_finance_dir(item)
-    if not os.path.exists(finance_dir):
-        os.makedirs(finance_dir)
-
-    tick_dir = get_tick_dir(item)
-    if not os.path.exists(tick_dir):
-        os.makedirs(tick_dir)
-
-    event_dir = get_event_dir(item)
-    if not os.path.exists(event_dir):
-        os.makedirs(event_dir)
-
-
-def get_security_dir(item):
-    return os.path.join(settings.FILES_STORE, item['type'], item['exchange'], item['code'])
-
-
-def get_event_dir(item):
-    return os.path.join(get_security_dir(item), 'event')
-
-
-def get_forecast_event_path(item):
-    return os.path.join(get_event_dir(item), "forecast.json")
-
-
-def get_kdata_dir(item):
-    return os.path.join(get_security_dir(item), 'kdata')
-
-
-def get_kdata_fuquan_dir(item):
-    return os.path.join(get_kdata_dir(item), 'fuquan')
-
-
-# TODO:change path
-def get_kdata_path_ths(item, fuquan=False):
-    if fuquan:
-        return os.path.join(get_security_dir(item), 'ths_fuquan_dayk.json')
-    else:
-        return os.path.join(get_security_dir(item), 'ths_dayk.json')
 
 
 def merge_ths_kdata(security_item, dates):
@@ -301,29 +277,6 @@ def merge_ths_kdata(security_item, dates):
 
     except Exception as e:
         logger.error(e)
-
-
-def get_kdata_path(item, year, quarter, fuquan):
-    if fuquan:
-        return os.path.join(get_kdata_fuquan_dir(item), '{}_{}_fuquan_dayk.json'.format(year, quarter))
-    else:
-        return os.path.join(get_kdata_dir(item), '{}_{}_dayk.json'.format(year, quarter))
-
-
-def get_trading_dates_path(item):
-    return os.path.join(get_security_dir(item), 'trading_dates.json')
-
-
-def get_trading_dates_path_ths(item):
-    return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
-
-
-def get_trading_dates_path_sse(item):
-    return os.path.join(get_security_dir(item), 'trading_dates_sse.json')
-
-
-def get_status_path():
-    return os.path.join(settings.FILES_STORE, "status.json")
 
 
 def get_base_trading_dates(item):
@@ -377,38 +330,6 @@ def get_trading_dates(security_item):
     return dates
 
 
-def get_tick_dir(item):
-    return os.path.join(settings.FILES_STORE, item['type'], item['exchange'], item['code'], 'tick')
-
-
-def get_tick_path(item, date):
-    return os.path.join(get_tick_dir(item), date + ".xls")
-
-
-def get_finance_dir(item):
-    return os.path.join(get_security_dir(item), "finance")
-
-
-def get_balance_sheet_path(item):
-    return os.path.join(get_finance_dir(item), "balance_sheet.xls")
-
-
-def get_income_statement_path(item):
-    return os.path.join(get_finance_dir(item), "income_statement.xls")
-
-
-def get_cash_flow_statement_path(item):
-    return os.path.join(get_finance_dir(item), "cash_flow_statement.xls")
-
-
-def get_sh_stock_list_path():
-    return os.path.join(settings.FILES_STORE, settings.SH_STOCK_FILE)
-
-
-def get_sz_stock_list_path():
-    return os.path.join(settings.FILES_STORE, settings.SZ_STOCK_FILE)
-
-
 def is_available_tick(path):
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
@@ -420,9 +341,8 @@ def is_available_tick(path):
         return False
 
 
-# time utils
 def get_datetime(str):
-    return datetime.datetime.strptime(str, "%Y-%m-%d")
+    return datetime.datetime.strptime(str, TIME_FORMAT_DAY)
 
 
 def get_year_quarter(time):

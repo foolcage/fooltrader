@@ -2,9 +2,10 @@ import logging
 import os
 
 from fooltrader import settings
+from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
+    get_cash_flow_statement_path
 from fooltrader.items import SecurityItem
-from fooltrader.utils.utils import get_balance_sheet_path, detect_encoding, get_income_statement_path, \
-    get_cash_flow_statement_path, to_float
+from fooltrader.utils.utils import detect_encoding, to_float
 
 logger = logging.getLogger(__name__)
 

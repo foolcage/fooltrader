@@ -1,7 +1,7 @@
 import json
 import os
 
-from fooltrader.utils.utils import get_forecast_event_path
+from fooltrader.contract.files_contract import get_forecast_event_path
 
 
 def get_forecast_items(security_item):

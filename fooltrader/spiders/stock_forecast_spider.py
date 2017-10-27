@@ -6,8 +6,9 @@ from scrapy import Selector
 from scrapy import signals
 
 from fooltrader.consts import DEFAULT_KDATA_HEADER
+from fooltrader.contract.files_contract import get_forecast_event_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import mkdir_for_security, get_security_items, get_forecast_event_path
+from fooltrader.utils.utils import get_security_items
 
 
 class StockForecastSpider(scrapy.Spider):
@@ -26,8 +27,6 @@ class StockForecastSpider(scrapy.Spider):
         for item in get_security_items():
             # 设置抓取的股票范围
             if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                mkdir_for_security(item)
-
                 url = self.get_forecast_url(item['code'])
                 yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
                               meta={'item': item, },

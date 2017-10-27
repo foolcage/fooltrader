@@ -2,11 +2,11 @@ import logging
 
 from elasticsearch_dsl import Index
 
+from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_event_index
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
 from fooltrader.domain.meta import StockMeta
 from fooltrader.domain.technical import DayKData, HoufuquanDayKData
-from fooltrader.utils.data_contract import get_es_kdata_index, get_es_forecast_event_index
 from fooltrader.utils.event_utils import get_forecast_items
 from fooltrader.utils.finance_utils import get_balance_sheet_items, get_income_statement_items, \
     get_cash_flow_statement_items

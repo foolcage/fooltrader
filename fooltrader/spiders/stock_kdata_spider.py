@@ -12,7 +12,7 @@ from fooltrader import settings
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.items import KDataFuquanItem, KDataItem
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_security_item, get_quarters, mkdir_for_security, get_year_quarter, \
+from fooltrader.utils.utils import get_security_item, get_quarters, get_year_quarter, \
     get_sh_stock_list_path, get_sz_stock_list_path, get_kdata_path, get_trading_dates_path, get_trading_dates
 
 
@@ -37,7 +37,6 @@ class StockKDataSpider(scrapy.Spider):
         if not end_date:
             end_date = datetime.date.today().strftime(settings.TIME_FORMAT_DAY)
 
-        mkdir_for_security(item)
         current_year, current_quarter = get_year_quarter(datetime.date.today())
 
         # get day k data

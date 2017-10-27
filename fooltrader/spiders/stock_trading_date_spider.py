@@ -7,7 +7,7 @@ from scrapy import signals
 
 from fooltrader.consts import SSE_KDATA_HEADER
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, TIME_FORMAT_DAY
-from fooltrader.utils.utils import get_security_item, mkdir_for_security, get_sh_stock_list_path, \
+from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, \
     get_sz_stock_list_path, \
     get_trading_dates_path_sse
 
@@ -25,7 +25,6 @@ class StockTradingDateSpider(scrapy.Spider):
     }
 
     def yield_request(self, item):
-        mkdir_for_security(item)
 
         data_path = get_trading_dates_path_sse(item)  # get day k data
         url = self.get_k_data_url(item['exchange'], item['code'])

@@ -11,7 +11,7 @@ from fooltrader import settings
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, get_trading_dates, get_tick_path, \
-    is_available_tick, get_sz_stock_list_path, get_datetime, get_tick_item, mkdir_for_security, \
+    is_available_tick, get_sz_stock_list_path, get_datetime, get_tick_item, \
     get_kdata_item_with_date, \
     kdata_to_tick
 
@@ -32,7 +32,6 @@ class StockTickSpider(scrapy.Spider):
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
     def yield_request(self, item, trading_dates=None):
-        mkdir_for_security(item)
         if not trading_dates:
             trading_dates = get_trading_dates(item)
 

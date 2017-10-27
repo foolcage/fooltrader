@@ -7,6 +7,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 from fooltrader import settings
+from fooltrader.cmds.common import init_trading_dates
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
@@ -51,6 +52,7 @@ def check_data_integrity():
 
         # compare kdata/tick with base trading dates and fix them
         base_dates = set(get_base_trading_dates(security_item))
+        init_trading_dates(security_item)
         dates = set(get_trading_dates(security_item))
         diff1 = base_dates - dates
         if diff1:

@@ -8,7 +8,7 @@ from scrapy import signals
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
 from fooltrader.items import KDataItem
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_security_item, mkdir_for_security, get_sh_stock_list_path, \
+from fooltrader.utils.utils import get_security_item, get_sh_stock_list_path, \
     get_sz_stock_list_path, \
     get_kdata_path_ths, get_trading_dates_path_ths
 
@@ -43,7 +43,6 @@ class StockKDataSpiderTHS(scrapy.Spider):
             for item in get_security_item(stock_file):
                 # 设置抓取的股票范围
                 if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-                    mkdir_for_security(item)
 
                     for fuquan in [True, False]:
                         data_path = get_kdata_path_ths(item, fuquan)
