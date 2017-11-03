@@ -3,6 +3,10 @@ import os
 from fooltrader import settings
 
 
+def get_security_list_path(security_type, exchange):
+    return os.path.join(settings.FILES_STORE, security_type, '{}.csv'.format(exchange))
+
+
 def get_sh_stock_list_path():
     return os.path.join(settings.FILES_STORE, settings.SH_STOCK_FILE)
 

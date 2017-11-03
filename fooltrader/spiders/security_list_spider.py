@@ -1,13 +1,14 @@
-import json
+import io
 
+import pandas
 import scrapy
 from kafka import KafkaProducer
 from scrapy import Request
 from scrapy import signals
 
 from fooltrader.consts import DEFAULT_SH_HEADER, DEFAULT_SZ_HEADER
+from fooltrader.contract import files_contract
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
-from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_item
 
 
 # TODO:check whether has new stock and new trading date to ignore download again
@@ -21,25 +22,29 @@ class SecurityListSpider(scrapy.Spider):
         yield Request(
             url='http://query.sse.com.cn/security/stock/downloadStockListFile.do?csrcCode=&stockCode=&areaName=&stockType=1',
             headers=DEFAULT_SH_HEADER,
-            meta={'path': get_sh_stock_list_path(),
-                  'exchange': 'sh'},
+            meta={'exchange': 'sh'},
             callback=self.download_stock_list)
 
         yield Request(
             url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=xlsx&CATALOGID=1110&tab1PAGENUM=1&ENCODE=1&TABKEY=tab1',
             headers=DEFAULT_SZ_HEADER,
-            meta={'path': get_sz_stock_list_path(),
-                  'exchange': 'sz'},
+            meta={'exchange': 'sz'},
             callback=self.download_stock_list)
 
     def download_stock_list(self, response):
-        path = response.meta['path']
         exchange = response.meta['exchange']
-        with open(path, "wb") as f:
-            f.write(response.body)
-            if AUTO_KAFKA:
-                for item in get_security_item(exchange):
-                    self.producer.send('CHINA_STOCK', bytes(json.dumps(item, ensure_ascii=False), encoding='utf8'))
+        path = files_contract.get_security_list_path('stock', exchange)
+        if exchange == 'sh':
+            datas = pandas.read_csv(io.BytesIO(response.body), sep='\s+', encoding='GB2312')
+            datas = datas.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
+            datas.columns = ['code', 'name', 'listDate']
+            datas.to_csv(path, index=False)
+        elif exchange == 'sz':
+            datas = pandas.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', parse_dates=['A股上市日期'],
+                                      converters={'A股代码': str})
+            datas = datas.loc[:, ['A股代码', 'A股上市日期', 'A股简称']]
+            datas.columns = ['code', 'name', 'listDate']
+            datas.to_csv(path, index=False)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
