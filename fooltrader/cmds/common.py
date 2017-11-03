@@ -34,6 +34,8 @@ def init_all_traing_dates():
     for item in get_security_items():
         init_trading_dates(item)
 
+def legacy_to_new():
+    pass
 
 if __name__ == '__main__':
     init_all_traing_dates()
