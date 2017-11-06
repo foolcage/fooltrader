@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from fooltrader.api.api import get_security_list
+from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.utils.utils import get_kdata_dir, \
     get_trading_dates_path, get_security_items
 
@@ -36,8 +38,8 @@ def init_all_traing_dates():
 
 
 def legacy_to_new():
-    pass
-
+    for index, security_item in get_security_list().iterrows():
+        get_kdata_path()
 
 if __name__ == '__main__':
-    init_all_traing_dates()
+    legacy_to_new()

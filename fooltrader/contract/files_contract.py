@@ -8,11 +8,17 @@ def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FILES_STORE, security_type, '{}.csv'.format(exchange))
 
 
-def get_kdata_dir():
-    pass
+def get_kdata_dir_new(item, fuquan=None):
+    if fuquan == 'qfq' or fuquan == 'hfq':
+        return os.path.join(get_security_dir(item), 'kdata', fuquan)
+    else:
+        return os.path.join(get_security_dir(item), 'kdata', 'bfq')
 
-def get_kdata_path(item, year, quarter, fuquan):
-    pass
+
+def get_kdata_path_new(item, year, quarter, fuquan=None):
+    return os.path.join(get_kdata_dir(item, fuquan), '{}Q{}.json'.format(year, quarter))
+
+
 # ===========================
 def get_sh_stock_list_path():
     return os.path.join(settings.FILES_STORE, settings.SH_STOCK_FILE)

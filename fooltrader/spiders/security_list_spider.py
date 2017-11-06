@@ -1,6 +1,6 @@
 import io
 
-import pandas
+import pandas as pd
 import scrapy
 from kafka import KafkaProducer
 from scrapy import Request
@@ -35,16 +35,16 @@ class SecurityListSpider(scrapy.Spider):
         exchange = response.meta['exchange']
         path = files_contract.get_security_list_path('stock', exchange)
         if exchange == 'sh':
-            datas = pandas.read_csv(io.BytesIO(response.body), sep='\s+', encoding='GB2312')
-            datas = datas.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
-            datas.columns = ['code', 'name', 'listDate']
-            datas.to_csv(path, index=False)
+            df = pd.read_csv(io.BytesIO(response.body), sep='\s+', encoding='GB2312')
+            df = df.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
+            df.columns = ['code', 'name', 'listDate']
+            df.to_csv(path, index=False)
         elif exchange == 'sz':
-            datas = pandas.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', parse_dates=['A股上市日期'],
-                                      converters={'A股代码': str})
-            datas = datas.loc[:, ['A股代码', 'A股上市日期', 'A股简称']]
-            datas.columns = ['code', 'name', 'listDate']
-            datas.to_csv(path, index=False)
+            df = pd.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', parse_dates=['A股上市日期'],
+                               converters={'A股代码': str})
+            df = df.loc[:, ['A股代码', 'A股上市日期', 'A股简称']]
+            df.columns = ['code', 'name', 'listDate']
+            df.to_csv(path, index=False)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

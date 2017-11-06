@@ -57,8 +57,8 @@ gdp cpi pmi 利率等
   * 默认存储日线级别,其他级别可以根据tick进行计算  
   * csv结构
 ```
-  timestamp,securityId,low,open,close,high,vol,turnover,factor
-  19991230,stock_sh_600000,24.90,24.65,24.75,24.99,2333200,57888237,1
+  timestamp,code,low,open,close,high,vol,turnover,factor
+  19991230,600000,24.90,24.65,24.75,24.99,2333200,57888237,1
 ```
 3. tick
   * csv结构  

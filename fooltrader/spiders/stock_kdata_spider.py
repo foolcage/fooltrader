@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 
+import pandas as pd
 import scrapy
 from kafka import KafkaProducer
 from scrapy import Request
@@ -11,9 +12,9 @@ from scrapy import signals
 from fooltrader import settings
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.items import KDataFuquanItem, KDataItem
-from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_security_item, get_quarters, get_year_quarter, \
-    get_sh_stock_list_path, get_sz_stock_list_path, get_kdata_path, get_trading_dates_path, get_trading_dates, \
+from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
+from fooltrader.utils.utils import get_quarters, get_year_quarter, \
+    get_kdata_path, get_trading_dates_path, get_trading_dates, \
     get_security_items
 
 
@@ -78,18 +79,28 @@ class StockKDataSpider(scrapy.Spider):
         kdata_json = []
         trading_dates = []
 
+        if fuquan:
+            df = pd.DataFrame(
+                columns=['timestamp', 'code', 'low', 'open', 'close', 'high', 'vol', 'turnover', 'factor'])
+        else:
+            df = pd.DataFrame(
+                columns=['timestamp', 'code', 'low', 'open', 'close', 'high', 'vol', 'turnover'])
+
         try:
-            for tr in trs:
+            for idx, tr in enumerate(trs):
                 tds = Selector(text=tr).xpath('//td//text()').extract()
                 tds = [x.strip() for x in tds if x.strip()]
                 if fuquan:
                     k_item = KDataFuquanItem(securityId=item['id'], code=item['code'], timestamp=tds[0], open=tds[1],
                                              high=tds[2], close=tds[3], low=tds[4], volume=tds[5], turnover=tds[6],
                                              fuquan=tds[7], type='stock', level='DAY')
+
+                    df[idx] = [tds[0], item['code'], tds[4], tds[1], tds[3], tds[2], tds[5], tds[6], tds[7]]
                 else:
                     k_item = KDataItem(securityId=item['id'], code=item['code'], timestamp=tds[0], open=tds[1],
                                        high=tds[2], close=tds[3], low=tds[4], volume=tds[5], turnover=tds[6],
                                        type='stock', level='DAY')
+                    df[idx] = [tds[0], item['code'], tds[4], tds[1], tds[3], tds[2], tds[5], tds[6]]
                 kdata_json.append(dict(k_item))
                 trading_dates.append(k_item['timestamp'])
                 if AUTO_KAFKA:
@@ -105,6 +116,8 @@ class StockKDataSpider(scrapy.Spider):
                     json.dump(kdata_json, f)
             except Exception as e:
                 self.logger.error('error when saving k data url={} path={} error={}'.format(response.url, path, e))
+
+        df.to_csv(path, index=False)
         if len(trading_dates) > 0:
             path = get_trading_dates_path(item)
             current_dates = get_trading_dates(item)

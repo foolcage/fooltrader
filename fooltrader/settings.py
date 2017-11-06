@@ -90,7 +90,7 @@ AUTOTHROTTLE_DEBUG = False
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-FILES_STORE = '/Users/xuanqi/workspace/github/fooltrader/data'
+FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
 SH_STOCK_FILE = 'sh.txt'
 SZ_STOCK_FILE = 'sz.xlsx'
 
