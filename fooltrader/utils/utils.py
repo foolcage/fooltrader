@@ -8,6 +8,7 @@ import openpyxl
 import pandas as pd
 
 from fooltrader import settings
+from fooltrader.cmds.common import init_trading_dates
 from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
     get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
@@ -321,17 +322,9 @@ def get_trading_dates(security_item):
         logger.error(e)
 
     if not dates:
-        dir = get_kdata_dir(security_item)
-        if os.path.exists(dir):
-            files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                     (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
+        init_trading_dates(security_item)
+        return get_trading_dates_path(security_item)
 
-            for f in files:
-                with open(f) as data_file:
-                    items = json.load(data_file)
-                    for item in items:
-                        dates.append(item['timestamp'])
-    dates.sort()
     return dates
 
 

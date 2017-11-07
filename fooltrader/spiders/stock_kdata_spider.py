@@ -9,6 +9,7 @@ from scrapy import Selector
 from scrapy import signals
 
 from fooltrader import settings
+from fooltrader.cmds.common import init_trading_dates
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path_csv
@@ -102,6 +103,7 @@ class StockKDataSpider(scrapy.Spider):
                 else:
                     df.loc[idx] = [timestamp, item['code'], low, open, close, high, volume, turnover, securityId]
             df.to_csv(path, index=False)
+            init_trading_dates(item)
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
 
