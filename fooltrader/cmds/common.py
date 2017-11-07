@@ -5,7 +5,7 @@ import os
 import pandas as pd
 
 from fooltrader.api.api import get_security_list
-from fooltrader.contract.files_contract import get_kdata_path_new, get_kdata_dir_new
+from fooltrader.contract.files_contract import get_kdata_path_new, get_kdata_dir_new, get_tick_dir, get_tick_path_csv
 from fooltrader.utils.utils import get_kdata_dir, \
     get_trading_dates_path, get_security_items, init_env
 
@@ -66,15 +66,41 @@ def remove_old_json():
                     os.remove(f)
 
 
-def legacy_to_new():
+def direction_to_int(direction):
+    if direction == '买盘':
+        return 1
+    elif direction == '卖盘':
+        return -1
+    else:
+        return 0
+
+
+def legacy_tick_to_csv():
+    for index, security_item in get_security_list().iterrows():
+        dir = get_tick_dir(security_item)
+        if os.path.exists(dir):
+            files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                     ('xls' in f and 'lock' not in f and os.path.isfile(os.path.join(dir, f)))]
+            for f in files:
+                the_date = os.path.splitext(os.path.basename(f))[0]
+                csv_path = get_tick_path_csv(security_item, the_date)
+                logger.info("{} to {}".format(f, csv_path))
+                df = pd.read_csv(f, sep='\s+', encoding='GB2312')
+                df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
+                df.columns = ['timestamp', 'price', 'volume', 'turnover', 'direction']
+                df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
+                df.to_csv(csv_path, index=False)
+
+
+def legacy_kdata_to_csv():
     for index, security_item in get_security_list().iterrows():
         for fuquan in (True, False):
             dir = get_kdata_dir(security_item, fuquan)
             if os.path.exists(dir):
                 files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                         (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
+                         ('all' not in f and 'json' in f and os.path.isfile(os.path.join(dir, f)))]
 
-                for f in sorted(files):
+                for f in files:
                     tmp = os.path.basename(f).split('_')
                     df = pd.read_json(f)
                     if fuquan:
@@ -98,4 +124,4 @@ def legacy_to_new():
 
 if __name__ == '__main__':
     init_env()
-    remove_old_json()
+    legacy_tick_to_csv()

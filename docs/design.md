@@ -63,7 +63,7 @@ gdp cpi pmi 利率等
 3. tick
   * csv结构  
 ```
-  timestamp,price,vol,turnover,direction(0-买,1-卖,2-中性)
+  timestamp,price,vol,turnover,direction(买:1,卖:-1,中性:0)
   14:59:55,10.02,407,408014,0
 ```
 

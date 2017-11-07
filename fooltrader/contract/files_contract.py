@@ -19,6 +19,10 @@ def get_kdata_path_new(item, year, quarter, fuquan=None):
     return os.path.join(get_kdata_dir_new(item, fuquan), '{}Q{}.csv'.format(year, quarter))
 
 
+def get_tick_path_csv(item, date):
+    return os.path.join(get_tick_dir(item), date + ".csv")
+
+
 # ===========================
 def get_sh_stock_list_path():
     return os.path.join(settings.FILES_STORE, settings.SH_STOCK_FILE)
