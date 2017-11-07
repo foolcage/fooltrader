@@ -16,7 +16,7 @@ def get_kdata_dir_new(item, fuquan=None):
 
 
 def get_kdata_path_new(item, year, quarter, fuquan=None):
-    return os.path.join(get_kdata_dir(item, fuquan), '{}Q{}.json'.format(year, quarter))
+    return os.path.join(get_kdata_dir_new(item, fuquan), '{}Q{}.csv'.format(year, quarter))
 
 
 # ===========================

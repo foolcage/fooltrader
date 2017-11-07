@@ -9,7 +9,7 @@ import openpyxl
 from fooltrader import settings
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
     get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
-    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_finance_dir, get_event_dir
+    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_finance_dir, get_event_dir, get_kdata_dir_new
 from fooltrader.items import SecurityItem
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, TIME_FORMAT_DAY
 
@@ -32,6 +32,14 @@ def mkdir_for_security(item):
     event_dir = get_event_dir(item)
     if not os.path.exists(event_dir):
         os.makedirs(event_dir)
+
+    bfq_kdata_dir = get_kdata_dir_new(item, 'bfq')
+    if not os.path.exists(bfq_kdata_dir):
+        os.makedirs(bfq_kdata_dir)
+
+    hfq_kdata_dir = get_kdata_dir_new(item, 'hfq')
+    if not os.path.exists(hfq_kdata_dir):
+        os.makedirs(hfq_kdata_dir)
 
 
 def init_env():

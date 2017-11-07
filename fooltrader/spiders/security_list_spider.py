@@ -38,12 +38,18 @@ class SecurityListSpider(scrapy.Spider):
             df = pd.read_csv(io.BytesIO(response.body), sep='\s+', encoding='GB2312')
             df = df.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
             df.columns = ['code', 'name', 'listDate']
+            df['exchange'] = exchange
+            df['type'] = 'stock'
+            df['id'] = df[['type', 'exchange', 'code']].apply(lambda x: '_'.join(x.astype(str)), axis=1)
             df.to_csv(path, index=False)
         elif exchange == 'sz':
             df = pd.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', parse_dates=['A股上市日期'],
                                converters={'A股代码': str})
             df = df.loc[:, ['A股代码', 'A股上市日期', 'A股简称']]
             df.columns = ['code', 'name', 'listDate']
+            df['exchange'] = exchange
+            df['type'] = 'stock'
+            df['id'] = df[['type', 'exchange', 'code']].apply(lambda x: '_'.join(x.astype(str)), axis=1)
             df.to_csv(path, index=False)
 
     @classmethod

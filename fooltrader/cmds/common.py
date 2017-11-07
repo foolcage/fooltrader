@@ -2,10 +2,12 @@ import json
 import logging
 import os
 
+import pandas as pd
+
 from fooltrader.api.api import get_security_list
-from fooltrader.contract.files_contract import get_kdata_path
+from fooltrader.contract.files_contract import get_kdata_path_new, get_kdata_dir_new
 from fooltrader.utils.utils import get_kdata_dir, \
-    get_trading_dates_path, get_security_items
+    get_trading_dates_path, get_security_items, init_env
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +39,63 @@ def init_all_traing_dates():
         init_trading_dates(item)
 
 
+{
+    "turnover": "57888237",
+    "type": "stock",
+    "low": "24.650",
+    "timestamp": "1999-12-30",
+    "high": "24.990",
+    "code": "600000",
+    "securityId": "stock_sh_600000",
+    "open": "24.900",
+    "level": "DAY",
+    "close": "24.750",
+    "volume": "2333200"
+}
+
+
+def remove_old_json():
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in ('bfq', 'hfq'):
+            dir = get_kdata_dir_new(security_item, fuquan)
+            if os.path.exists(dir):
+                files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                         ('json' in f and os.path.isfile(os.path.join(dir, f)))]
+                for f in files:
+                    logger.info("remove {}".format(f))
+                    os.remove(f)
+
+
 def legacy_to_new():
     for index, security_item in get_security_list().iterrows():
-        get_kdata_path()
+        for fuquan in (True, False):
+            dir = get_kdata_dir(security_item, fuquan)
+            if os.path.exists(dir):
+                files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                         (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
+
+                for f in sorted(files):
+                    tmp = os.path.basename(f).split('_')
+                    df = pd.read_json(f)
+                    if fuquan:
+                        logger.info("{} to {}".format(f, get_kdata_path_new(security_item, tmp[0], tmp[1], 'hfq')))
+
+                        df = df.loc[:,
+                             ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
+                              'fuquan']]
+                        df.columns = ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover',
+                                      'securityId', 'factor']
+
+                        df.to_csv(get_kdata_path_new(security_item, tmp[0], tmp[1], 'hfq'), index=False)
+                    else:
+                        logger.info("{} to {}".format(f, get_kdata_path_new(security_item, tmp[0], tmp[1], 'bfq')))
+
+                        df = df.loc[:,
+                             ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId']]
+
+                        df.to_csv(get_kdata_path_new(security_item, tmp[0], tmp[1], 'bfq'), index=False)
+
 
 if __name__ == '__main__':
-    legacy_to_new()
+    init_env()
+    remove_old_json()
