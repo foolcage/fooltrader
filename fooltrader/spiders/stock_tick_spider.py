@@ -6,11 +6,10 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader import settings
-from fooltrader.cmds.common import sina_tick_to_csv
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path_csv
 from fooltrader.utils.utils import get_trading_dates, is_available_tick, get_datetime, get_kdata_item_with_date, \
-    kdata_to_tick, get_security_items
+    kdata_to_tick, get_security_items, sina_tick_to_csv
 
 
 class StockTickSpider(scrapy.Spider):

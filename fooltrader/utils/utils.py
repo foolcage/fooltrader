@@ -8,7 +8,6 @@ import openpyxl
 import pandas as pd
 
 from fooltrader import settings
-from fooltrader.cmds.common import init_trading_dates
 from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
     get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
@@ -51,26 +50,6 @@ def init_env():
         os.makedirs(settings.FILES_STORE)
     for item in get_security_items():
         mkdir_for_security(item)
-
-
-def init_log():
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-
-    # fh = logging.FileHandler('fooltrader.log')
-    # fh.setLevel(logging.INFO)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter("%(levelname) -10s %(asctime)s %(module)s:%(lineno)s %(funcName)s %(message)s")
-    # fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-
-    # add the handlers to the logger
-    # root_logger.addHandler(fh)
-    root_logger.addHandler(ch)
 
 
 def chrome_copy_header_to_dict(src):
@@ -322,7 +301,7 @@ def get_trading_dates(security_item):
         logger.error(e)
 
     if not dates:
-        init_trading_dates(security_item)
+        # init_trading_dates(security_item)
         return get_trading_dates_path(security_item)
 
     return dates
@@ -373,6 +352,13 @@ def to_float(str):
         return float(str)
     except Exception as e:
         return None
+
+
+def get_exchange(code):
+    if code >= '333333':
+        return 'sh'
+    else:
+        return 'sz'
 
 
 def direction_to_int(direction):

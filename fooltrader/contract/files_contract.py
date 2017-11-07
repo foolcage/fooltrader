@@ -31,6 +31,13 @@ def get_kdata_path_csv_ths(item, fuquan=None):
         return os.path.join(get_security_dir(item), 'kdata', 'ths.csv')
 
 
+def get_kdata_path_csv_tdx(item, fuquan=None):
+    if fuquan == 'qfq' or fuquan == 'hfq':
+        return os.path.join(get_security_dir(item), 'kdata', '{}_tdx.csv'.format(fuquan))
+    else:
+        return os.path.join(get_security_dir(item), 'kdata', 'tdx.csv')
+
+
 # ===========================
 def get_sh_stock_list_path():
     return os.path.join(settings.FILES_STORE, settings.SH_STOCK_FILE)

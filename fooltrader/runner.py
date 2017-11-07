@@ -7,15 +7,16 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 from fooltrader import settings
+from fooltrader.api.api import get_security_list
 from fooltrader.cmds.common import init_trading_dates
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
-from fooltrader.spiders.security_list_spider import SecurityListSpider
-from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
-from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
-from fooltrader.spiders.stock_tick_spider import StockTickSpider
-from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
-from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_security_items, \
-    get_trading_dates, get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
+from fooltrader.spiders import SecurityListSpider
+from fooltrader.spiders import StockKDataSpider
+from fooltrader.spiders import StockKDataSpiderTHS
+from fooltrader.spiders import StockTickSpider
+from fooltrader.spiders import StockTradingDateSpider
+from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_trading_dates, \
+    get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
     get_base_trading_dates, merge_ths_kdata
 
 logger = logging.getLogger(__name__)
@@ -34,14 +35,12 @@ def process_crawl(spider, setting):
 
 
 def check_data_integrity():
-    status = {}
     # check security list
-    if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()):
+    if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()) or True:
         logger.info('------download stock list at first------')
         process_crawl(SecurityListSpider)
 
-    for security_item in get_security_items():
-        status.setdefault(security_item['code'], {})
+    for _, security_item in get_security_list().iterrows():
         # download base trading dates at first
         if not os.path.exists(get_trading_dates_path_sse(security_item)):
             logger.info("------need to download {} sse trading date------".format(security_item['code']))
@@ -76,10 +75,7 @@ def check_data_integrity():
             diff2 = dates - base_dates
             # this should not happen
             if diff2:
-                if STATUS_SHOW_NOT_OK_DATE:
-                    status[security_item['code']] = {'base trading dates': 'not ok?:{}'.format(diff2)}
-                else:
-                    status[security_item['code']] = {'base trading dates': 'not ok?'}
+                logger.info("{} base trading dates not ok?".format(security_item['id']))
 
         tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
         diff3 = tick_dates - set(get_downloaded_tick_dates(security_item))

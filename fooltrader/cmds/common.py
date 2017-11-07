@@ -5,9 +5,9 @@ import pandas as pd
 
 from fooltrader.api.api import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
-from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv
-from fooltrader.utils.utils import get_kdata_dir, \
-    get_trading_dates_path, get_security_items, sina_tick_to_csv
+from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
+    get_trading_dates_path, get_kdata_dir
+from fooltrader.utils.utils import get_security_items, sina_tick_to_csv
 
 logger = logging.getLogger(__name__)
 
