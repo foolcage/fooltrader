@@ -23,6 +23,14 @@ def get_tick_path_csv(item, date):
     return os.path.join(get_tick_dir(item), date + ".csv")
 
 
+# 目前看同花顺的后复权和新浪的差别挺大，先以新浪的为准
+def get_kdata_path_csv_ths(item, fuquan=None):
+    if fuquan == 'qfq' or fuquan == 'hfq':
+        return os.path.join(get_security_dir(item), 'kdata', '{}_ths.csv'.format(fuquan))
+    else:
+        return os.path.join(get_security_dir(item), 'kdata', 'ths.csv')
+
+
 # ===========================
 def get_sh_stock_list_path():
     return os.path.join(settings.FILES_STORE, settings.SH_STOCK_FILE)

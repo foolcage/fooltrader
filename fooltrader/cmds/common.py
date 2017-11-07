@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -8,27 +7,25 @@ from fooltrader.api.api import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv
 from fooltrader.utils.utils import get_kdata_dir, \
-    get_trading_dates_path, get_security_items, init_env, sina_tick_to_csv
+    get_trading_dates_path, get_security_items, sina_tick_to_csv
 
 logger = logging.getLogger(__name__)
 
 
 # 抓取k线时会自动生成交易日期json，如果出错，可以用该脚本手动生成
 def init_trading_dates(security_item):
-    dates = []
-
-    dir = get_kdata_dir(security_item)
-    files = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
-
-    for f in files:
-        with open(f) as data_file:
-            items = json.load(data_file)
-            for k_item in items:
-                dates.append(k_item['timestamp'])
-    dates.sort()
     try:
-        with open(get_trading_dates_path(security_item), "w") as f:
-            json.dump(dates, f)
+        dates = pd.Series()
+
+        the_dir = get_kdata_dir_csv(security_item)
+        files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if os.path.isfile(os.path.join(the_dir, f))]
+
+        for f in files:
+            df = pd.read_csv(f)
+            dates = dates.append(df['timestamp'], ignore_index=True)
+        dates = dates.sort_values()
+
+        dates.to_json(get_trading_dates_path(security_item), orient='values')
         logger.info('init_trading_dates for item:{}'.format(security_item))
     except Exception as e:
         logger.error(
@@ -75,7 +72,7 @@ def legacy_kdata_to_csv():
 
                 for f in files:
                     tmp = os.path.basename(f).split('_')
-                    df = pd.read_json(f)
+                    df = pd.read_json(f, dtype={'code': str})
                     if fuquan:
                         logger.info("{} to {}".format(f, get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq')))
 
@@ -94,5 +91,4 @@ def legacy_kdata_to_csv():
 
 
 if __name__ == '__main__':
-    init_env()
-    legacy_tick_to_csv()
+    legacy_kdata_to_csv()

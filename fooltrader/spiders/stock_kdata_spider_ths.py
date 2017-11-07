@@ -1,14 +1,15 @@
 import json
 import os
 
+import pandas as pd
 import scrapy
 from scrapy import Request
 from scrapy import signals
 
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
-from fooltrader.items import KDataItem
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_kdata_path_ths, get_trading_dates_path_ths, get_security_items
+from fooltrader.contract import data_contract
+from fooltrader.contract.files_contract import get_kdata_path_csv_ths
+from fooltrader.utils.utils import get_trading_dates_path_ths, get_security_items
 
 
 class StockKDataSpiderTHS(scrapy.Spider):
@@ -37,35 +38,33 @@ class StockKDataSpiderTHS(scrapy.Spider):
 
     def start_requests(self):
         for item in get_security_items():
-            # 设置抓取的股票范围
-            if STOCK_START_CODE <= item['code'] <= STOCK_END_CODE:
-
-                for fuquan in [True, False]:
-                    data_path = get_kdata_path_ths(item, fuquan)
-                    data_exist = os.path.isfile(data_path)
-                    if not data_exist or True:
-                        # get day k data
-                        if fuquan:
-                            flag = 2
-                        else:
-                            flag = 0
-                        url = self.get_k_data_url(item['code'], flag)
-                        yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
-                                      meta={'path': data_path, 'item': item},
-                                      callback=self.download_day_k_data)
-
+            for fuquan in ['hfq', 'bfq']:
+                data_path = get_kdata_path_csv_ths(item, fuquan)
+                data_exist = os.path.isfile(data_path)
+                if not data_exist or True:
+                    # get day k data
+                    if fuquan == 'hfq':
+                        flag = 2
                     else:
-                        self.logger.info("{} kdata existed".format(item['code']))
+                        flag = 0
+                    url = self.get_k_data_url(item['code'], flag)
+                    yield Request(url=url, headers=TONGHUASHUN_KDATA_HEADER,
+                                  meta={'path': data_path, 'item': item, 'fuquan': fuquan},
+                                  callback=self.download_day_k_data)
+
+                else:
+                    self.logger.info("{} kdata existed".format(item['code']))
 
     def download_day_k_data(self, response):
         path = response.meta['path']
         item = response.meta['item']
 
-        kdata_json = []
         trading_dates = []
         price_json = []
 
         try:
+            df = pd.DataFrame(columns=data_contract.KDATA_COLUMN)
+
             tmp_str = response.text
             json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]
             tmp_json = json.loads(json_str)
@@ -94,25 +93,14 @@ class StockKDataSpiderTHS(scrapy.Spider):
             volumns = tmp_json['volumn'].split(',')
 
             for i in range(int(tmp_json['total'])):
-                k_item = KDataItem(securityId=item['id'], code=item['code'],
-                                   type='stock', level='DAY',
-                                   high=price_json[i]['high'],
-                                   low=price_json[i]['low'],
-                                   open=price_json[i]['open'],
-                                   close=price_json[i]['close'],
-                                   volume=int(volumns[i]),
-                                   timestamp=trading_dates[i])
-                kdata_json.append(dict(k_item))
+                df.loc[i] = [trading_dates[i], item['code'], price_json[i]['low'], price_json[i]['open'],
+                             price_json[i]['close'],
+                             price_json[i]['high'], int(volumns[i]), 0, item['id']]
 
+            df.to_csv(path, index=False, )
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
 
-        if len(kdata_json) > 0:
-            try:
-                with open(path, "w") as f:
-                    json.dump(kdata_json, f)
-            except Exception as e:
-                self.logger.error('error when saving k data url={} path={} error={}'.format(response.url, path, e))
         if len(trading_dates) > 0:
             try:
                 with open(get_trading_dates_path_ths(item), "w") as f:
