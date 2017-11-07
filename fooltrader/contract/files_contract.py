@@ -8,15 +8,15 @@ def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FILES_STORE, security_type, '{}.csv'.format(exchange))
 
 
-def get_kdata_dir_new(item, fuquan=None):
+def get_kdata_dir_csv(item, fuquan=None):
     if fuquan == 'qfq' or fuquan == 'hfq':
         return os.path.join(get_security_dir(item), 'kdata', fuquan)
     else:
         return os.path.join(get_security_dir(item), 'kdata', 'bfq')
 
 
-def get_kdata_path_new(item, year, quarter, fuquan=None):
-    return os.path.join(get_kdata_dir_new(item, fuquan), '{}Q{}.csv'.format(year, quarter))
+def get_kdata_path_csv(item, year, quarter, fuquan=None):
+    return os.path.join(get_kdata_dir_csv(item, fuquan), '{}Q{}.csv'.format(year, quarter))
 
 
 def get_tick_path_csv(item, date):

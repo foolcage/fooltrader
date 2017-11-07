@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 
 import pandas as pd
@@ -11,10 +10,10 @@ from scrapy import signals
 
 from fooltrader import settings
 from fooltrader.consts import DEFAULT_KDATA_HEADER
-from fooltrader.items import KDataFuquanItem, KDataItem
+from fooltrader.contract import data_contract
+from fooltrader.contract.files_contract import get_kdata_path_csv
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
 from fooltrader.utils.utils import get_quarters, get_year_quarter, \
-    get_kdata_path, get_trading_dates_path, get_trading_dates, \
     get_security_items
 
 
@@ -45,8 +44,8 @@ class StockKDataSpider(scrapy.Spider):
         for year, quarter in get_quarters(
                 datetime.datetime.strptime(start_date, settings.TIME_FORMAT_DAY),
                 datetime.datetime.strptime(end_date, settings.TIME_FORMAT_DAY)):
-            for fuquan in (False, True):
-                data_path = get_kdata_path(item, year, quarter, fuquan)
+            for fuquan in ('hfq', 'bfq'):
+                data_path = get_kdata_path_csv(item, year, quarter, fuquan)
                 data_exist = os.path.isfile(data_path)
 
                 # 该爬虫每天一次,一个季度一个文件，增量的数据在当前季度，所以总是下载
@@ -76,59 +75,35 @@ class StockKDataSpider(scrapy.Spider):
         fuquan = response.meta['fuquan']
         trs = response.xpath('//*[@id="FundHoldSharesTable"]/tr[position()>1 and position()<=last()]').extract()
 
-        kdata_json = []
-        trading_dates = []
-
-        if fuquan:
-            df = pd.DataFrame(
-                columns=['timestamp', 'code', 'low', 'open', 'close', 'high', 'vol', 'turnover', 'factor'])
-        else:
-            df = pd.DataFrame(
-                columns=['timestamp', 'code', 'low', 'open', 'close', 'high', 'vol', 'turnover'])
-
         try:
+            if fuquan == 'hfq':
+                df = pd.DataFrame(
+                    columns=data_contract.KDATA_COLUMN_FQ)
+
+            else:
+                df = pd.DataFrame(
+                    columns=data_contract.KDATA_COLUMN)
+
             for idx, tr in enumerate(trs):
                 tds = Selector(text=tr).xpath('//td//text()').extract()
                 tds = [x.strip() for x in tds if x.strip()]
-                if fuquan:
-                    k_item = KDataFuquanItem(securityId=item['id'], code=item['code'], timestamp=tds[0], open=tds[1],
-                                             high=tds[2], close=tds[3], low=tds[4], volume=tds[5], turnover=tds[6],
-                                             fuquan=tds[7], type='stock', level='DAY')
-
-                    df[idx] = [tds[0], item['code'], tds[4], tds[1], tds[3], tds[2], tds[5], tds[6], tds[7]]
+                securityId = item['id']
+                timestamp = tds[0]
+                open = float(tds[1])
+                high = float(tds[2])
+                close = float(tds[3])
+                low = float(tds[4])
+                volume = tds[5]
+                turnover = tds[6]
+                if fuquan == 'hfq':
+                    factor = tds[7]
+                    df.loc[idx] = [timestamp, item['code'], low, open, close, high, volume, turnover, securityId,
+                                   factor]
                 else:
-                    k_item = KDataItem(securityId=item['id'], code=item['code'], timestamp=tds[0], open=tds[1],
-                                       high=tds[2], close=tds[3], low=tds[4], volume=tds[5], turnover=tds[6],
-                                       type='stock', level='DAY')
-                    df[idx] = [tds[0], item['code'], tds[4], tds[1], tds[3], tds[2], tds[5], tds[6]]
-                kdata_json.append(dict(k_item))
-                trading_dates.append(k_item['timestamp'])
-                if AUTO_KAFKA:
-                    self.producer.send('CHINA_STOCK_KDATA_DAY',
-                                       bytes(json.dumps(dict(k_item), ensure_ascii=False), encoding='utf8'))
-
+                    df.loc[idx] = [timestamp, item['code'], low, open, close, high, volume, turnover, securityId]
+            df.to_csv(path, index=False)
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
-
-        if len(kdata_json) > 0:
-            try:
-                with open(path, "w") as f:
-                    json.dump(kdata_json, f)
-            except Exception as e:
-                self.logger.error('error when saving k data url={} path={} error={}'.format(response.url, path, e))
-
-        df.to_csv(path, index=False)
-        if len(trading_dates) > 0:
-            path = get_trading_dates_path(item)
-            current_dates = get_trading_dates(item)
-            trading_dates = list(set(current_dates + trading_dates))
-            trading_dates.sort()
-            try:
-                with open(get_trading_dates_path(item), "w") as f:
-                    json.dump(trading_dates, f)
-            except Exception as e:
-                self.logger.error(
-                    'error when saving trading dates url={} path={} error={}'.format(response.url, path, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -140,7 +115,7 @@ class StockKDataSpider(scrapy.Spider):
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
 
     def get_k_data_url(self, code, year, quarter, fuquan):
-        if fuquan:
+        if fuquan == 'hfq':
             return 'http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_FuQuanMarketHistory/stockid/{}.phtml?year={}&jidu={}'.format(
                 code, year, quarter)
         else:

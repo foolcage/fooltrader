@@ -5,11 +5,14 @@ import logging
 import os
 
 import openpyxl
+import pandas as pd
 
 from fooltrader import settings
+from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
     get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
-    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_finance_dir, get_event_dir, get_kdata_dir_new
+    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_finance_dir, get_event_dir, get_kdata_dir_csv, \
+    get_tick_path_csv
 from fooltrader.items import SecurityItem
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, TIME_FORMAT_DAY
 
@@ -33,11 +36,11 @@ def mkdir_for_security(item):
     if not os.path.exists(event_dir):
         os.makedirs(event_dir)
 
-    bfq_kdata_dir = get_kdata_dir_new(item, 'bfq')
+    bfq_kdata_dir = get_kdata_dir_csv(item, 'bfq')
     if not os.path.exists(bfq_kdata_dir):
         os.makedirs(bfq_kdata_dir)
 
-    hfq_kdata_dir = get_kdata_dir_new(item, 'hfq')
+    hfq_kdata_dir = get_kdata_dir_csv(item, 'hfq')
     if not os.path.exists(hfq_kdata_dir):
         os.makedirs(hfq_kdata_dir)
 
@@ -377,3 +380,21 @@ def to_float(str):
         return float(str)
     except Exception as e:
         return None
+
+
+def direction_to_int(direction):
+    if direction == '买盘':
+        return 1
+    elif direction == '卖盘':
+        return -1
+    else:
+        return 0
+
+
+def sina_tick_to_csv(security_item, the_content, the_date):
+    csv_path = get_tick_path_csv(security_item, the_date)
+    df = pd.read_csv(the_content, sep='\s+', encoding='GB2312')
+    df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
+    df.columns = TICK_COLUNM
+    df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
+    df.to_csv(csv_path, index=False)

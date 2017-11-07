@@ -5,9 +5,10 @@ import os
 import pandas as pd
 
 from fooltrader.api.api import get_security_list
-from fooltrader.contract.files_contract import get_kdata_path_new, get_kdata_dir_new, get_tick_dir, get_tick_path_csv
+from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
+from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv
 from fooltrader.utils.utils import get_kdata_dir, \
-    get_trading_dates_path, get_security_items, init_env
+    get_trading_dates_path, get_security_items, init_env, sina_tick_to_csv
 
 logger = logging.getLogger(__name__)
 
@@ -39,40 +40,16 @@ def init_all_traing_dates():
         init_trading_dates(item)
 
 
-{
-    "turnover": "57888237",
-    "type": "stock",
-    "low": "24.650",
-    "timestamp": "1999-12-30",
-    "high": "24.990",
-    "code": "600000",
-    "securityId": "stock_sh_600000",
-    "open": "24.900",
-    "level": "DAY",
-    "close": "24.750",
-    "volume": "2333200"
-}
-
-
 def remove_old_json():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
-            dir = get_kdata_dir_new(security_item, fuquan)
+            dir = get_kdata_dir_csv(security_item, fuquan)
             if os.path.exists(dir):
                 files = [os.path.join(dir, f) for f in os.listdir(dir) if
                          ('json' in f and os.path.isfile(os.path.join(dir, f)))]
                 for f in files:
                     logger.info("remove {}".format(f))
                     os.remove(f)
-
-
-def direction_to_int(direction):
-    if direction == '买盘':
-        return 1
-    elif direction == '卖盘':
-        return -1
-    else:
-        return 0
 
 
 def legacy_tick_to_csv():
@@ -85,11 +62,7 @@ def legacy_tick_to_csv():
                 the_date = os.path.splitext(os.path.basename(f))[0]
                 csv_path = get_tick_path_csv(security_item, the_date)
                 logger.info("{} to {}".format(f, csv_path))
-                df = pd.read_csv(f, sep='\s+', encoding='GB2312')
-                df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
-                df.columns = ['timestamp', 'price', 'volume', 'turnover', 'direction']
-                df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
-                df.to_csv(csv_path, index=False)
+                sina_tick_to_csv(security_item, f, the_date)
 
 
 def legacy_kdata_to_csv():
@@ -104,22 +77,20 @@ def legacy_kdata_to_csv():
                     tmp = os.path.basename(f).split('_')
                     df = pd.read_json(f)
                     if fuquan:
-                        logger.info("{} to {}".format(f, get_kdata_path_new(security_item, tmp[0], tmp[1], 'hfq')))
+                        logger.info("{} to {}".format(f, get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq')))
 
                         df = df.loc[:,
                              ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
                               'fuquan']]
-                        df.columns = ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover',
-                                      'securityId', 'factor']
+                        df.columns = KDATA_COLUMN_FQ
 
-                        df.to_csv(get_kdata_path_new(security_item, tmp[0], tmp[1], 'hfq'), index=False)
+                        df.to_csv(get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq'), index=False)
                     else:
-                        logger.info("{} to {}".format(f, get_kdata_path_new(security_item, tmp[0], tmp[1], 'bfq')))
+                        logger.info("{} to {}".format(f, get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq')))
 
-                        df = df.loc[:,
-                             ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId']]
+                        df = df.loc[:, KDATA_COLUMN]
 
-                        df.to_csv(get_kdata_path_new(security_item, tmp[0], tmp[1], 'bfq'), index=False)
+                        df.to_csv(get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq'), index=False)
 
 
 if __name__ == '__main__':
