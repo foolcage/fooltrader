@@ -265,26 +265,26 @@ def merge_ths_kdata(security_item, dates):
 
 
 def get_base_trading_dates(item):
-    dates = []
-
     dates_path_sse = get_trading_dates_path_sse(item)
     dates_path_ths = get_trading_dates_path_ths(item)
 
-    try:
-        dates_sse = []
-        dates_ths = []
-        if dates_path_sse:
+    dates_sse = []
+    dates_ths = []
+    if dates_path_sse:
+        try:
             with open(dates_path_sse) as data_file:
                 dates_sse = json.load(data_file)
-        if dates_path_ths:
+        except Exception as e:
+            logger.warn(e)
+    if dates_path_ths:
+        try:
             with open(dates_path_ths) as data_file:
                 dates_ths = json.load(data_file)
+        except  Exception as e:
+            logger.warn(e)
 
-        dates_tmp = set(dates_sse) & set(dates_ths)
-        dates = list(dates_tmp)
-
-    except Exception as e:
-        logger.error(e)
+    dates_tmp = set(dates_sse) | set(dates_ths)
+    dates = list(dates_tmp)
 
     dates.sort()
     return dates

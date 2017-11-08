@@ -10,14 +10,16 @@ from fooltrader import settings
 from fooltrader.api.api import get_security_list
 from fooltrader.cmds.common import init_trading_dates
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
-from fooltrader.spiders import SecurityListSpider
-from fooltrader.spiders import StockKDataSpider
-from fooltrader.spiders import StockKDataSpiderTHS
-from fooltrader.spiders import StockTickSpider
-from fooltrader.spiders import StockTradingDateSpider
+from fooltrader.spiders.security_list_spider import SecurityListSpider
+from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
+from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
+from fooltrader.spiders.stock_tick_spider import StockTickSpider
+from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_trading_dates, \
     get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
     get_base_trading_dates, merge_ths_kdata
+
+# 检查数据的完整性
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +36,14 @@ def process_crawl(spider, setting):
     p.join(5 * 60)
 
 
+# 校验历史数据的完整性算法，先从新浪数据获取数据，从证监会和同花顺获取交易日期
+# 如果新浪数据的日期缺少，试图重新获取缺少的数据，如果获取不到，去tdx获取
+# 不管如何，都生成符合contract的数据,数据源越多，数据质量就越高
+FORCE_DOWNLOAD_SECURITY_LIST = True
+FORCE_DOWNLOAD_SSE_TRADING_DATES = True
+FORCE_DOWNLOAD_SSE_TRADING_DATES = True
+
+
 def check_data_integrity():
     # check security list
     if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()) or True:
@@ -42,10 +52,10 @@ def check_data_integrity():
 
     for _, security_item in get_security_list().iterrows():
         # download base trading dates at first
-        if not os.path.exists(get_trading_dates_path_sse(security_item)):
+        if not os.path.exists(get_trading_dates_path_sse(security_item)) or True:
             logger.info("------need to download {} sse trading date------".format(security_item['code']))
             process_crawl(StockTradingDateSpider, {"security_item": security_item})
-        if not os.path.exists(get_trading_dates_path_ths(security_item)):
+        if not os.path.exists(get_trading_dates_path_ths(security_item)) or True:
             logger.info("------need to download {} ths trading date------".format(security_item['code']))
             process_crawl(StockKDataSpiderTHS, {"security_item": security_item})
 
