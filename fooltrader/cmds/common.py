@@ -56,10 +56,15 @@ def legacy_tick_to_csv():
             files = [os.path.join(dir, f) for f in os.listdir(dir) if
                      ('xls' in f and 'lock' not in f and os.path.isfile(os.path.join(dir, f)))]
             for f in files:
-                the_date = os.path.splitext(os.path.basename(f))[0]
-                csv_path = get_tick_path_csv(security_item, the_date)
-                logger.info("{} to {}".format(f, csv_path))
-                sina_tick_to_csv(security_item, f, the_date)
+                try:
+                    the_date = os.path.splitext(os.path.basename(f))[0]
+                    csv_path = get_tick_path_csv(security_item, the_date)
+                    if not os.path.exists(csv_path):
+                        logger.info("{} to {}".format(f, csv_path))
+                        sina_tick_to_csv(security_item, f, the_date)
+                except Exception as e:
+                    logger.warn(e)
+                    os.rename(f, f + ".error")
 
 
 def legacy_kdata_to_csv():
