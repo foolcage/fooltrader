@@ -45,7 +45,7 @@ class SecurityListSpider(scrapy.Spider):
         elif exchange == 'sz':
             df = pd.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', parse_dates=['A股上市日期'],
                                converters={'A股代码': str})
-            df = df.loc[:, ['A股代码', 'A股上市日期', 'A股简称']]
+            df = df.loc[:, ['A股代码', 'A股简称', 'A股上市日期']]
             df.columns = ['code', 'name', 'listDate']
             df['exchange'] = exchange
             df['type'] = 'stock'

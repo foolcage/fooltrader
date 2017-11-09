@@ -17,7 +17,7 @@ from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
 from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_trading_dates, \
     get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
-    get_base_trading_dates, merge_ths_kdata
+    get_base_trading_dates
 
 # 检查数据的完整性
 
@@ -55,7 +55,7 @@ def check_data_integrity():
         if not os.path.exists(get_trading_dates_path_sse(security_item)) or True:
             logger.info("------need to download {} sse trading date------".format(security_item['code']))
             process_crawl(StockTradingDateSpider, {"security_item": security_item})
-        if not os.path.exists(get_trading_dates_path_ths(security_item)) or True:
+        if not os.path.exists(get_trading_dates_path_ths(security_item)):
             logger.info("------need to download {} ths trading date------".format(security_item['code']))
             process_crawl(StockKDataSpiderTHS, {"security_item": security_item})
 
@@ -74,11 +74,21 @@ def check_data_integrity():
 
             the_dates = list(diff1)
             the_dates.sort()
-            merge_ths_kdata(security_item, the_dates)
 
+            # 试图从新浪修复
             process_crawl(StockKDataSpider, {"security_item": security_item,
                                              "start_date": the_dates[0],
                                              "end_date": the_dates[-1]})
+
+            dates = set(get_trading_dates(security_item))
+            diff1 = base_dates - dates
+            # 试图从tdx修复
+            if diff1:
+                the_dates = list(diff1)
+                the_dates.sort()
+
+
+
 
         else:
             logger.info("------{} kdata ok------".format(security_item['code']))

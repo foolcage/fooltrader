@@ -1,35 +1,73 @@
 import datetime
+import os
 
-import pandas
+import pandas as pd
 
 from fooltrader import settings
 from fooltrader.contract import files_contract
 from fooltrader.datasource import tdx
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils import utils
 
 
+# meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE):
-    df = pandas.DataFrame()
+    df = pd.DataFrame()
     for exchange in exchanges:
-        df1 = pandas.read_csv(files_contract.get_security_list_path(security_type, exchange), converters={'code': str})
+        df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange), converters={'code': str})
         df = df.append(df1, ignore_index=True)
     df = df[df["code"] <= end]
     df = df[df["code"] >= start]
     return df
 
 
-def get_kdata(security_item, start, end):
-    df = pandas.DataFrame()
-    for year, quarter in utils.get_quarters(start, end):
-        data_path = files_contract.get_kdata_path_csv(security_item, year, quarter)
-        df1 = pandas.read_csv(data_path, converters={'code': str})
-        df = df.append(df1, ignore_index=True)
-    return df
+# kdata
+def get_kdata(security_item, start=None, end=None, fuquan=None, dtype=None):
+    the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
+    if os.path.isfile(the_path):
+        if not dtype:
+            dtype = {"code": str}
+        df = pd.read_csv(the_path, dtype=dtype)
+        df = df.set_index(df['timestamp'])
+        df.index = pd.to_datetime(df.index)
+        df = df.sort_index()
+        df.loc[start:end]
+        return df
+    return pd.DataFrame()
 
 
+def kdata_exist(security_item, year, quarter, fuquan=None):
+    df = get_kdata(security_item, fuquan=fuquan)
+    if "{}Q{}".format(year, quarter) in df.index:
+        return True
+    return False
+
+
+# TODO:use join
+def merge_to_current_kdata(security_item, df, fuquan='bfq'):
+    df = df.set_index(df['timestamp'])
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
+
+    df1 = get_kdata(security_item, fuquan=fuquan, dtype=str)
+    df1 = df1.append(df)
+
+    df1 = df1.drop_duplicates()
+    df1.sort_index()
+
+    the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
+    df1.to_csv(the_path, index=False)
+
+
+# tick
 if __name__ == '__main__':
     item = {"code": "000001", "type": "stock", "exchange": "sz"}
+    assert kdata_exist(item, 1991, 2) == True
+    assert kdata_exist(item, 1991, 3) == True
+    assert kdata_exist(item, 1991, 4) == True
+    assert kdata_exist(item, 1991, 2) == True
+    assert kdata_exist(item, 1990, 1) == False
+    assert kdata_exist(item, 2017, 1) == False
+
     df1 = get_kdata(item,
                     datetime.datetime.strptime('1991-04-01', settings.TIME_FORMAT_DAY),
                     datetime.datetime.strptime('1991-12-31', settings.TIME_FORMAT_DAY))

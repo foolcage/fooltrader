@@ -9,13 +9,13 @@ from scrapy import Selector
 from scrapy import signals
 
 from fooltrader import settings
+from fooltrader.api.api import get_security_list, kdata_exist, merge_to_current_kdata
 from fooltrader.cmds.common import init_trading_dates
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path_csv
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
-from fooltrader.utils.utils import get_quarters, get_year_quarter, \
-    get_security_items
+from fooltrader.utils.utils import get_quarters, get_year_quarter
 
 
 class StockKDataSpider(scrapy.Spider):
@@ -47,7 +47,7 @@ class StockKDataSpider(scrapy.Spider):
                 datetime.datetime.strptime(end_date, settings.TIME_FORMAT_DAY)):
             for fuquan in ('hfq', 'bfq'):
                 data_path = get_kdata_path_csv(item, year, quarter, fuquan)
-                data_exist = os.path.isfile(data_path)
+                data_exist = os.path.isfile(data_path) or kdata_exist(item, year, quarter, fuquan)
 
                 # 该爬虫每天一次,一个季度一个文件，增量的数据在当前季度，所以总是下载
                 if (current_quarter == quarter and current_year == year) \
@@ -59,6 +59,9 @@ class StockKDataSpider(scrapy.Spider):
                                   callback=self.download_day_k_data)
 
     def start_requests(self):
+        # 两种模式:
+        # 1)item,start_date,end_date不指定,用于全量下载数据
+        # 2)指定，用于修复
         item = self.settings.get("security_item")
         start_date = self.settings.get("start_date")
         end_date = self.settings.get("end_date")
@@ -66,7 +69,7 @@ class StockKDataSpider(scrapy.Spider):
             for request in self.yield_request(item, start_date, end_date):
                 yield request
         else:
-            for item in get_security_items():
+            for _, item in get_security_list().iterrows():
                 for request in self.yield_request(item, item['listDate']):
                     yield request
 
@@ -102,7 +105,8 @@ class StockKDataSpider(scrapy.Spider):
                                    factor]
                 else:
                     df.loc[idx] = [timestamp, item['code'], low, open, close, high, volume, turnover, securityId]
-            df.to_csv(path, index=False)
+            # df.to_csv(path, index=False)
+            merge_to_current_kdata(item, df, fuquan)
             init_trading_dates(item)
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))

@@ -17,4 +17,10 @@ def get_tdx_kdata(security_item, start, end):
         df.columns = KDATA_COLUMN
     return df
 
-# print(get_tdx_kdata({'code': '000001'}, '1999-01-01', '2000-01-01'))
+
+def save_tdx_kdata(security_item, start, end):
+    df = get_tdx_kdata(security_item, start, end)
+    df
+
+if __name__ == '__main__':
+    pass

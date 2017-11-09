@@ -1,15 +1,16 @@
+import io
 import os
 
-import io
 import scrapy
 from scrapy import Request
 from scrapy import signals
 
 from fooltrader import settings
+from fooltrader.api.api import get_security_list
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path_csv
 from fooltrader.utils.utils import get_trading_dates, is_available_tick, get_datetime, get_kdata_item_with_date, \
-    kdata_to_tick, get_security_items, sina_tick_to_csv
+    kdata_to_tick, sina_tick_to_csv
 
 
 class StockTickSpider(scrapy.Spider):
@@ -51,7 +52,7 @@ class StockTickSpider(scrapy.Spider):
             for request in self.yield_request(item, trading_dates):
                 yield request
         else:
-            for item in get_security_items():
+            for _, item in get_security_list().iterrows():
                 for request in self.yield_request(item):
                     yield request
 

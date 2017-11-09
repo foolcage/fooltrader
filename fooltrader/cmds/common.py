@@ -3,11 +3,12 @@ import os
 
 import pandas as pd
 
-from fooltrader.api.api import get_security_list
+from fooltrader.api.api import get_security_list, merge_to_current_kdata
+from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
     get_trading_dates_path, get_kdata_dir
-from fooltrader.utils.utils import get_security_items, sina_tick_to_csv, init_env
+from fooltrader.utils.utils import sina_tick_to_csv
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def init_trading_dates(security_item):
 
 
 def init_all_traing_dates():
-    for item in get_security_items():
+    for _, item in get_security_list().iterrows():
         init_trading_dates(item)
 
 
@@ -95,6 +96,31 @@ def legacy_kdata_to_csv():
                         df.to_csv(get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq'), index=False)
 
 
+def merge_kdata_to_one():
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in ('bfq', 'hfq'):
+            if fuquan == 'hfq':
+                df = pd.DataFrame(
+                    columns=data_contract.KDATA_COLUMN_FQ)
+            else:
+                df = pd.DataFrame(
+                    columns=data_contract.KDATA_COLUMN)
+
+            dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
+
+            if os.path.exists(dir):
+                files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                         ('day' not in f and 'csv' in f and os.path.isfile(os.path.join(dir, f)))]
+                for f in files:
+                    df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
+            df = df.set_index(df['timestamp'])
+            df = df.sort_index()
+            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            logger.info("{} to {}".format(security_item['code'], dayk_path))
+            # merge_to_current_kdata(security_item, df, fuquan=fuquan)
+            df.to_csv(dayk_path, index=False)
+
+
 if __name__ == '__main__':
-    init_env()
-    legacy_kdata_to_csv()
+    pd.set_option('expand_frame_repr', False)
+    merge_kdata_to_one()

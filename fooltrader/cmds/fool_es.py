@@ -2,6 +2,7 @@ import logging
 
 from elasticsearch_dsl import Index
 
+from fooltrader.api.api import get_security_list
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_event_index
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
@@ -10,7 +11,7 @@ from fooltrader.domain.technical import DayKData, HoufuquanDayKData
 from fooltrader.utils.event_utils import get_forecast_items
 from fooltrader.utils.finance_utils import get_balance_sheet_items, get_income_statement_items, \
     get_cash_flow_statement_items
-from fooltrader.utils.utils import get_security_items, get_kdata_items, fill_doc_type
+from fooltrader.utils.utils import get_kdata_items, fill_doc_type
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def index_mapping(index_name, doc_type):
 
 
 def security_meta_to_es():
-    for item in get_security_items():
+    for _, item in get_security_list().iterrows():
         try:
             stock_meta = StockMeta(meta={'id': item['id']}, id=item['id'], type=item['type'],
                                    exchange=item['exchange'], code=item['code'], listDate=item['listDate'],
@@ -38,7 +39,7 @@ def security_meta_to_es():
 
 
 def kdata_to_es(houfuquan=False):
-    for security_item in get_security_items():
+    for security_item in get_security_list():
         # 创建索引
         if houfuquan:
             index_name = get_es_kdata_index(security_item['id'], adjust='houfuquan')
@@ -65,7 +66,7 @@ def kdata_to_es(houfuquan=False):
 
 
 def balance_sheet_to_es():
-    for security_item in get_security_items():
+    for security_item in get_security_list():
         for json_object in get_balance_sheet_items(security_item):
             try:
                 balance_sheet = BalanceSheet(meta={'id': json_object['id']})
@@ -76,7 +77,7 @@ def balance_sheet_to_es():
 
 
 def income_statement_to_es():
-    for security_item in get_security_items():
+    for security_item in get_security_list():
         for json_object in get_income_statement_items(security_item):
             try:
                 income_statement = IncomeStatement(meta={'id': json_object['id']})
@@ -87,7 +88,7 @@ def income_statement_to_es():
 
 
 def cash_flow_statement_to_es():
-    for security_item in get_security_items():
+    for security_item in get_security_list():
         for json_object in get_cash_flow_statement_items(security_item):
             try:
                 cash_flow_statement = CashFlowStatement(meta={'id': json_object['id']})
@@ -98,7 +99,7 @@ def cash_flow_statement_to_es():
 
 
 def forecast_event_to_es():
-    for security_item in get_security_items():
+    for security_item in get_security_list():
         # 创建索引
         index_name = get_es_forecast_event_index(security_item['id'])
         index_mapping(index_name, ForecastEvent)

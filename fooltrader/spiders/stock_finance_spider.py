@@ -3,11 +3,11 @@ from kafka import KafkaProducer
 from scrapy import Request
 from scrapy import signals
 
+from fooltrader.api.api import get_security_list
 from fooltrader.consts import DEFAULT_BALANCE_SHEET_HEADER
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
-from fooltrader.utils.utils import get_security_items
 
 
 class StockFinanceSpider(scrapy.Spider):
@@ -26,7 +26,7 @@ class StockFinanceSpider(scrapy.Spider):
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
     def start_requests(self):
-        for item in get_security_items():
+        for _, item in get_security_list().iterrows():
             for (data_url, data_path) in (
                     (self.get_balance_sheet_url(item['code']), get_balance_sheet_path(item)),
                     (self.get_income_statement_url(item['code']), get_income_statement_path(item)),

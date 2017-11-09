@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import json
 import logging
 import os
@@ -11,45 +10,11 @@ from fooltrader import settings
 from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
     get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
-    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_finance_dir, get_event_dir, get_kdata_dir_csv, \
-    get_tick_path_csv
+    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_tick_path_csv
 from fooltrader.items import SecurityItem
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, TIME_FORMAT_DAY
+from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
-
-
-def mkdir_for_security(item):
-    fuquan_kdata_dir = get_kdata_dir(item, True)
-    if not os.path.exists(fuquan_kdata_dir):
-        os.makedirs(fuquan_kdata_dir)
-
-    finance_dir = get_finance_dir(item)
-    if not os.path.exists(finance_dir):
-        os.makedirs(finance_dir)
-
-    tick_dir = get_tick_dir(item)
-    if not os.path.exists(tick_dir):
-        os.makedirs(tick_dir)
-
-    event_dir = get_event_dir(item)
-    if not os.path.exists(event_dir):
-        os.makedirs(event_dir)
-
-    bfq_kdata_dir = get_kdata_dir_csv(item, 'bfq')
-    if not os.path.exists(bfq_kdata_dir):
-        os.makedirs(bfq_kdata_dir)
-
-    hfq_kdata_dir = get_kdata_dir_csv(item, 'hfq')
-    if not os.path.exists(hfq_kdata_dir):
-        os.makedirs(hfq_kdata_dir)
-
-
-def init_env():
-    if not os.path.exists(settings.FILES_STORE):
-        os.makedirs(settings.FILES_STORE)
-    for item in get_security_items():
-        mkdir_for_security(item)
 
 
 def chrome_copy_header_to_dict(src):
@@ -66,13 +31,6 @@ def chrome_copy_header_to_dict(src):
             except Exception:
                 pass
     return header
-
-
-def get_security_items(start=STOCK_START_CODE, end=STOCK_END_CODE):
-    for item in itertools.chain(get_sh_security_item(),
-                                get_sz_security_item()):
-        if start <= item['code'] <= end:
-            yield item
 
 
 def generate_csv_line(*items):

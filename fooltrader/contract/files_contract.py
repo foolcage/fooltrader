@@ -15,8 +15,11 @@ def get_kdata_dir_csv(item, fuquan=None):
         return os.path.join(get_security_dir(item), 'kdata', 'bfq')
 
 
-def get_kdata_path_csv(item, year, quarter, fuquan=None):
-    return os.path.join(get_kdata_dir_csv(item, fuquan), '{}Q{}.csv'.format(year, quarter))
+def get_kdata_path_csv(item, year=None, quarter=None, fuquan=None):
+    if not year and not quarter:
+        return os.path.join(get_kdata_dir_csv(item, fuquan), 'dayk.csv')
+    else:
+        return os.path.join(get_kdata_dir_csv(item, fuquan), '{}Q{}.csv'.format(year, quarter))
 
 
 def get_tick_path_csv(item, date):

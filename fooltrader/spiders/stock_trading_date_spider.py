@@ -5,9 +5,10 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
+from fooltrader.api.api import get_security_list
 from fooltrader.consts import SSE_KDATA_HEADER
 from fooltrader.settings import TIME_FORMAT_DAY
-from fooltrader.utils.utils import get_trading_dates_path_sse, get_security_items
+from fooltrader.utils.utils import get_trading_dates_path_sse
 
 
 class StockTradingDateSpider(scrapy.Spider):
@@ -36,7 +37,7 @@ class StockTradingDateSpider(scrapy.Spider):
             for request in self.yield_request(item):
                 yield request
         else:
-            for item in get_security_items():
+            for _, item in get_security_list().iterrows():
                 for request in self.yield_request(item):
                     yield request
 

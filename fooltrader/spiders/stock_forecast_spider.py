@@ -5,10 +5,9 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
+from fooltrader.api.api import get_security_list
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract.files_contract import get_forecast_event_path
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_security_items
 
 
 class StockForecastSpider(scrapy.Spider):
@@ -24,7 +23,7 @@ class StockForecastSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        for item in get_security_items():
+        for _, item in get_security_list().iterrows():
             url = self.get_forecast_url(item['code'])
             yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
                           meta={'item': item, },
