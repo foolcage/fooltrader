@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 import pandas as pd
 
@@ -16,13 +17,39 @@ logger = logging.getLogger(__name__)
 # 该脚本是用来转换以前抓的数据的,转换完成后就没有用了
 # 请不要在其他地方引用里面的函数
 
-def remove_old_json():
+def remove_old_tick():
+    for index, security_item in get_security_list().iterrows():
+        dir = get_tick_dir(security_item)
+        if os.path.exists(dir):
+            files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                     ('xls' in f and 'lock' not in f and 'error' not in f and os.path.isfile(os.path.join(dir, f)))]
+            for f in files:
+                logger.info("remove {}".format(f))
+                os.remove(f)
+
+
+def remove_old_kdata():
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in (True, False):
+            dir = get_kdata_dir(security_item, fuquan)
+            if os.path.exists(dir):
+                if fuquan:
+                    logger.info("remove {}".format(dir))
+                    shutil.rmtree(dir)
+                else:
+                    files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                             ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
+
+                    for f in files:
+                        logger.info("remove {}".format(f))
+                        os.remove(f)
+
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
             dir = get_kdata_dir_csv(security_item, fuquan)
             if os.path.exists(dir):
                 files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                         ('json' in f and os.path.isfile(os.path.join(dir, f)))]
+                         ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
                 for f in files:
                     logger.info("remove {}".format(f))
                     os.remove(f)
@@ -168,4 +195,5 @@ def assert_df(df1, df2):
 
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    check_convert_result()
+    remove_old_kdata()
+    remove_old_tick()
