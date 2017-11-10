@@ -193,7 +193,21 @@ def assert_df(df1, df2):
         assert df1.loc[the_date].equals(df2.loc[the_date])
 
 
+def check_result():
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in ('bfq', 'hfq'):
+            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            if not os.path.exists(dayk_path):
+                logger.warn("{} no {} kdata csv?".format(security_item['code'], fuquan))
+
+        dir = get_tick_dir(security_item)
+        if os.path.exists(dir):
+            files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                     ('csv' in f and os.path.isfile(os.path.join(dir, f)))]
+            if not files:
+                logger.warn("{} no tick csv?".format(security_item['code']))
+
+
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    remove_old_kdata()
-    remove_old_tick()
+    check_result()
