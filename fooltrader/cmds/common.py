@@ -96,22 +96,28 @@ def legacy_kdata_to_csv():
 
                 for f in files:
                     tmp = os.path.basename(f).split('_')
-                    df = pd.read_json(f, dtype={'code': str})
                     if fuquan:
-                        logger.info("{} to {}".format(f, get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq')))
+                        csv_path = get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq')
+                        if not os.path.exists(csv_path):
+                            df = pd.read_json(f, dtype={'code': str})
+                            logger.info("{} to {}".format(f, csv_path))
 
-                        df = df.loc[:,
-                             ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
-                              'fuquan']]
-                        df.columns = KDATA_COLUMN_FQ
+                            df = df.loc[:,
+                                 ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover',
+                                  'securityId',
+                                  'fuquan']]
+                            df.columns = KDATA_COLUMN_FQ
 
-                        df.to_csv(get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq'), index=False)
+                            df.to_csv(csv_path, index=False)
                     else:
-                        logger.info("{} to {}".format(f, get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq')))
+                        csv_path = get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq')
+                        if not os.path.exists(csv_path):
+                            df = pd.read_json(f, dtype={'code': str})
+                            logger.info("{} to {}".format(f, csv_path))
 
-                        df = df.loc[:, KDATA_COLUMN]
+                            df = df.loc[:, KDATA_COLUMN]
 
-                        df.to_csv(get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq'), index=False)
+                            df.to_csv(csv_path, index=False)
 
 
 def merge_kdata_to_one():
@@ -142,4 +148,5 @@ def merge_kdata_to_one():
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
     # merge_kdata_to_one()
-    handle_error_tick()
+    # handle_error_tick()
+    legacy_kdata_to_csv()
