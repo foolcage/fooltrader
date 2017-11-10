@@ -8,7 +8,7 @@ from fooltrader.api.hq import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
-    get_kdata_dir
+    get_kdata_dir, get_security_dir
 from fooltrader.utils.utils import sina_tick_to_csv
 
 logger = logging.getLogger(__name__)
@@ -198,14 +198,14 @@ def check_result():
         for fuquan in ('bfq', 'hfq'):
             dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
             if not os.path.exists(dayk_path):
-                logger.warn("{} no {} kdata csv?".format(security_item['code'], fuquan))
+                logger.warn(get_security_dir(security_item))
 
         dir = get_tick_dir(security_item)
         if os.path.exists(dir):
             files = [os.path.join(dir, f) for f in os.listdir(dir) if
                      ('csv' in f and os.path.isfile(os.path.join(dir, f)))]
             if not files:
-                logger.warn("{} no tick csv?".format(security_item['code']))
+                logger.warn(get_security_dir(security_item))
 
 
 if __name__ == '__main__':
