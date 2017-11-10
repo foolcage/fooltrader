@@ -328,14 +328,23 @@ def direction_to_int(direction):
         return 0
 
 
+def read_csv(f, encoding):
+    try:
+        return pd.read_csv(f, sep='\s+', encoding=encoding)
+    except UnicodeDecodeError as e:
+        if encoding == "GB2312":
+            return read_csv(f, "GBK")
+        elif encoding == "GBK":
+            return read_csv(f, "GB18030")
+        elif encoding == "GB18030":
+            return read_csv(f, "UTF-8")
+        else:
+            raise e
+
+
 def sina_tick_to_csv(security_item, the_content, the_date):
     csv_path = get_tick_path_csv(security_item, the_date)
-    try:
-        df = pd.read_csv(the_content, sep='\s+', encoding='GB2312')
-    except UnicodeDecodeError as e:
-        logger.warn("{} is not GB2312,try GBK".format(the_content), e)
-        df = pd.read_csv(the_content, sep='\s+', encoding='GBK')
-
+    df = read_csv(the_content, "GB2312")
     df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
     df.columns = TICK_COLUNM
     df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))

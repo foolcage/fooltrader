@@ -62,9 +62,9 @@ def crawl():
     # yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
-    yield runner.crawl(StockKDataSpider)
+    # yield runner.crawl(StockKDataSpider)
 
-    # yield runner.crawl(StockTickSpider)
+    yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)
     # yield runner.crawl(StockGNSpider)
     # yield runner.crawl(StockForecastSpider)
