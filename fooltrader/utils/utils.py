@@ -10,7 +10,7 @@ from fooltrader import settings
 from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
     get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
-    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_tick_path_csv
+    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_tick_path_csv, get_kdata_dir_csv
 from fooltrader.items import SecurityItem
 from fooltrader.settings import TIME_FORMAT_DAY
 
@@ -349,3 +349,23 @@ def sina_tick_to_csv(security_item, the_content, the_date):
     df.columns = TICK_COLUNM
     df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
     df.to_csv(csv_path, index=False)
+
+
+# 抓取k线时会自动生成交易日期json，如果出错，可以用该脚本手动生成
+def init_trading_dates(security_item):
+    try:
+        dates = pd.Series()
+
+        the_dir = get_kdata_dir_csv(security_item)
+        files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if os.path.isfile(os.path.join(the_dir, f))]
+
+        for f in files:
+            df = pd.read_csv(f)
+            dates = dates.append(df['timestamp'], ignore_index=True)
+        dates = dates.sort_values()
+
+        dates.to_json(get_trading_dates_path(security_item), orient='values')
+        logger.info('init_trading_dates for item:{}'.format(security_item))
+    except Exception as e:
+        logger.error(
+            'init_trading_dates for item:{},error:{}'.format(security_item, e))

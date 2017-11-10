@@ -7,36 +7,14 @@ from fooltrader.api.api import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
-    get_trading_dates_path, get_kdata_dir
+    get_kdata_dir
 from fooltrader.utils.utils import sina_tick_to_csv
 
 logger = logging.getLogger(__name__)
 
 
-# 抓取k线时会自动生成交易日期json，如果出错，可以用该脚本手动生成
-def init_trading_dates(security_item):
-    try:
-        dates = pd.Series()
-
-        the_dir = get_kdata_dir_csv(security_item)
-        files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if os.path.isfile(os.path.join(the_dir, f))]
-
-        for f in files:
-            df = pd.read_csv(f)
-            dates = dates.append(df['timestamp'], ignore_index=True)
-        dates = dates.sort_values()
-
-        dates.to_json(get_trading_dates_path(security_item), orient='values')
-        logger.info('init_trading_dates for item:{}'.format(security_item))
-    except Exception as e:
-        logger.error(
-            'init_trading_dates for item:{},error:{}'.format(security_item, e))
-
-
-def init_all_traing_dates():
-    for _, item in get_security_list().iterrows():
-        init_trading_dates(item)
-
+# 该脚本是用来转换以前抓的数据的,转换完成后就没有用了
+# 请不要在其他地方引用里面的函数
 
 def remove_old_json():
     for index, security_item in get_security_list().iterrows():
@@ -123,30 +101,71 @@ def legacy_kdata_to_csv():
 def merge_kdata_to_one():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
-            if fuquan == 'hfq':
-                df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN_FQ)
-            else:
-                df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN)
-
-            dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
-
-            if os.path.exists(dir):
-                files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                         ('day' not in f and 'csv' in f and os.path.isfile(os.path.join(dir, f)))]
-                for f in files:
-                    df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
-            df = df.set_index(df['timestamp'])
-            df = df.sort_index()
             dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
-            logger.info("{} to {}".format(security_item['code'], dayk_path))
-            # merge_to_current_kdata(security_item, df, fuquan=fuquan)
-            df.to_csv(dayk_path, index=False)
+            if not os.path.exists(dayk_path):
+                if fuquan == 'hfq':
+                    df = pd.DataFrame(
+                        columns=data_contract.KDATA_COLUMN_FQ)
+                else:
+                    df = pd.DataFrame(
+                        columns=data_contract.KDATA_COLUMN)
+
+                dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
+
+                if os.path.exists(dir):
+                    files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                             ('day' not in f and 'csv' in f and os.path.isfile(os.path.join(dir, f)))]
+                    for f in files:
+                        df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
+                if df.size > 0:
+                    df = df.set_index(df['timestamp'])
+                    df.index = pd.to_datetime(df.index)
+                    df = df.sort_index()
+                    logger.info("{} to {}".format(security_item['code'], dayk_path))
+                    # merge_to_current_kdata(security_item, df, fuquan=fuquan)
+                    df.to_csv(dayk_path, index=False)
+
+
+def check_convert_result():
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in ('bfq', 'hfq'):
+            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            if os.path.exists(dayk_path):
+                df_result = pd.read_csv(dayk_path)
+
+                if fuquan == 'hfq':
+                    df = pd.DataFrame(
+                        columns=data_contract.KDATA_COLUMN_FQ)
+                else:
+                    df = pd.DataFrame(
+                        columns=data_contract.KDATA_COLUMN)
+
+                dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
+
+                if os.path.exists(dir):
+                    files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                             ('day' not in f and 'csv' in f and os.path.isfile(os.path.join(dir, f)))]
+                    for f in files:
+                        df = df.append(pd.read_csv(f), ignore_index=True)
+                    assert_df(df, df_result)
+                    logger.info("{} merge as one ok".format(security_item['code']))
+
+
+def assert_df(df1, df2):
+    df1 = df1.set_index(df1['timestamp'])
+    df1.index = pd.to_datetime(df1.index)
+    df1 = df1.sort_index()
+
+    df2 = df2.set_index(df2['timestamp'])
+    df2 = df2.sort_index()
+    df2.index = pd.to_datetime(df2.index)
+
+    assert df1.index.equals(df2.index)
+
+    for the_date in df1.index:
+        assert df1.loc[the_date].equals(df2.loc[the_date])
 
 
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    # merge_kdata_to_one()
-    # handle_error_tick()
-    legacy_kdata_to_csv()
+    check_convert_result()
