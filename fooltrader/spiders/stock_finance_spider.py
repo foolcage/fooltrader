@@ -3,7 +3,7 @@ from kafka import KafkaProducer
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.consts import DEFAULT_BALANCE_SHEET_HEADER
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path

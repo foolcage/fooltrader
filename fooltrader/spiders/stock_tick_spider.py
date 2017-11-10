@@ -6,7 +6,7 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader import settings
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path_csv
 from fooltrader.utils.utils import get_trading_dates, is_available_tick, get_datetime, get_kdata_item_with_date, \

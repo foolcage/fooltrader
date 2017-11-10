@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE, CalledProcessError
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
 
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_SEC, TIME_FORMAT_DAY, KAFKA_PATH, ZK_KAFKA_HOST
 from fooltrader.utils.utils import get_tick_items, get_kdata_items

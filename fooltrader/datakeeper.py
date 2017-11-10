@@ -7,7 +7,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 from fooltrader import settings
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.cmds.common import init_trading_dates
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider

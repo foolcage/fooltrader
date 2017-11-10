@@ -9,7 +9,7 @@ from scrapy import Selector
 from scrapy import signals
 
 from fooltrader import settings
-from fooltrader.api.api import get_security_list, kdata_exist, merge_to_current_kdata
+from fooltrader.api.hq import get_security_list, kdata_exist, merge_to_current_kdata
 from fooltrader.cmds.common import init_trading_dates
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract

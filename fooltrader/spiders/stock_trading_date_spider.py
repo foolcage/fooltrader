@@ -5,7 +5,7 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.consts import SSE_KDATA_HEADER
 from fooltrader.settings import TIME_FORMAT_DAY
 from fooltrader.utils.utils import get_trading_dates_path_sse

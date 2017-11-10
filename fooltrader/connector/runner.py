@@ -1,4 +1,4 @@
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.utils.utils import init_trading_dates
 
 

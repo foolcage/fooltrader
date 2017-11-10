@@ -2,7 +2,7 @@ import logging
 
 from elasticsearch_dsl import Index
 
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_event_index
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement

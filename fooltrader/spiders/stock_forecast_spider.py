@@ -5,7 +5,7 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
-from fooltrader.api.api import get_security_list
+from fooltrader.api.hq import get_security_list
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract.files_contract import get_forecast_event_path
 
