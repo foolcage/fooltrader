@@ -38,7 +38,7 @@ def remove_old_kdata():
                     shutil.rmtree(dir)
                 else:
                     files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                             ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
+                             ('dayk.json' in f and os.path.isfile(os.path.join(dir, f)))]
 
                     for f in files:
                         logger.info("remove {}".format(f))
