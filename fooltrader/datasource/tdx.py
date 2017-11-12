@@ -1,5 +1,6 @@
 from pytdx.hq import TdxHq_API
 
+from fooltrader.api import hq
 from fooltrader.contract.data_contract import KDATA_COLUMN
 from fooltrader.utils.utils import get_exchange
 
@@ -20,7 +21,8 @@ def get_tdx_kdata(security_item, start, end):
 
 def save_tdx_kdata(security_item, start, end):
     df = get_tdx_kdata(security_item, start, end)
-    df
+    hq.merge_to_current_kdata(security_item, df)
+
 
 if __name__ == '__main__':
     pass

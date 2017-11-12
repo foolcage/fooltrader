@@ -1,12 +1,17 @@
 import datetime
+import logging
 import os
 
 import pandas as pd
 
 from fooltrader import settings
+from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
+from fooltrader.contract.files_contract import get_kdata_dir_csv, get_kdata_path_csv
 from fooltrader.datasource import tdx
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
+
+logger = logging.getLogger(__name__)
 
 
 # meta
@@ -35,6 +40,11 @@ def get_kdata(security_item, start=None, end=None, fuquan=None, dtype=None):
     return pd.DataFrame()
 
 
+def get_trading_dates(security_item):
+    df = get_kdata(security_item)
+    return df.index.values
+
+
 def kdata_exist(security_item, year, quarter, fuquan=None):
     df = get_kdata(security_item, fuquan=fuquan)
     if "{}Q{}".format(year, quarter) in df.index:
@@ -56,6 +66,47 @@ def merge_to_current_kdata(security_item, df, fuquan='bfq'):
 
     the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
     df1.to_csv(the_path, index=False)
+
+
+def merge_kdata_to_one(replace=False):
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in ('bfq', 'hfq'):
+            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            if fuquan == 'hfq':
+                df = pd.DataFrame(
+                    columns=data_contract.KDATA_COLUMN_FQ)
+            else:
+                df = pd.DataFrame(
+                    columns=data_contract.KDATA_COLUMN)
+
+            the_dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
+
+            if os.path.exists(the_dir):
+                files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if
+                         (f != 'dayk.csv' and os.path.isfile(os.path.join(the_dir, f)))]
+                for f in files:
+                    df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
+            if df.size > 0:
+                df = df.set_index(df['timestamp'])
+                df.index = pd.to_datetime(df.index)
+                df = df.sort_index()
+                logger.info("{} to {}".format(security_item['code'], dayk_path))
+                if replace:
+                    df.to_csv(dayk_path, index=False)
+                else:
+                    merge_to_current_kdata(security_item, df, fuquan=fuquan)
+
+
+def remove_quarter_kdata():
+    for index, security_item in get_security_list().iterrows():
+        for fuquan in ('bfq', 'hfq'):
+            dir = get_kdata_dir_csv(security_item, fuquan)
+            if os.path.exists(dir):
+                files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                         (f != 'dayk.csv' and os.path.isfile(os.path.join(dir, f)))]
+                for f in files:
+                    logger.info("remove {}".format(f))
+                    os.remove(f)
 
 
 # tick

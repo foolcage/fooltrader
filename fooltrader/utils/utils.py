@@ -248,23 +248,6 @@ def get_base_trading_dates(item):
     return dates
 
 
-def get_trading_dates(security_item):
-    dates = []
-    dates_path_sina = get_trading_dates_path(security_item)
-    try:
-        with open(dates_path_sina) as data_file:
-            dates = json.load(data_file)
-
-    except Exception as e:
-        logger.error(e)
-
-    if not dates:
-        # init_trading_dates(security_item)
-        return get_trading_dates_path(security_item)
-
-    return dates
-
-
 def is_available_tick(path):
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
@@ -281,6 +264,8 @@ def get_datetime(str):
 
 
 def get_year_quarter(time):
+    if type(time) == str:
+        time = get_datetime(time)
     return time.year, ((time.month - 1) // 3) + 1
 
 

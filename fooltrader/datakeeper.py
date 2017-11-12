@@ -7,15 +7,15 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 from fooltrader import settings
-from fooltrader.api.hq import get_security_list
-from fooltrader.cmds.common import init_trading_dates
+from fooltrader.api.hq import get_security_list, get_trading_dates
+from fooltrader.datasource import tdx
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
-from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, get_trading_dates, \
+from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, \
     get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
     get_base_trading_dates
 
@@ -48,7 +48,7 @@ def check_data_integrity():
     # check security list
     if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()) or True:
         logger.info('------download stock list at first------')
-        process_crawl(SecurityListSpider)
+        process_crawl(SecurityListSpider,{})
 
     for _, security_item in get_security_list().iterrows():
         # download base trading dates at first
@@ -61,7 +61,6 @@ def check_data_integrity():
 
         # compare kdata/tick with base trading dates and fix them
         base_dates = set(get_base_trading_dates(security_item))
-        init_trading_dates(security_item)
         dates = set(get_trading_dates(security_item))
         diff1 = base_dates - dates
         if diff1:
@@ -77,8 +76,7 @@ def check_data_integrity():
 
             # 试图从新浪修复
             process_crawl(StockKDataSpider, {"security_item": security_item,
-                                             "start_date": the_dates[0],
-                                             "end_date": the_dates[-1]})
+                                             "trading_dates": the_dates})
 
             dates = set(get_trading_dates(security_item))
             diff1 = base_dates - dates
@@ -86,6 +84,8 @@ def check_data_integrity():
             if diff1:
                 the_dates = list(diff1)
                 the_dates.sort()
+                df = tdx.get_tdx_kdata(security_item, the_dates[0], the_dates[-1])
+                print(df)
 
 
 
@@ -113,13 +113,15 @@ def check_data_integrity():
             logger.info("------{} tick ok------".format(security_item['code']))
 
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument("cmd", choices=['check_data', 'check_kafka', 'check_es'])
-
-args = parser.parse_args()
-
-if args.cmd == 'check_data':
-    check_data_integrity()
-elif args.cmd == 'check_kafka':
+# parser = argparse.ArgumentParser()
+#
+# parser.add_argument("cmd", choices=['check_data', 'check_kafka', 'check_es'])
+#
+# args = parser.parse_args()
+#
+# if args.cmd == 'check_data':
+#     check_data_integrity()
+# elif args.cmd == 'check_kafka':
+#     check_data_integrity()
+if __name__ == '__main__':
     check_data_integrity()

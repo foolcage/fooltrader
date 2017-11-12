@@ -11,6 +11,7 @@ from fooltrader.api.hq import get_security_list
 from fooltrader.contract.files_contract import get_kdata_dir, get_finance_dir, get_tick_dir, get_event_dir, \
     get_kdata_dir_csv
 from fooltrader.proxy.proxy_manager import int_proxy
+from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.utils.utils import setup_env
@@ -62,9 +63,9 @@ def crawl():
     # yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
-    # yield runner.crawl(StockKDataSpider)
+    yield runner.crawl(StockKDataSpider)
 
-    yield runner.crawl(StockTickSpider)
+    # yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)
     # yield runner.crawl(StockGNSpider)
     # yield runner.crawl(StockForecastSpider)
@@ -76,3 +77,6 @@ def crawl():
 crawl()
 
 reactor.run()  # the script will block here until the last crawl call is finished
+
+# if __name__ == '__main__':
+#     init_env()

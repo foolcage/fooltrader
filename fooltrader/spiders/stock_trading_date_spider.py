@@ -33,7 +33,7 @@ class StockTradingDateSpider(scrapy.Spider):
 
     def start_requests(self):
         item = self.settings.get("security_item")
-        if item:
+        if item is not None:
             for request in self.yield_request(item):
                 yield request
         else:

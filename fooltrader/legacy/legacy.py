@@ -124,35 +124,6 @@ def legacy_kdata_to_csv():
 
                             df.to_csv(csv_path, index=False)
 
-
-def merge_kdata_to_one():
-    for index, security_item in get_security_list().iterrows():
-        for fuquan in ('bfq', 'hfq'):
-            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
-            if not os.path.exists(dayk_path):
-                if fuquan == 'hfq':
-                    df = pd.DataFrame(
-                        columns=data_contract.KDATA_COLUMN_FQ)
-                else:
-                    df = pd.DataFrame(
-                        columns=data_contract.KDATA_COLUMN)
-
-                dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
-
-                if os.path.exists(dir):
-                    files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                             ('day' not in f and 'csv' in f and os.path.isfile(os.path.join(dir, f)))]
-                    for f in files:
-                        df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
-                if df.size > 0:
-                    df = df.set_index(df['timestamp'])
-                    df.index = pd.to_datetime(df.index)
-                    df = df.sort_index()
-                    logger.info("{} to {}".format(security_item['code'], dayk_path))
-                    # merge_to_current_kdata(security_item, df, fuquan=fuquan)
-                    df.to_csv(dayk_path, index=False)
-
-
 def check_convert_result():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
