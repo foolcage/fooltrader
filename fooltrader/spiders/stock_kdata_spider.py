@@ -19,7 +19,7 @@ class StockKDataSpider(scrapy.Spider):
     name = "stock_kdata"
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 1,
+        'DOWNLOAD_DELAY': 2,
         'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
 
         'SPIDER_MIDDLEWARES': {

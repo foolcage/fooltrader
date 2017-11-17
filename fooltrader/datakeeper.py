@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 from multiprocessing import Process
@@ -8,6 +7,7 @@ from scrapy.utils.project import get_project_settings
 
 from fooltrader import settings
 from fooltrader.api.hq import get_security_list, get_trading_dates
+from fooltrader.contract.files_contract import get_security_list_path
 from fooltrader.datasource import tdx
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
@@ -15,8 +15,7 @@ from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
-from fooltrader.utils.utils import get_sh_stock_list_path, get_sz_stock_list_path, \
-    get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
+from fooltrader.utils.utils import get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
     get_base_trading_dates
 
 # 检查数据的完整性
@@ -46,16 +45,18 @@ FORCE_DOWNLOAD_SSE_TRADING_DATES = True
 
 def check_data_integrity():
     # check security list
-    if not os.path.exists(get_sh_stock_list_path()) or not os.path.exists(get_sz_stock_list_path()) or True:
+    if not os.path.exists(get_security_list_path('stock', 'sh')) or not os.path.exists(
+            get_security_list_path('stock', 'sz')):
         logger.info('------download stock list at first------')
-        process_crawl(SecurityListSpider,{})
+        process_crawl(SecurityListSpider, {})
 
     for _, security_item in get_security_list().iterrows():
         # download base trading dates at first
-        if not os.path.exists(get_trading_dates_path_sse(security_item)) or True:
+        if not os.path.exists(get_trading_dates_path_sse(security_item)):
             logger.info("------need to download {} sse trading date------".format(security_item['code']))
             process_crawl(StockTradingDateSpider, {"security_item": security_item})
-        if not os.path.exists(get_trading_dates_path_ths(security_item)):
+        # 暂时不用同花顺,缺少成交额数据
+        if not os.path.exists(get_trading_dates_path_ths(security_item)) and False:
             logger.info("------need to download {} ths trading date------".format(security_item['code']))
             process_crawl(StockKDataSpiderTHS, {"security_item": security_item})
 
@@ -84,11 +85,7 @@ def check_data_integrity():
             if diff1:
                 the_dates = list(diff1)
                 the_dates.sort()
-                df = tdx.get_tdx_kdata(security_item, the_dates[0], the_dates[-1])
-                print(df)
-
-
-
+                tdx.save_tdx_kdata(security_item, the_dates)
 
         else:
             logger.info("------{} kdata ok------".format(security_item['code']))
@@ -99,7 +96,7 @@ def check_data_integrity():
 
         tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
         diff3 = tick_dates - set(get_downloaded_tick_dates(security_item))
-        if diff3:
+        if diff3 and False:
             if STATUS_SHOW_NOT_OK_DATE:
                 logger.info("------{} tick not ok for dates:{}------".format(security_item['code'], diff3))
             else:

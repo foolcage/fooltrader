@@ -19,9 +19,10 @@ def get_tdx_kdata(security_item, start, end):
     return df
 
 
-def save_tdx_kdata(security_item, start, end):
-    df = get_tdx_kdata(security_item, start, end)
-    hq.merge_to_current_kdata(security_item, df)
+def save_tdx_kdata(security_item, the_dates):
+    df = get_tdx_kdata(security_item, the_dates[0], the_dates[-1])
+
+    hq.merge_to_current_kdata(security_item, df[df.timestamp.isin(the_dates)])
 
 
 if __name__ == '__main__':

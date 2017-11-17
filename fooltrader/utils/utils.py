@@ -222,7 +222,7 @@ def merge_ths_kdata(security_item, dates):
         logger.error(e)
 
 
-def get_base_trading_dates(item):
+def get_base_trading_dates(item, ignore_today=True):
     dates_path_sse = get_trading_dates_path_sse(item)
     dates_path_ths = get_trading_dates_path_ths(item)
 
@@ -245,6 +245,9 @@ def get_base_trading_dates(item):
     dates = list(dates_tmp)
 
     dates.sort()
+    if ignore_today:
+        dates = [the_date for the_date in dates if the_date != datetime.datetime.today().strftime('%Y-%m-%d')]
+
     return dates
 
 

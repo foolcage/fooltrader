@@ -40,9 +40,14 @@ def get_kdata(security_item, start=None, end=None, fuquan=None, dtype=None):
     return pd.DataFrame()
 
 
-def get_trading_dates(security_item):
+def get_trading_dates(security_item, dtype='list', ignore_today=True):
     df = get_kdata(security_item)
-    return df.index.values
+    if dtype is 'list':
+        dates = df.index.strftime('%Y-%m-%d').tolist()
+        if ignore_today:
+            dates = [the_date for the_date in dates if the_date != datetime.datetime.today().strftime('%Y-%m-%d')]
+            return dates
+    return df.index
 
 
 def kdata_exist(security_item, year, quarter, fuquan=None):
@@ -62,7 +67,7 @@ def merge_to_current_kdata(security_item, df, fuquan='bfq'):
     df1 = df1.append(df)
 
     df1 = df1.drop_duplicates()
-    df1.sort_index()
+    df1 = df1.sort_index()
 
     the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
     df1.to_csv(the_path, index=False)
