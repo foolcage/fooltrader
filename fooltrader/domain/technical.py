@@ -7,11 +7,7 @@ class BaseKData(DocType):
     id = Keyword()
     securityId = Keyword()
     timestamp = Date()
-    type = Keyword()
     code = Keyword()
-    level = Keyword()
-    fuquan = Float()
-
     open = Float()
     close = Float()
     high = Float()
@@ -20,13 +16,15 @@ class BaseKData(DocType):
     turnover = Float()
 
 
-class DayKData(BaseKData):
+class BfqDayKData(BaseKData):
     class Meta:
         all = MetaField(enabled=False)
         doc_type = 'doc'
 
 
-class HoufuquanDayKData(BaseKData):
+class HfqDayKData(BaseKData):
+    factor = Float()
+
     class Meta:
         all = MetaField(enabled=False)
         doc_type = 'doc'
