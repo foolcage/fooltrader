@@ -1,35 +1,40 @@
 import datetime
-import json
+import logging
 from subprocess import Popen, PIPE, CalledProcessError
 
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
 
-from fooltrader.api.hq import get_security_list
+from fooltrader.api.quote import get_security_list, get_ticks, get_kdata
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_SEC, TIME_FORMAT_DAY, KAFKA_PATH, ZK_KAFKA_HOST
-from fooltrader.utils.utils import get_tick_items, get_kdata_items
 
 producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
+logger = logging.getLogger(__name__)
+
 
 def tick_to_kafka():
-    for security_item in get_security_list():
-        for tick_items in get_tick_items(security_item):
-            for tick_item in tick_items:
+    for _, security_item in get_security_list().iterrows():
+        for df in get_ticks(security_item):
+            for _, tick_item in df.iterrows():
+                the_json = tick_item.to_json(force_ascii=False)
                 producer.send(get_kafka_tick_topic(security_item['id']),
-                              bytes(json.dumps(tick_item, ensure_ascii=False), encoding='utf8'),
+                              bytes(the_json, encoding='utf8'),
                               timestamp_ms=int(datetime.datetime.strptime(tick_item['timestamp'],
                                                                           TIME_FORMAT_SEC).timestamp()))
+                logger.debug("tick_to_kafka {}".format(the_json))
 
 
-def kdata_to_kafka(houfuquan):
-    for security_item in get_security_list():
-        for kdata_item in get_kdata_items(security_item, houfuquan):
-            producer.send(get_kafka_kdata_topic(security_item['id'], houfuquan),
-                          bytes(json.dumps(kdata_item, ensure_ascii=False), encoding='utf8'),
+def kdata_to_kafka(fuquan):
+    for _, security_item in get_security_list().iterrows():
+        for _, kdata_item in get_kdata(security_item, fuquan=fuquan).iterrows():
+            the_json = kdata_item.to_json(force_ascii=False)
+            producer.send(get_kafka_kdata_topic(security_item['id'], fuquan),
+                          bytes(the_json, encoding='utf8'),
                           timestamp_ms=int(datetime.datetime.strptime(kdata_item['timestamp'],
                                                                       TIME_FORMAT_DAY).timestamp()))
+            logger.debug("kdata_to_kafka {}".format(the_json))
 
 
 # make sure delete.topic.enable = true
@@ -57,4 +62,5 @@ def delete_all_topics():
 
 
 # consume_topic('stock_sh_600000_day_kdata')
-kdata_to_kafka(True)
+if __name__ == '__main__':
+    kdata_to_kafka('hfq')

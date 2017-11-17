@@ -6,11 +6,10 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader import settings
-from fooltrader.api.hq import get_security_list, get_trading_dates
+from fooltrader.api.quote import get_security_list, get_trading_dates, get_kdata
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path_csv
-from fooltrader.utils.utils import is_available_tick, get_datetime, get_kdata_item_with_date, \
-    kdata_to_tick, sina_tick_to_csv
+from fooltrader.utils.utils import is_available_tick, get_datetime, kdata_to_tick, sina_tick_to_csv
 
 
 class StockTickSpider(scrapy.Spider):
@@ -65,8 +64,10 @@ class StockTickSpider(scrapy.Spider):
             if content_type_header.decode("utf-8") == 'application/vnd.ms-excel':
                 content = response.body
             else:
-                kdata_json = get_kdata_item_with_date(security_item, trading_date)
-                content = kdata_to_tick(response.meta['item'], kdata_json).encode('GB2312')
+                kdata_json = get_kdata(security_item, trading_date).to_json()
+                content = kdata_to_tick(kdata_json)
+                self.logger.info("{} {} generate tick from kdata {}", security_item['code'], trading_date, content)
+                content = content.encode('GB2312')
             sina_tick_to_csv(security_item, io.BytesIO(content), trading_date)
         else:
             self.logger.error(

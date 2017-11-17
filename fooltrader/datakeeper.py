@@ -6,7 +6,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 from fooltrader import settings
-from fooltrader.api.hq import get_security_list, get_trading_dates
+from fooltrader.api.quote import get_security_list, get_trading_dates, get_available_tick_dates
 from fooltrader.contract.files_contract import get_security_list_path
 from fooltrader.datasource import tdx
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
@@ -15,7 +15,7 @@ from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_ths import StockKDataSpiderTHS
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
-from fooltrader.utils.utils import get_downloaded_tick_dates, get_trading_dates_path_sse, get_trading_dates_path_ths, \
+from fooltrader.utils.utils import get_trading_dates_path_sse, get_trading_dates_path_ths, \
     get_base_trading_dates
 
 # 检查数据的完整性
@@ -95,8 +95,8 @@ def check_data_integrity():
                 logger.info("{} base trading dates not ok?".format(security_item['id']))
 
         tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
-        diff3 = tick_dates - set(get_downloaded_tick_dates(security_item))
-        if diff3 and False:
+        diff3 = tick_dates - set(get_available_tick_dates(security_item))
+        if diff3:
             if STATUS_SHOW_NOT_OK_DATE:
                 logger.info("------{} tick not ok for dates:{}------".format(security_item['code'], diff3))
             else:

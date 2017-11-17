@@ -10,6 +10,7 @@ from fooltrader.contract import files_contract
 from fooltrader.contract.files_contract import get_kdata_dir_csv, get_kdata_path_csv
 from fooltrader.datasource import tdx
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
+from fooltrader.utils.utils import get_file_name
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +26,46 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
     return df
 
 
+# tick
+def get_ticks(security_item, the_date=None, start=None, end=None):
+    if the_date:
+        tick_path = files_contract.get_tick_path(security_item, the_date)
+        return parse_tick(tick_path)
+    else:
+        tick_dir = files_contract.get_tick_dir(security_item)
+        if start or end:
+            if not start:
+                start = security_item['listDate']
+            if not end:
+                end = datetime.datetime.today()
+            tick_paths = [os.path.join(tick_dir, f) for f in
+                          os.listdir(tick_dir) if
+                          get_file_name(f) in pd.date_range(start=start, end=end)]
+        else:
+            tick_paths = [os.path.join(tick_dir, f) for f in
+                          os.listdir(tick_dir)]
+
+        for tick_path in sorted(tick_paths):
+            yield parse_tick(tick_path)
+
+
+def parse_tick(tick_path):
+    if os.path.isfile(tick_path):
+        df = pd.read_csv(tick_path)
+        df['timestamp'] = get_file_name(tick_path) + " " + df['timestamp']
+        df = df.set_index(df['timestamp'])
+        df.index = pd.to_datetime(df.index)
+        df = df.sort_index()
+        return df
+
+
+def get_available_tick_dates(security_item):
+    dir = files_contract.get_tick_dir(security_item)
+    return [get_file_name(f) for f in os.listdir(dir)]
+
+
 # kdata
-def get_kdata(security_item, start=None, end=None, fuquan=None, dtype=None):
+def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None):
     the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
     if os.path.isfile(the_path):
         if not dtype:
@@ -35,6 +74,14 @@ def get_kdata(security_item, start=None, end=None, fuquan=None, dtype=None):
         df = df.set_index(df['timestamp'])
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
+        if the_date:
+            return df[the_date]
+
+        if not start:
+            start = security_item['listDate']
+        if not end:
+            end = datetime.datetime.today()
+
         df.loc[start:end]
         return df
     return pd.DataFrame()

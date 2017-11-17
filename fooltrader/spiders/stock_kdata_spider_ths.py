@@ -6,7 +6,7 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.hq import get_security_list
+from fooltrader.api.quote import get_security_list
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path_csv_ths

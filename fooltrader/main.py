@@ -7,7 +7,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 
 from fooltrader import settings
-from fooltrader.api.hq import get_security_list
+from fooltrader.api.quote import get_security_list
 from fooltrader.contract.files_contract import get_kdata_dir, get_finance_dir, get_tick_dir, get_event_dir, \
     get_kdata_dir_csv
 from fooltrader.proxy.proxy_manager import int_proxy
@@ -60,10 +60,10 @@ def init_env():
 
 @defer.inlineCallbacks
 def crawl():
-    # yield runner.crawl(SecurityListSpider)
+    yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
-    yield runner.crawl(StockKDataSpider)
+    # yield runner.crawl(StockKDataSpider)
 
     # yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)

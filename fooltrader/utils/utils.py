@@ -3,15 +3,12 @@ import json
 import logging
 import os
 
-import openpyxl
 import pandas as pd
 
 from fooltrader import settings
 from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
-    get_trading_dates_path_sse, get_trading_dates_path_ths, get_trading_dates_path, get_tick_path, \
-    get_tick_dir, get_sh_stock_list_path, get_sz_stock_list_path, get_tick_path_csv, get_kdata_dir_csv
-from fooltrader.items import SecurityItem
+    get_trading_dates_path_sse, get_trading_dates_path_ths, get_tick_path_csv
 from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
@@ -37,72 +34,17 @@ def generate_csv_line(*items):
     if items:
         result = items[0]
         for item in items[1:]:
-            result = (result + ',' + item)
+            result = '{},{}'.format(result, item)
         return result
     return ''
 
 
-def get_sz_security_item():
-    path = get_sz_stock_list_path()
-    wb = openpyxl.load_workbook(path)
-    for name in wb.get_sheet_names():
-        sheet = wb.get_sheet_by_name(name)
-        max_row, max_column = sheet.max_row, sheet.max_column
-        for i in range(2, max_row):
-            code = sheet.cell(row=i, column=1).value
-            name = sheet.cell(row=i, column=2).value
-            list_date = sheet.cell(row=i, column=8).value
-            # ignore just in B
-            if not list_date:
-                continue
-            yield SecurityItem(id=gen_security_id('stock', 'sz', code), type='stock', exchange='sz', code=code,
-                               name=name, listDate=list_date)
-
-
 def gen_security_id(type, exchange, code):
-    return type + '_' + exchange + '_' + code;
-
-
-def get_security_item(exchange):
-    if exchange == 'sz':
-        return get_sz_security_item()
-    elif exchange == 'sh':
-        return get_sh_security_item()
-
-
-def get_sh_security_item():
-    path = get_sh_stock_list_path()
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
-    with open(path, encoding=encoding) as fr:
-        lines = fr.readlines()
-        for line in lines[1:]:
-            code, name, _, _, list_date, _, _ = line.split()
-            yield SecurityItem(id=gen_security_id('stock', 'sh', code), type='stock', exchange='sh', code=code,
-                               name=name, listDate=list_date)
-
-
-def get_tick_items(security_item):
-    for trading_date in get_trading_dates(security_item):
-        tick_path = get_tick_path(security_item, trading_date)
-        if os.path.exists(tick_path):
-            yield get_tick_item(tick_path, trading_date, security_item)
-
-
-def get_kdata_item_with_date(security_item, the_date_str):
-    the_date = get_datetime(the_date_str)
-    the_year_quarter = get_year_quarter(the_date)
-    data_path = get_kdata_path(security_item, the_year_quarter[0], the_year_quarter[1], False)
-
-    with open(data_path) as data_file:
-        kdata_jsons = json.load(data_file)
-        for kdata_json in kdata_jsons:
-            if kdata_json['timestamp'] == the_date_str:
-                return kdata_json
+    return type + '_' + exchange + '_' + code
 
 
 # 对于开盘涨停的，算作买盘tick
-def kdata_to_tick(security_item, kdata_json):
+def kdata_to_tick(kdata_json):
     str = '''成交时间	成交价	价格变动	成交量(手)	成交额(元)	性质
 {}	{}	--	{}	{}	{}'''.format('09:25:00', kdata_json['high'], int(kdata_json['volume']) / 100,
                                            kdata_json['turnover'], '买盘')
@@ -120,11 +62,6 @@ def get_kdata_items(security_item, houfuquan=False):
                 kdata_jsons = json.load(data_file)
                 for kdata_json in reversed(kdata_jsons):
                     yield kdata_json
-
-
-def get_downloaded_tick_dates(security_item):
-    dir = get_tick_dir(security_item)
-    return [f[:f.index('.')] for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
 
 
 def get_tick_item(path, the_date, security_item):
@@ -285,7 +222,7 @@ def get_quarters(start, end=datetime.date.today()):
                [(x, y) for x in range(start_year_quarter[0] + 1, current_year_quarter[0]) for y in range(1, 5)] + \
                [(current_year_quarter[0], x) for x in range(1, current_year_quarter[1] + 1)]
     else:
-        raise Exception("wrong start time:{}".format(start));
+        raise Exception("wrong start time:{}".format(start))
 
 
 def fill_doc_type(doc_type, json_object):
@@ -339,21 +276,5 @@ def sina_tick_to_csv(security_item, the_content, the_date):
     df.to_csv(csv_path, index=False)
 
 
-# 抓取k线时会自动生成交易日期json，如果出错，可以用该脚本手动生成
-def init_trading_dates(security_item):
-    try:
-        dates = pd.Series()
-
-        the_dir = get_kdata_dir_csv(security_item)
-        files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if os.path.isfile(os.path.join(the_dir, f))]
-
-        for f in files:
-            df = pd.read_csv(f)
-            dates = dates.append(df['timestamp'], ignore_index=True)
-        dates = dates.sort_values()
-
-        dates.to_json(get_trading_dates_path(security_item), orient='values')
-        logger.info('init_trading_dates for item:{}'.format(security_item))
-    except Exception as e:
-        logger.error(
-            'init_trading_dates for item:{},error:{}'.format(security_item, e))
+def get_file_name(the_path):
+    return os.path.basename(the_path).split(".")[0]

@@ -4,12 +4,12 @@ import shutil
 
 import pandas as pd
 
-from fooltrader.api.hq import get_security_list
+from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
     get_kdata_dir, get_security_dir
-from fooltrader.utils.utils import sina_tick_to_csv
+from fooltrader.utils.utils import sina_tick_to_csv, get_file_name
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def legacy_tick_to_csv():
                      ('xls' in f and 'lock' not in f and 'error' not in f and os.path.isfile(os.path.join(dir, f)))]
             for f in files:
                 try:
-                    the_date = os.path.splitext(os.path.basename(f))[0]
+                    the_date = get_file_name(f)
                     csv_path = get_tick_path_csv(security_item, the_date)
                     if not os.path.exists(csv_path):
                         logger.info("{} to {}".format(f, csv_path))
@@ -81,7 +81,7 @@ def handle_error_tick():
                      (('fatal' in f or 'error' in f) and os.path.isfile(os.path.join(dir, f)))]
             for f in files:
                 try:
-                    the_date = os.path.basename(f).split(".")[0]
+                    the_date = get_file_name(f)
                     csv_path = get_tick_path_csv(security_item, the_date)
                     if not os.path.exists(csv_path):
                         logger.info("{} to {}".format(f, csv_path))

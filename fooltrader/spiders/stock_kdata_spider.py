@@ -7,7 +7,7 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
-from fooltrader.api.hq import get_security_list, kdata_exist, merge_kdata_to_one, remove_quarter_kdata
+from fooltrader.api.quote import get_security_list, kdata_exist, merge_kdata_to_one, remove_quarter_kdata
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path_csv
