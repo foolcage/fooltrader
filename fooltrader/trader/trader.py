@@ -5,9 +5,9 @@ from datetime import datetime
 from kafka import KafkaConsumer
 from kafka import TopicPartition
 
+from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.domain.Account import Account, Order
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
-from fooltrader.utils.data_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class Trader(object):
     sellCost = 0.001;
     slippage = 0.001;
 
-    start_date = '2015-1-1'
+    start_date = '2013-1-1'
     # listen for ever if not set
     end_date = datetime.now().strftime(TIME_FORMAT_DAY)
 
@@ -91,5 +91,6 @@ class Trader(object):
                 self.__consume_topic_with_func(topic, the_func)
 
 
-trader = Trader()
-trader.run()
+if __name__ == '__main__':
+    trader = Trader()
+    trader.run()
