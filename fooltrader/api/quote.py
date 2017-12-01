@@ -26,6 +26,12 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
     return df
 
 
+def get_security_item(code):
+    df = get_security_list(start=code, end=code)
+    df = df.set_index(df['code'])
+    return df.loc[code,]
+
+
 # tick
 def get_ticks(security_item, the_date=None, start=None, end=None):
     if the_date:
