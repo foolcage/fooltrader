@@ -60,6 +60,8 @@ def init_env():
         mkdir_for_security(item)
 
 
+init_env()
+
 @defer.inlineCallbacks
 def crawl():
     # yield runner.crawl(SecurityListSpider)

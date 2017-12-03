@@ -1,4 +1,5 @@
 import io
+import os
 from datetime import datetime
 
 import pandas as pd
@@ -24,8 +25,8 @@ class StockKdataSpider163(scrapy.Spider):
     }
 
     def yield_request(self, item, trading_dates=[]):
-
         data_path = get_kdata_path_163(item)
+
         if trading_dates:
             start = trading_dates[0]
             end = trading_dates[-1]
@@ -33,13 +34,14 @@ class StockKdataSpider163(scrapy.Spider):
             start = item['listDate'].replace('-', '')
             end = datetime.today().strftime('%Y%m%d')
 
-        if item['exchange'] == 'sh':
-            exchange_flag = 0
-        else:
-            exchange_flag = 1
-        url = self.get_k_data_url(exchange_flag, item['code'], start, end)
-        yield Request(url=url, meta={'path': data_path, 'item': item},
-                      callback=self.download_day_k_data)
+        if not os.path.exists(data_path) or trading_dates:
+            if item['exchange'] == 'sh':
+                exchange_flag = 0
+            else:
+                exchange_flag = 1
+            url = self.get_k_data_url(exchange_flag, item['code'], start, end)
+            yield Request(url=url, meta={'path': data_path, 'item': item},
+                          callback=self.download_day_k_data)
 
     def start_requests(self):
         item = self.settings.get("security_item")

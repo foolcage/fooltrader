@@ -17,7 +17,7 @@ def init_log():
     ch.setFormatter(formatter)
 
     # add the handlers to the logger
-    # root_logger.addHandler(fh)
+    root_logger.addHandler(fh)
     root_logger.addHandler(ch)
 
 
