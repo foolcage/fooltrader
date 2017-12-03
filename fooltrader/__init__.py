@@ -3,10 +3,10 @@ import logging
 
 def init_log():
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(logging.INFO)
 
-    # fh = logging.FileHandler('fooltrader.log')
-    # fh.setLevel(logging.INFO)
+    fh = logging.FileHandler('fooltrader.log')
+    fh.setLevel(logging.INFO)
 
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)

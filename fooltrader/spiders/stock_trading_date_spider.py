@@ -11,6 +11,8 @@ from fooltrader.settings import TIME_FORMAT_DAY
 from fooltrader.utils.utils import get_trading_dates_path_sse
 
 
+# 本来想以交易所网站的数据为标准,结果发现数据质量堪忧，比如很多股票的交易日跑到周末去了，上市前也有数据
+# 所以:不要用这个爬虫
 class StockTradingDateSpider(scrapy.Spider):
     name = "stock_trading_date"
 

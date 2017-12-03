@@ -94,7 +94,7 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
 
 
 def get_trading_dates(security_item, dtype='list', ignore_today=True):
-    df = get_kdata(security_item)
+    df = get_kdata(security_item,fuquan='hfq')
     if dtype is 'list':
         dates = df.index.strftime('%Y-%m-%d').tolist()
         if ignore_today:
@@ -119,7 +119,7 @@ def merge_to_current_kdata(security_item, df, fuquan='bfq'):
     df1 = get_kdata(security_item, fuquan=fuquan, dtype=str)
     df1 = df1.append(df)
 
-    df1 = df1.drop_duplicates()
+    df1 = df1.drop_duplicates(subset='timestamp', keep='last')
     df1 = df1.sort_index()
 
     the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)

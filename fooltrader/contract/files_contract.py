@@ -4,6 +4,10 @@ from fooltrader import settings
 
 
 # new
+def get_kdata_path_163(item, source='163', fuquan='bfq'):
+    return os.path.join(get_kdata_dir_csv(item, fuquan), '{}_dayk.csv'.format(source))
+
+
 def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FILES_STORE, security_type, '{}.csv'.format(exchange))
 
@@ -83,16 +87,16 @@ def get_kdata_path(item, year, quarter, fuquan):
         return os.path.join(get_kdata_dir(item), '{}_{}_dayk.json'.format(year, quarter))
 
 
-def get_trading_dates_path(item):
-    return os.path.join(get_security_dir(item), 'trading_dates.json')
-
-
 def get_trading_dates_path_ths(item):
     return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
 
 
 def get_trading_dates_path_sse(item):
     return os.path.join(get_security_dir(item), 'trading_dates_sse.json')
+
+
+def get_trading_dates_path(item, source=163):
+    return os.path.join(get_security_dir(item), 'trading_dates_{}.json'.format(source))
 
 
 def get_tick_dir(item):

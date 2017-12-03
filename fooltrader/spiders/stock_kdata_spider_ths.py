@@ -12,7 +12,7 @@ from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path_csv_ths
 from fooltrader.utils.utils import get_trading_dates_path_ths
 
-
+# 同花顺的数据质量也堪忧，跟交易所的数据一样，也出现不少周末的交易数据
 class StockKDataSpiderTHS(scrapy.Spider):
     name = "stock_kdata_ths"
 

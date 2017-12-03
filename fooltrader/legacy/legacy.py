@@ -16,6 +16,17 @@ logger = logging.getLogger(__name__)
 
 # 该脚本是用来转换以前抓的数据的,转换完成后就没有用了
 # 请不要在其他地方引用里面的函数
+def get_trading_dates_path(item):
+    return os.path.join(get_security_dir(item), 'trading_dates.json')
+
+
+def remove_old_trading_dates():
+    for index, security_item in get_security_list().iterrows():
+        the_path = get_trading_dates_path(security_item)
+        if os.path.exists(the_path):
+            logger.info("remove {}".format(the_path))
+            os.remove(the_path)
+
 
 def remove_old_tick():
     for index, security_item in get_security_list().iterrows():
@@ -124,6 +135,7 @@ def legacy_kdata_to_csv():
 
                             df.to_csv(csv_path, index=False)
 
+
 def check_convert_result():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
@@ -181,4 +193,4 @@ def check_result():
 
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    check_result()
+    remove_old_trading_dates()

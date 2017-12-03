@@ -32,7 +32,9 @@ class StockKDataSpider(scrapy.Spider):
 
     def yield_request(self, item, trading_dates=[]):
         the_quarters = []
+        force_download = False
         if trading_dates:
+            force_download = True
             for the_date in trading_dates:
                 the_quarters.append(get_year_quarter(the_date))
         else:
@@ -46,7 +48,7 @@ class StockKDataSpider(scrapy.Spider):
                 data_path = get_kdata_path_csv(item, year, quarter, fuquan)
                 data_exist = os.path.isfile(data_path) or kdata_exist(item, year, quarter, fuquan)
 
-                if not data_exist:
+                if not data_exist or force_download:
                     url = self.get_k_data_url(item['code'], year, quarter, fuquan)
                     yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
                                   meta={'path': data_path, 'item': item, 'fuquan': fuquan},

@@ -83,9 +83,17 @@ def check_data_integrity():
             diff1 = base_dates - dates
             # 试图从tdx修复
             if diff1:
-                the_dates = list(diff1)
-                the_dates.sort()
-                tdx.save_tdx_kdata(security_item, the_dates)
+                logger.info("------{} kdata missing {} after fixed------".format(security_item['code'], len(diff1)))
+                # the_dates = list(diff1)
+                # the_dates.sort()
+                # tdx.save_tdx_kdata(security_item, the_dates)
+                #
+                # dates = set(get_trading_dates(security_item))
+                # diff1 = base_dates - dates
+                # if diff1:
+                #     logger.info("------{} kdata missing {} after fixed------".format(security_item['code'], len(diff1)))
+            else:
+                logger.info("------{} kdata ok after fixed------".format(security_item['code']))
 
         else:
             logger.info("------{} kdata ok------".format(security_item['code']))
