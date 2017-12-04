@@ -20,3 +20,5 @@ xlrd == 1.1.0
 pandas == 0.21.0
 
 pytdx == 1.55
+
+apscheduler == 3.4.0

@@ -27,7 +27,7 @@ def process_crawl(spider, setting):
     p.join(5 * 60)
 
 
-def check_data_integrity():
+def crawl_stock_data():
     # 更新股票列表
     # TODO:看是否有必要判断有新股上市，目前每天抓一次列表，问题不大
     if False:
@@ -59,4 +59,4 @@ def check_data_integrity():
 
 
 if __name__ == '__main__':
-    check_data_integrity()
+    crawl_stock_data()
