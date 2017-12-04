@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import shutil
@@ -8,16 +9,89 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
-    get_kdata_dir, get_security_dir
-from fooltrader.utils.utils import sina_tick_to_csv, get_file_name
+    get_security_dir, get_kdata_path_ths
+from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter
 
 logger = logging.getLogger(__name__)
 
 
 # 该脚本是用来转换以前抓的数据的,转换完成后就没有用了
 # 请不要在其他地方引用里面的函数
+def get_kdata_dir(item, fuquan=False):
+    if fuquan:
+        return os.path.join(get_security_dir(item), 'kdata', 'fuquan')
+    else:
+        return os.path.join(get_security_dir(item), 'kdata')
+
+
+def get_kdata_path(item, year, quarter, fuquan):
+    if fuquan:
+        return os.path.join(get_kdata_dir(item, fuquan), '{}_{}_fuquan_dayk.json'.format(year, quarter))
+    else:
+        return os.path.join(get_kdata_dir(item), '{}_{}_dayk.json'.format(year, quarter))
+
+
 def get_trading_dates_path(item):
     return os.path.join(get_security_dir(item), 'trading_dates.json')
+
+
+def get_kdata_items(security_item, houfuquan=False):
+    dir = get_kdata_dir(security_item, houfuquan)
+    if os.path.exists(dir):
+        files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                 (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
+
+        for f in sorted(files):
+            with open(f) as data_file:
+                kdata_jsons = json.load(data_file)
+                for kdata_json in reversed(kdata_jsons):
+                    yield kdata_json
+
+
+def merge_ths_kdata(security_item, dates):
+    ths_kdata = {}
+    ths_fuquan_kdata = {}
+
+    try:
+        with open(get_kdata_path_ths(security_item)) as data_file:
+            ths_items = json.load(data_file)
+            for item in ths_items:
+                if item["timestamp"] in dates:
+                    ths_kdata[item["timestamp"]] = item
+
+        with open(get_kdata_path_ths(security_item, True)) as data_file:
+            ths_items = json.load(data_file)
+            for item in ths_items:
+                if item["timestamp"] in dates:
+                    ths_fuquan_kdata[item["timestamp"]] = item
+
+        year_quarter_map_dates = {}
+        for the_date in dates:
+            year, quarter = get_year_quarter(get_datetime(the_date))
+            year_quarter_map_dates.setdefault((year, quarter), [])
+            year_quarter_map_dates.get((year, quarter)).append(the_date)
+
+        for year, quarter in year_quarter_map_dates.keys():
+            for fuquan in (False, True):
+                data_path = get_kdata_path(security_item, year, quarter, fuquan)
+                data_exist = os.path.isfile(data_path)
+                if data_exist:
+                    with open(data_path) as data_file:
+                        k_items = json.load(data_file)
+                        if fuquan:
+                            for the_date in year_quarter_map_dates.get((year, quarter)):
+                                k_items.append(ths_fuquan_kdata[the_date])
+                        else:
+                            for the_date in year_quarter_map_dates.get((year, quarter)):
+                                k_items.append(ths_kdata[the_date])
+                    k_items = sorted(k_items, key=lambda item: item["timestamp"], reverse=True)
+
+                    with open(data_path, "w") as f:
+                        json.dump(k_items, f)
+
+
+    except Exception as e:
+        logger.error(e)
 
 
 def remove_old_trading_dates():

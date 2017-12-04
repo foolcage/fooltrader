@@ -8,7 +8,6 @@ from scrapy.utils.project import get_project_settings
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list, get_trading_dates, get_available_tick_dates
 from fooltrader.contract.files_contract import get_security_list_path
-from fooltrader.datasource import tdx
 from fooltrader.settings import STATUS_SHOW_NOT_OK_DATE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider

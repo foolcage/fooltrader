@@ -8,19 +8,12 @@ from twisted.internet import reactor
 
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list
-from fooltrader.contract.files_contract import get_kdata_dir, get_finance_dir, get_tick_dir, get_event_dir, \
+from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, \
     get_kdata_dir_csv
 from fooltrader.proxy.proxy_manager import int_proxy
-from fooltrader.spiders.security_list_spider import SecurityListSpider
-from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_163 import StockKdataSpider163
-from fooltrader.spiders.stock_tick_spider import StockTickSpider
-from fooltrader.spiders.stock_trading_date_spider import StockTradingDateSpider
-from fooltrader.utils.utils import setup_env
 
 configure_logging()
-
-setup_env()
 
 int_proxy()
 
@@ -28,10 +21,6 @@ runner = CrawlerRunner(get_project_settings())
 
 
 def mkdir_for_security(item):
-    fuquan_kdata_dir = get_kdata_dir(item, True)
-    if not os.path.exists(fuquan_kdata_dir):
-        os.makedirs(fuquan_kdata_dir)
-
     finance_dir = get_finance_dir(item)
     if not os.path.exists(finance_dir):
         os.makedirs(finance_dir)
@@ -61,6 +50,7 @@ def init_env():
 
 
 init_env()
+
 
 @defer.inlineCallbacks
 def crawl():

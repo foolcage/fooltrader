@@ -10,6 +10,7 @@ from scrapy import signals
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_FULL
 from fooltrader.contract.files_contract import get_kdata_path_163
+from fooltrader.utils import utils
 
 
 class StockKdataSpider163(scrapy.Spider):
@@ -24,17 +25,21 @@ class StockKdataSpider163(scrapy.Spider):
         }
     }
 
-    def yield_request(self, item, trading_dates=[]):
+    # 指定日期的话，是用来抓增量数据的
+    def yield_request(self, item, start_date, end_date):
         data_path = get_kdata_path_163(item)
 
-        if trading_dates:
-            start = trading_dates[0]
-            end = trading_dates[-1]
+        if start_date:
+            start = start_date.strftime('%Y%m%d')
         else:
             start = item['listDate'].replace('-', '')
+
+        if end_date:
+            end = end_date.strftime('%Y%m%d')
+        else:
             end = datetime.today().strftime('%Y%m%d')
 
-        if not os.path.exists(data_path) or trading_dates:
+        if not os.path.exists(data_path) or start_date or end_date:
             if item['exchange'] == 'sh':
                 exchange_flag = 0
             else:
@@ -45,9 +50,10 @@ class StockKdataSpider163(scrapy.Spider):
 
     def start_requests(self):
         item = self.settings.get("security_item")
-        trading_dates = self.settings.get("trading_dates")
+        start_date = self.settings.get("start_date")
+        end_date = self.settings.get("end_date")
         if item is not None:
-            for request in self.yield_request(item, trading_dates):
+            for request in self.yield_request(item, start_date, end_date):
                 yield request
         else:
             for _, item in get_security_list().iterrows():
@@ -59,18 +65,26 @@ class StockKdataSpider163(scrapy.Spider):
         item = response.meta['item']
 
         try:
-            df = pd.read_csv(io.BytesIO(response.body), encoding='GB2312', na_values='None')
+            # 已经保存的csv数据
+            df_current = pd.read_csv(path, dtype=str)
+
+            df = utils.read_csv(io.BytesIO(response.body), encoding='GB2312', na_values='None')
             df['code'] = item['code']
             df['securityId'] = item['id']
             df = df.loc[:,
                  ['日期', 'code', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额', '涨跌幅', '换手率',
                   '总市值', '流通市值']]
-            df.dropna()
             df.columns = KDATA_COLUMN_FULL
-            df = df.set_index(df['timestamp'])
-            df.index = pd.to_datetime(df.index)
-            df = df.sort_index()
-            df.to_csv(path, index=False)
+
+            # 合并到当前csv中
+            df_current = df_current.append(df, ignore_index=True)
+
+            df_current = df_current.dropna()
+            df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
+            df_current = df_current.set_index(df_current['timestamp'])
+            df_current.index = pd.to_datetime(df_current.index)
+            df_current = df_current.sort_index()
+            df_current.to_csv(path, index=False)
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
 

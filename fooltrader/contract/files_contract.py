@@ -66,11 +66,6 @@ def get_forecast_event_path(item):
     return os.path.join(get_event_dir(item), 'forecast.json')
 
 
-def get_kdata_dir(item, fuquan=False):
-    if fuquan:
-        return os.path.join(get_security_dir(item), 'kdata', 'fuquan')
-    else:
-        return os.path.join(get_security_dir(item), 'kdata')
 
 
 def get_kdata_path_ths(item, fuquan=False):
@@ -78,13 +73,6 @@ def get_kdata_path_ths(item, fuquan=False):
         return os.path.join(get_security_dir(item), 'ths_fuquan_dayk.json')
     else:
         return os.path.join(get_security_dir(item), 'ths_dayk.json')
-
-
-def get_kdata_path(item, year, quarter, fuquan):
-    if fuquan:
-        return os.path.join(get_kdata_dir(item, fuquan), '{}_{}_fuquan_dayk.json'.format(year, quarter))
-    else:
-        return os.path.join(get_kdata_dir(item), '{}_{}_dayk.json'.format(year, quarter))
 
 
 def get_trading_dates_path_ths(item):

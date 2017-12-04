@@ -7,7 +7,7 @@ import pandas as pd
 from fooltrader import settings
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
-from fooltrader.contract.files_contract import get_kdata_dir_csv, get_kdata_path_csv
+from fooltrader.contract.files_contract import get_kdata_dir_csv, get_kdata_path_csv, get_kdata_path_163
 from fooltrader.datasource import tdx
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import get_file_name
@@ -71,8 +71,11 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None):
-    the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
+def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None, source='163'):
+    if source == '163':
+        the_path = get_kdata_path_163(security_item, fuquan=fuquan)
+    else:
+        the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
     if os.path.isfile(the_path):
         if not dtype:
             dtype = {"code": str}
@@ -93,13 +96,22 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
     return pd.DataFrame()
 
 
-def get_trading_dates(security_item, dtype='list', ignore_today=True):
-    df = get_kdata(security_item,fuquan='hfq')
+def get_latest_download_trading_date(security_item, return_next=True):
+    df = get_kdata(security_item)
+    if return_next:
+        return df.index[-1] + pd.DateOffset(1)
+    else:
+        return df.index[-1]
+
+
+def get_trading_dates(security_item, dtype='list', ignore_today=False, source=163):
+    df = get_kdata(security_item, source=source)
     if dtype is 'list':
         dates = df.index.strftime('%Y-%m-%d').tolist()
         if ignore_today:
             dates = [the_date for the_date in dates if the_date != datetime.datetime.today().strftime('%Y-%m-%d')]
             return dates
+        return dates
     return df.index
 
 

@@ -7,8 +7,7 @@ import pandas as pd
 
 from fooltrader import settings
 from fooltrader.contract.data_contract import TICK_COLUNM
-from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir, get_kdata_path_ths, \
-    get_trading_dates_path_sse, get_trading_dates_path_ths, get_tick_path_csv
+from fooltrader.contract.files_contract import get_trading_dates_path_sse, get_trading_dates_path_ths, get_tick_path_csv
 from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
@@ -49,19 +48,6 @@ def kdata_to_tick(kdata_json):
 {}	{}	--	{}	{}	{}'''.format('09:25:00', kdata_json['high'], int(kdata_json['volume']) / 100,
                                            kdata_json['turnover'], '买盘')
     return str
-
-
-def get_kdata_items(security_item, houfuquan=False):
-    dir = get_kdata_dir(security_item, houfuquan)
-    if os.path.exists(dir):
-        files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                 (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
-
-        for f in sorted(files):
-            with open(f) as data_file:
-                kdata_jsons = json.load(data_file)
-                for kdata_json in reversed(kdata_jsons):
-                    yield kdata_json
 
 
 def get_tick_item(path, the_date, security_item):
@@ -107,56 +93,6 @@ def detect_encoding(url):
     detector.close()
     usock.close()
     return detector.result.get('encoding')
-
-
-def setup_env():
-    pass
-
-
-def merge_ths_kdata(security_item, dates):
-    ths_kdata = {}
-    ths_fuquan_kdata = {}
-
-    try:
-        with open(get_kdata_path_ths(security_item)) as data_file:
-            ths_items = json.load(data_file)
-            for item in ths_items:
-                if item["timestamp"] in dates:
-                    ths_kdata[item["timestamp"]] = item
-
-        with open(get_kdata_path_ths(security_item, True)) as data_file:
-            ths_items = json.load(data_file)
-            for item in ths_items:
-                if item["timestamp"] in dates:
-                    ths_fuquan_kdata[item["timestamp"]] = item
-
-        year_quarter_map_dates = {}
-        for the_date in dates:
-            year, quarter = get_year_quarter(get_datetime(the_date))
-            year_quarter_map_dates.setdefault((year, quarter), [])
-            year_quarter_map_dates.get((year, quarter)).append(the_date)
-
-        for year, quarter in year_quarter_map_dates.keys():
-            for fuquan in (False, True):
-                data_path = get_kdata_path(security_item, year, quarter, fuquan)
-                data_exist = os.path.isfile(data_path)
-                if data_exist:
-                    with open(data_path) as data_file:
-                        k_items = json.load(data_file)
-                        if fuquan:
-                            for the_date in year_quarter_map_dates.get((year, quarter)):
-                                k_items.append(ths_fuquan_kdata[the_date])
-                        else:
-                            for the_date in year_quarter_map_dates.get((year, quarter)):
-                                k_items.append(ths_kdata[the_date])
-                    k_items = sorted(k_items, key=lambda item: item["timestamp"], reverse=True)
-
-                    with open(data_path, "w") as f:
-                        json.dump(k_items, f)
-
-
-    except Exception as e:
-        logger.error(e)
 
 
 def get_base_trading_dates(item, ignore_today=True):
@@ -253,9 +189,12 @@ def direction_to_int(direction):
         return 0
 
 
-def read_csv(f, encoding):
+def read_csv(f, encoding, sep=None, na_values=None):
     try:
-        return pd.read_csv(f, sep='\s+', encoding=encoding)
+        if sep:
+            return pd.read_csv(f, sep=sep, encoding=encoding, na_values=na_values)
+        else:
+            return pd.read_csv(f, encoding=encoding, na_values=na_values)
     except UnicodeDecodeError as e:
         if encoding == "GB2312":
             return read_csv(f, "GBK")
@@ -269,7 +208,7 @@ def read_csv(f, encoding):
 
 def sina_tick_to_csv(security_item, the_content, the_date):
     csv_path = get_tick_path_csv(security_item, the_date)
-    df = read_csv(the_content, "GB2312")
+    df = read_csv(the_content, "GB2312", sep='\s+')
     df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
     df.columns = TICK_COLUNM
     df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
