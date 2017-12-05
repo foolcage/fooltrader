@@ -110,8 +110,6 @@ ZK_KAFKA_HOST = 'localhost:2181'
 # LOG_FILE = 'log.txt'
 
 DG_PATH = '/Users/xuanqi/software/delegate/DGROOT/bin/delegate'
-HTTP_PROXY_ITEMS_PATH = FILES_STORE + '/http_proxy_items.json'
-SOCKS_PROXY_ITEMS_PATH = FILES_STORE + '/socks_proxy_items.json'
 
 SUPPORT_SOCKS2HTTP = False
 

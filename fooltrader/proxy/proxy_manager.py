@@ -1,10 +1,9 @@
-import json
 import socket
 import subprocess
 from contextlib import closing
 
-from fooltrader import settings
-from fooltrader.settings import DG_PATH, HTTP_PROXY_ITEMS_PATH, SUPPORT_SOCKS2HTTP, g_socks2http_proxy_items
+from fooltrader.proxy.spiders.proxy_spider_hideme import ProxySpiderHideMe
+from fooltrader.settings import DG_PATH, SUPPORT_SOCKS2HTTP, g_socks2http_proxy_items
 
 
 def start_delegate(proxy):
@@ -60,14 +59,14 @@ def int_proxy():
         g_socks2http_proxy_items['{}:{}'.format(my_1080['ip'], + my_1080['port'])] = start_delegate(my_1080)
 
         g_socks2http_proxy_items['{}:{}'.format(my_1081['ip'], + my_1081['port'])] = start_delegate(my_1081)
-    try:
-        with open(HTTP_PROXY_ITEMS_PATH) as fr:
-            items = json.load(fr)
-            settings.g_http_proxy_items = settings.g_http_proxy_items + items
-    except Exception as e:
-        print(e)
+
+    ProxySpiderHideMe().run()
 
 
 def release_socks2http_proxy():
     for _, item in g_socks2http_proxy_items:
         stop_delegate(item['port'])
+
+
+if __name__ == '__main__':
+    int_proxy()
