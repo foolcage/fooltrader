@@ -50,20 +50,28 @@ class ProxySpiderHideMe(BaseProxySpider):
                 check_time = (datetime.datetime.now() + datetime.timedelta(seconds=-check_time_gap)).strftime(
                     '%Y-%m-%d %H:%M:%S')
 
-                json_item = {"ip": tds[0],
-                             'port': tds[1],
+                if 'HTTP' in tds[5]:
+                    the_url = "{}://{}:{}".format('http', tds[0], tds[1])
+                elif 'HTTPS' in tds[5]:
+                    the_url = "{}://{}:{}".format('https', tds[0], tds[1])
+                elif 'SOCKS5' in tds[5]:
+                    the_url = "{}://{}:{}".format('socks5', tds[0], tds[1])
+                elif 'SOCKS4' in tds[5]:
+                    the_url = "{}://{}:{}".format('socks4', tds[0], tds[1])
+                else:
+                    logger.info("not support protocol:{}".format(tds[5]))
+                    continue
+
+                json_item = {"url": the_url,
                              'location': location,
-                             'speed': tds[4],
-                             'type': tds[5],
-                             'anonymity': tds[6],
-                             'checkTime': check_time}
+                             'anonymity': tds[6]}
 
                 logger.info("get item {}".format(json_item))
 
-                if tds[5] == 'HTTP':
+                if 'HTTP' in tds[5]:
                     http_jsons.append(json_item)
-                elif tds[5] == 'HTTPS':
+                elif 'HTTPS' in tds[5]:
                     https_jsons.append(json_item)
-                else:
+                elif 'SOCKS' in tds[5]:
                     socks_jsons.append(json_item)
             self.save_proxies(http_jsons, https_jsons, socks_jsons)

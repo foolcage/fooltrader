@@ -12,15 +12,15 @@ def get_proxy_dir():
 
 
 def get_http_proxy_path():
-    return os.path.join(get_proxy_dir(), "http_proxy.json")
+    return os.path.join(get_proxy_dir(), "http_proxy.csv")
 
 
 def get_https_proxy_path():
-    return os.path.join(get_proxy_dir(), "https_proxy.json")
+    return os.path.join(get_proxy_dir(), "https_proxy.csv")
 
 
 def get_socks_proxy_path():
-    return os.path.join(get_proxy_dir(), "socks_proxy.json")
+    return os.path.join(get_proxy_dir(), "socks_proxy.csv")
 
 
 def get_http_proxy():
@@ -47,22 +47,22 @@ def get_socks_proxy():
 def save_http_proxy(proxies):
     global http_proxy_df
     http_proxy_df = http_proxy_df.append(proxies)
-    http_proxy_df.drop_duplicates(subset=('ip', 'port'), keep='last')
-    http_proxy_df.to_json(get_http_proxy_path(), orient='records')
+    http_proxy_df.drop_duplicates(subset=('url'), keep='last')
+    http_proxy_df.to_csv(get_http_proxy_path(), index=False)
 
 
 def save_https_proxy(proxies):
     global https_proxy_df
     https_proxy_df = https_proxy_df.append(proxies)
-    https_proxy_df.drop_duplicates(subset=('ip', 'port'), keep='last')
-    https_proxy_df.to_json(get_https_proxy_path(), orient='records')
+    https_proxy_df.drop_duplicates(subset=('url'), keep='last')
+    https_proxy_df.to_csv(get_https_proxy_path(), index=False)
 
 
 def save_socks_proxy(proxies):
     global socks_proxy_df
     socks_proxy_df = socks_proxy_df.append(proxies)
-    socks_proxy_df.drop_duplicates(subset=('ip', 'port'), keep='last')
-    socks_proxy_df.to_json(get_socks_proxy_path(), orient='records')
+    socks_proxy_df.drop_duplicates(subset=('url'), keep='last')
+    socks_proxy_df.to_csv(get_socks_proxy_path(), index=False)
 
 
 if not os.path.exists(get_proxy_dir()):
