@@ -10,7 +10,7 @@ from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
     get_security_dir, get_kdata_path_ths
-from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter
+from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -121,23 +121,23 @@ def remove_old_kdata():
                 if fuquan:
                     logger.info("remove {}".format(dir))
                     shutil.rmtree(dir)
-                else:
-                    files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                             ('dayk.json' in f and os.path.isfile(os.path.join(dir, f)))]
+                # else:
+                #     files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                #              ('dayk.json' in f and os.path.isfile(os.path.join(dir, f)))]
+                #
+                #     for f in files:
+                #         logger.info("remove {}".format(f))
+                #         os.remove(f)
 
-                    for f in files:
-                        logger.info("remove {}".format(f))
-                        os.remove(f)
-
-    for index, security_item in get_security_list().iterrows():
-        for fuquan in ('bfq', 'hfq'):
-            dir = get_kdata_dir_csv(security_item, fuquan)
-            if os.path.exists(dir):
-                files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                         ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
-                for f in files:
-                    logger.info("remove {}".format(f))
-                    os.remove(f)
+    # for index, security_item in get_security_list().iterrows():
+    #     for fuquan in ('bfq', 'hfq'):
+    #         dir = get_kdata_dir_csv(security_item, fuquan)
+    #         if os.path.exists(dir):
+    #             files = [os.path.join(dir, f) for f in os.listdir(dir) if
+    #                      ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
+    #             for f in files:
+    #                 logger.info("remove {}".format(f))
+    #                 os.remove(f)
 
 
 def legacy_tick_to_csv():
@@ -267,4 +267,6 @@ def check_result():
 
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    remove_old_trading_dates()
+    # remove_old_trading_dates()
+    remove_old_kdata()
+

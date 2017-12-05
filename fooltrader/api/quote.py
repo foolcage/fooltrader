@@ -98,13 +98,15 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
 
 def get_latest_download_trading_date(security_item, return_next=True):
     df = get_kdata(security_item)
+    if len(df) == 0:
+        return security_item['listDate']
     if return_next:
         return df.index[-1] + pd.DateOffset(1)
     else:
         return df.index[-1]
 
 
-def get_trading_dates(security_item, dtype='list', ignore_today=False, source=163):
+def get_trading_dates(security_item, dtype='list', ignore_today=False, source='163'):
     df = get_kdata(security_item, source=source)
     if dtype is 'list':
         dates = df.index.strftime('%Y-%m-%d').tolist()

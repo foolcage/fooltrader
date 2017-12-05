@@ -16,8 +16,8 @@ class StockTickSpider(scrapy.Spider):
     name = "stock_tick"
 
     custom_settings = {
-        'DOWNLOAD_DELAY': 1,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
+        'DOWNLOAD_DELAY': 2,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 6,
 
         'SPIDER_MIDDLEWARES': {
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
