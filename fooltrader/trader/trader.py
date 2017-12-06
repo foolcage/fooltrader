@@ -1,38 +1,55 @@
 import json
 import logging
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 from kafka import KafkaConsumer
 from kafka import TopicPartition
 
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
-from fooltrader.domain.Account import Account, Order
+from fooltrader.domain.Account import Account
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
 
 
 class Trader(object):
-    account = Account()
+    def __init__(self):
+        self.account = Account()
 
-    baseCapital = 1000000;
-    buyCost = 0.001;
-    sellCost = 0.001;
-    slippage = 0.001;
+        self.baseCapital = 1000000;
+        self.buyCost = 0.001;
+        self.sellCost = 0.001;
+        self.slippage = 0.001;
 
-    start_date = '2013-1-1'
-    # listen for ever if not set
-    end_date = datetime.now().strftime(TIME_FORMAT_DAY)
+        self.start_date = '2013-01-01'
+        # listen for ever if not set
+        self.end_date = datetime.now().strftime(TIME_FORMAT_DAY)
 
-    universe = ('stock_sh_600000', 'stock_sh_600004')
+        self.universe = ('stock_sh_600000', 'stock_sh_600004')
 
-    trader_id = 'fool1'
+        self.trader_id = 'fool1'
+
+        self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d')
+        self.step = timedelta(days=1)
 
     def buy(self, security_id, amount, current_price=0, order_price=0):
         # 市价交易
-        if order_price == 0:
-            order = Order()
-            order.save()
+        # if order_price == 0:
+        #     order = Order()
+        #     order.save()
+        logger.info("{} buy {} {} with price {}".format(self.trader_id, security_id, amount, current_price))
+
+    def move_on(self, step):
+        # 对于回测来说,时间只是加一下
+        if self.event_time.date() < datetime.today().date():
+            self.event_time += step
+        else:
+            time.sleep(self.step.total_seconds())
+
+    def on_time_elapsed(self):
+        logger.info('event_time:{}'.format(self.event_time))
+        self.move_on(self.step)
 
     def on_tick(self, tick_item):
         logger.info('on_tick:{}'.format(tick_item))
@@ -81,6 +98,8 @@ class Trader(object):
                 logger.error("topic:{} not in kafka".format(topic))
 
     def run(self):
+        while True:
+            self.on_time_elapsed()
         for security_id in self.universe:
             if 'on_tick' in dir(self):
                 topic = get_kafka_tick_topic(security_id)

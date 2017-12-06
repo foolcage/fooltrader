@@ -72,6 +72,9 @@ def get_available_tick_dates(security_item):
 
 # kdata
 def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None, source='163', level='day'):
+    if type(security_item) == str:
+        security_item = get_security_item(security_item)
+
     if source == '163':
         the_path = get_kdata_path_163(security_item, fuquan=fuquan)
     else:
@@ -84,7 +87,10 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
         if the_date:
-            return df[the_date]
+            if the_date in df.index:
+                return df.loc[the_date]
+            else:
+                return pd.DataFrame()
 
         if not start:
             start = security_item['listDate']
