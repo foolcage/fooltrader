@@ -66,7 +66,10 @@ class StockKdataSpider163(scrapy.Spider):
 
         try:
             # 已经保存的csv数据
-            df_current = pd.read_csv(path, dtype=str)
+            if os.path.exists(path):
+                df_current = pd.read_csv(path, dtype=str)
+            else:
+                df_current = pd.DataFrame()
 
             df = utils.read_csv(io.BytesIO(response.body), encoding='GB2312', na_values='None')
             df['code'] = item['code']

@@ -71,7 +71,7 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None, source='163'):
+def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None, source='163', level='day'):
     if source == '163':
         the_path = get_kdata_path_163(security_item, fuquan=fuquan)
     else:
@@ -99,7 +99,7 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
 def get_latest_download_trading_date(security_item, return_next=True):
     df = get_kdata(security_item)
     if len(df) == 0:
-        return security_item['listDate']
+        return pd.Timestamp(security_item['listDate'])
     if return_next:
         return df.index[-1] + pd.DateOffset(1)
     else:
@@ -108,7 +108,7 @@ def get_latest_download_trading_date(security_item, return_next=True):
 
 def get_trading_dates(security_item, dtype='list', ignore_today=False, source='163'):
     df = get_kdata(security_item, source=source)
-    if dtype is 'list':
+    if dtype is 'list' and len(df.index) > 0:
         dates = df.index.strftime('%Y-%m-%d').tolist()
         if ignore_today:
             dates = [the_date for the_date in dates if the_date != datetime.datetime.today().strftime('%Y-%m-%d')]
