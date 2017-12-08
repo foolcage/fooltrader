@@ -5,8 +5,8 @@ def init_log():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
 
-    fh = logging.FileHandler('fooltrader.log')
-    fh.setLevel(logging.INFO)
+    # fh = logging.FileHandler('fooltrader.log')
+    # fh.setLevel(logging.INFO)
 
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
@@ -17,7 +17,7 @@ def init_log():
     ch.setFormatter(formatter)
 
     # add the handlers to the logger
-    root_logger.addHandler(fh)
+    # root_logger.addHandler(fh)
     root_logger.addHandler(ch)
 
 

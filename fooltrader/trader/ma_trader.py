@@ -17,10 +17,14 @@ class MaTrader(Trader):
             the_ma = technical.ma(self.universe, start=self.event_time, end=self.event_time)['close_ma5'][0]
             print(the_ma)
             if the_close > the_ma:
-                self.buy(security_id=self.universe, amount=100, current_price=the_close)
+                self.order(security_id=self.universe, amount=100, current_price=the_close)
             else:
-                self.buy(security_id=self.universe, amount=-100, current_price=the_close)
+                self.order(security_id=self.universe, amount=-100, current_price=the_close)
 
 
 if __name__ == '__main__':
+    from elasticsearch_dsl.connections import connections
+
+    connections.create_connection(hosts=['localhost'], timeout=20)
+
     MaTrader().run()
