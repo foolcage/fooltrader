@@ -8,7 +8,7 @@ from scrapy import signals
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list, get_trading_dates, get_kdata
 from fooltrader.consts import DEFAULT_TICK_HEADER
-from fooltrader.contract.files_contract import get_tick_path_csv
+from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.utils.utils import is_available_tick, get_datetime, kdata_to_tick, sina_tick_to_csv
 
 
@@ -32,7 +32,7 @@ class StockTickSpider(scrapy.Spider):
             if get_datetime(trading_date) < get_datetime(settings.START_TICK_DATE) or get_datetime(
                     trading_date) < get_datetime(settings.AVAILABLE_TICK_DATE):
                 continue
-            path = get_tick_path_csv(item, trading_date)
+            path = get_tick_path(item, trading_date)
 
             if os.path.isfile(path) and is_available_tick(path):
                 continue

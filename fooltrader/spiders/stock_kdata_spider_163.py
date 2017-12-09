@@ -9,7 +9,7 @@ from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_FULL
-from fooltrader.contract.files_contract import get_kdata_path_163
+from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.utils import utils
 
 
@@ -26,8 +26,8 @@ class StockKdataSpider163(scrapy.Spider):
     }
 
     # 指定日期的话，是用来抓增量数据的
-    def yield_request(self, item, start_date, end_date):
-        data_path = get_kdata_path_163(item)
+    def yield_request(self, item, start_date=None, end_date=None):
+        data_path = get_kdata_path(item, source='163')
 
         if start_date:
             start = start_date.strftime('%Y%m%d')

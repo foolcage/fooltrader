@@ -25,21 +25,21 @@ def get_socks_proxy_path():
 
 def get_http_proxy():
     if os.path.exists(get_http_proxy_path()):
-        return pd.read_json(get_http_proxy_path())
+        return pd.read_csv(get_http_proxy_path())
     else:
         return pd.DataFrame()
 
 
 def get_https_proxy():
     if os.path.exists(get_https_proxy_path()):
-        return pd.read_json(get_https_proxy_path())
+        return pd.read_csv(get_https_proxy_path())
     else:
         return pd.DataFrame()
 
 
 def get_socks_proxy():
     if os.path.exists(get_socks_proxy_path()):
-        return pd.read_json(get_socks_proxy_path())
+        return pd.read_csv(get_socks_proxy_path())
     else:
         return pd.DataFrame()
 

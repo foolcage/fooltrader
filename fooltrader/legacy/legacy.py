@@ -8,8 +8,8 @@ import pandas as pd
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
-from fooltrader.contract.files_contract import get_kdata_path_csv, get_kdata_dir_csv, get_tick_dir, get_tick_path_csv, \
-    get_security_dir, get_kdata_path_ths
+from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
+    get_security_dir, get_kdata_path_ths, get_kdata_path
 from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
 
 logger = logging.getLogger(__name__)
@@ -17,18 +17,34 @@ logger = logging.getLogger(__name__)
 
 # 该脚本是用来转换以前抓的数据的,转换完成后就没有用了
 # 请不要在其他地方引用里面的函数
-def get_kdata_dir(item, fuquan=False):
+
+# 目前看同花顺的后复权和新浪的差别挺大，先以新浪的为准
+def get_kdata_path_csv_ths(item, fuquan=None):
+    if fuquan == 'qfq' or fuquan == 'hfq':
+        return os.path.join(get_security_dir(item), 'kdata', '{}_ths.csv'.format(fuquan))
+    else:
+        return os.path.join(get_security_dir(item), 'kdata', 'ths.csv')
+
+
+def get_kdata_path_ths(item, fuquan=False):
+    if fuquan:
+        return os.path.join(get_security_dir(item), 'ths_fuquan_dayk.json')
+    else:
+        return os.path.join(get_security_dir(item), 'ths_dayk.json')
+
+
+def get_kdata_dir_old(item, fuquan=False):
     if fuquan:
         return os.path.join(get_security_dir(item), 'kdata', 'fuquan')
     else:
         return os.path.join(get_security_dir(item), 'kdata')
 
 
-def get_kdata_path(item, year, quarter, fuquan):
+def get_kdata_path_old(item, year, quarter, fuquan):
     if fuquan:
-        return os.path.join(get_kdata_dir(item, fuquan), '{}_{}_fuquan_dayk.json'.format(year, quarter))
+        return os.path.join(get_kdata_dir_old(item, fuquan), '{}_{}_fuquan_dayk.json'.format(year, quarter))
     else:
-        return os.path.join(get_kdata_dir(item), '{}_{}_dayk.json'.format(year, quarter))
+        return os.path.join(get_kdata_dir_old(item), '{}_{}_dayk.json'.format(year, quarter))
 
 
 def get_trading_dates_path(item):
@@ -36,7 +52,7 @@ def get_trading_dates_path(item):
 
 
 def get_kdata_items(security_item, houfuquan=False):
-    dir = get_kdata_dir(security_item, houfuquan)
+    dir = get_kdata_dir_old(security_item, houfuquan)
     if os.path.exists(dir):
         files = [os.path.join(dir, f) for f in os.listdir(dir) if
                  (f != "all_dayk.json" and os.path.isfile(os.path.join(dir, f)))]
@@ -73,7 +89,7 @@ def merge_ths_kdata(security_item, dates):
 
         for year, quarter in year_quarter_map_dates.keys():
             for fuquan in (False, True):
-                data_path = get_kdata_path(security_item, year, quarter, fuquan)
+                data_path = get_kdata_path_old(security_item, year, quarter, fuquan)
                 data_exist = os.path.isfile(data_path)
                 if data_exist:
                     with open(data_path) as data_file:
@@ -116,28 +132,28 @@ def remove_old_tick():
 def remove_old_kdata():
     for index, security_item in get_security_list().iterrows():
         for fuquan in (True, False):
-            dir = get_kdata_dir(security_item, fuquan)
+            dir = get_kdata_dir_old(security_item, fuquan)
             if os.path.exists(dir):
                 if fuquan:
                     logger.info("remove {}".format(dir))
                     shutil.rmtree(dir)
-                # else:
-                #     files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                #              ('dayk.json' in f and os.path.isfile(os.path.join(dir, f)))]
-                #
-                #     for f in files:
-                #         logger.info("remove {}".format(f))
-                #         os.remove(f)
+                    # else:
+                    #     files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                    #              ('dayk.json' in f and os.path.isfile(os.path.join(dir, f)))]
+                    #
+                    #     for f in files:
+                    #         logger.info("remove {}".format(f))
+                    #         os.remove(f)
 
-    # for index, security_item in get_security_list().iterrows():
-    #     for fuquan in ('bfq', 'hfq'):
-    #         dir = get_kdata_dir_csv(security_item, fuquan)
-    #         if os.path.exists(dir):
-    #             files = [os.path.join(dir, f) for f in os.listdir(dir) if
-    #                      ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
-    #             for f in files:
-    #                 logger.info("remove {}".format(f))
-    #                 os.remove(f)
+                    # for index, security_item in get_security_list().iterrows():
+                    #     for fuquan in ('bfq', 'hfq'):
+                    #         dir = get_kdata_dir_csv(security_item, fuquan)
+                    #         if os.path.exists(dir):
+                    #             files = [os.path.join(dir, f) for f in os.listdir(dir) if
+                    #                      ('dayk' not in f and os.path.isfile(os.path.join(dir, f)))]
+                    #             for f in files:
+                    #                 logger.info("remove {}".format(f))
+                    #                 os.remove(f)
 
 
 def legacy_tick_to_csv():
@@ -149,7 +165,7 @@ def legacy_tick_to_csv():
             for f in files:
                 try:
                     the_date = get_file_name(f)
-                    csv_path = get_tick_path_csv(security_item, the_date)
+                    csv_path = get_tick_path(security_item, the_date)
                     if not os.path.exists(csv_path):
                         logger.info("{} to {}".format(f, csv_path))
                         sina_tick_to_csv(security_item, f, the_date)
@@ -167,7 +183,7 @@ def handle_error_tick():
             for f in files:
                 try:
                     the_date = get_file_name(f)
-                    csv_path = get_tick_path_csv(security_item, the_date)
+                    csv_path = get_tick_path(security_item, the_date)
                     if not os.path.exists(csv_path):
                         logger.info("{} to {}".format(f, csv_path))
                         sina_tick_to_csv(security_item, f, the_date)
@@ -179,7 +195,7 @@ def handle_error_tick():
 def legacy_kdata_to_csv():
     for index, security_item in get_security_list().iterrows():
         for fuquan in (True, False):
-            dir = get_kdata_dir(security_item, fuquan)
+            dir = get_kdata_dir_old(security_item, fuquan)
             if os.path.exists(dir):
                 files = [os.path.join(dir, f) for f in os.listdir(dir) if
                          ('all' not in f and 'json' in f and os.path.isfile(os.path.join(dir, f)))]
@@ -187,7 +203,7 @@ def legacy_kdata_to_csv():
                 for f in files:
                     tmp = os.path.basename(f).split('_')
                     if fuquan:
-                        csv_path = get_kdata_path_csv(security_item, tmp[0], tmp[1], 'hfq')
+                        csv_path = get_kdata_path(security_item, tmp[0], tmp[1], 'hfq')
                         if not os.path.exists(csv_path):
                             df = pd.read_json(f, dtype={'code': str})
                             logger.info("{} to {}".format(f, csv_path))
@@ -200,7 +216,7 @@ def legacy_kdata_to_csv():
 
                             df.to_csv(csv_path, index=False)
                     else:
-                        csv_path = get_kdata_path_csv(security_item, tmp[0], tmp[1], 'bfq')
+                        csv_path = get_kdata_path(security_item, tmp[0], tmp[1], 'bfq')
                         if not os.path.exists(csv_path):
                             df = pd.read_json(f, dtype={'code': str})
                             logger.info("{} to {}".format(f, csv_path))
@@ -213,7 +229,7 @@ def legacy_kdata_to_csv():
 def check_convert_result():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
-            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            dayk_path = get_kdata_path(security_item, fuquan=fuquan)
             if os.path.exists(dayk_path):
                 df_result = pd.read_csv(dayk_path)
 
@@ -224,7 +240,7 @@ def check_convert_result():
                     df = pd.DataFrame(
                         columns=data_contract.KDATA_COLUMN)
 
-                dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
+                dir = get_kdata_dir(security_item, fuquan=fuquan)
 
                 if os.path.exists(dir):
                     files = [os.path.join(dir, f) for f in os.listdir(dir) if
@@ -253,7 +269,7 @@ def assert_df(df1, df2):
 def check_result():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
-            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            dayk_path = get_kdata_path(security_item, fuquan=fuquan)
             if not os.path.exists(dayk_path):
                 logger.warn(get_security_dir(security_item))
 
@@ -269,4 +285,3 @@ if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
     # remove_old_trading_dates()
     remove_old_kdata()
-

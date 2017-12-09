@@ -9,13 +9,13 @@ from twisted.internet import reactor
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, \
-    get_kdata_dir_csv
+    get_kdata_dir
 from fooltrader.proxy.proxy_manager import int_proxy
 from fooltrader.spiders.stock_kdata_spider_163 import StockKdataSpider163
 
 configure_logging()
 
-int_proxy()
+# int_proxy()
 
 runner = CrawlerRunner(get_project_settings())
 
@@ -33,11 +33,11 @@ def mkdir_for_security(item):
     if not os.path.exists(event_dir):
         os.makedirs(event_dir)
 
-    bfq_kdata_dir = get_kdata_dir_csv(item, 'bfq')
+    bfq_kdata_dir = get_kdata_dir(item, 'bfq')
     if not os.path.exists(bfq_kdata_dir):
         os.makedirs(bfq_kdata_dir)
 
-    hfq_kdata_dir = get_kdata_dir_csv(item, 'hfq')
+    hfq_kdata_dir = get_kdata_dir(item, 'hfq')
     if not os.path.exists(hfq_kdata_dir):
         os.makedirs(hfq_kdata_dir)
 

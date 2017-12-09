@@ -1,7 +1,6 @@
 import json
 import logging
 import time
-import uuid
 from datetime import datetime, timedelta
 
 from kafka import KafkaConsumer
@@ -9,17 +8,17 @@ from kafka import TopicPartition
 
 from fooltrader.connector import fool_es
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
-from fooltrader.domain.account import Account, Order, Position
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
+from fooltrader.trader.account import Account, Order
 
 logger = logging.getLogger(__name__)
 
 
 class Trader(object):
     def __init__(self):
-        self.baseCapital = 1000000;
-        self.buyCost = 0.001;
-        self.sellCost = 0.001;
+        self.base_capital = 1000000;
+        self.buy_cost = 0.001;
+        self.sell_cost = 0.001;
         self.slippage = 0.001;
 
         self.start_date = '2013-01-01'
@@ -28,71 +27,54 @@ class Trader(object):
 
         self.universe = ('stock_sh_600000', 'stock_sh_600004')
 
-        self.trader_id = "{}_{}".format(type(self).__name__, uuid.uuid4())
-
         self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d')
         self.step = timedelta(days=1)
 
         # 初始化账户
-        self.account = Account()
-        self.account.traderId = self.trader_id
-        self.account.cash = self.baseCapital
+        self.account = Account(base_capital=self.base_capital,
+                               buy_cost=self.buy_cost,
+                               sell_cost=self.sell_cost,
+                               slippage=self.slippage)
+
+        self.account.traderId = Account.generate_id(type(self).__name__.lower())
+
+        self.trader_id = self.account.traderId
+
+        self.account.cash = self.base_capital
         self.account.timestamp = self.start_date
-        logger.info("account:{} created".format(self.account.to_dict()))
+
         fool_es.index_mapping("account", Account)
         self.account.save()
+        logger.info("account:{} created".format(self.account.to_dict()))
 
-    def update_position(self, security_id, amount_change, current_price):
-        current_position = None
-        has_position = False
-        for position in self.account.positions:
-            if position.securityId == security_id:
-                current_position = position
-                has_position = True
-        if not current_position:
-            current_position = Position()
+    def order(self, security_id, current_price, amount=0, pct=0.1, order_price=0, direction=1):
+        self.account.refresh()
+        try:
+            # 市价交易
+            if order_price == 0:
+                order = Order()
+                order.traderId = self.trader_id
+                order.amount = amount
+                order.direction = direction
+                order.type = 0
+                order.price = current_price
+                # 买
+                if direction == 1:
+                    self.account.update_position(security_id, amount, current_price, self.event_time)
+                elif direction == -1:
+                    self.account.update_position(security_id, -amount, current_price, self.event_time)
 
-        if amount_change > 0:
-            # 不差钱
-            need_money = amount_change * current_price
-            if self.account.cash >= need_money:
-                self.account.cash -= need_money
-                current_position.amount += amount_change
-            else:
-                raise Exception("not enough money")
-        elif amount_change < 0:
-            # 不差货
-            if current_position.amount >= abs(amount_change):
-                current_position.amount += amount_change
-                self.account.cash += amount_change * current_price
-            else:
-                raise Exception("not enough pos")
-
-        if not has_position:
-            self.account.positions.append(current_position)
-        self.account.timestamp = self.event_time
-        self.account.save()
-
-    def order(self, security_id, amount, current_price, order_price=0, direction=1):
-        # 市价交易
-        if order_price == 0:
-            order = Order()
-            order.traderId = self.trader_id
-            order.amount = amount
-            order.direction = direction
-            order.type = 0
-            order.price = current_price
-            # 买
-            if direction == 1:
-                self.update_position(security_id, amount)
-            elif direction == -1:
-                # 货源充足
-                self.update_position(security_id, -amount)
-
-            order.status = "deal"
-            order.timestamp = self.event_time
-            order.save()
-        logger.info("{} buy {} {} with price {}".format(self.trader_id, security_id, amount, current_price))
+                order.status = "deal"
+                order.timestamp = self.event_time
+                # order.save()
+                logger.info(
+                    "{} {} {} {} with price {} success".format(self.trader_id, direction, amount, security_id,
+                                                               current_price))
+        except Exception as e:
+            logger.info(
+                "{} {} {} {} with price {} failed".format(self.trader_id, direction, amount, security_id,
+                                                          current_price))
+            logger.error(e)
 
     def move_on(self, step):
         # 对于回测来说,时间只是加一下
@@ -103,6 +85,7 @@ class Trader(object):
 
     def on_time_elapsed(self):
         logger.info('event_time:{}'.format(self.event_time))
+        self.account.refresh()
         self.move_on(self.step)
 
     def on_tick(self, tick_item):

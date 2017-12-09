@@ -1,5 +1,4 @@
 import datetime
-import json
 import logging
 import os
 
@@ -7,7 +6,7 @@ import pandas as pd
 
 from fooltrader import settings
 from fooltrader.contract.data_contract import TICK_COLUNM
-from fooltrader.contract.files_contract import get_trading_dates_path_sse, get_trading_dates_path_ths, get_tick_path_csv
+from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
@@ -95,35 +94,6 @@ def detect_encoding(url):
     return detector.result.get('encoding')
 
 
-def get_base_trading_dates(item, ignore_today=True):
-    dates_path_sse = get_trading_dates_path_sse(item)
-    dates_path_ths = get_trading_dates_path_ths(item)
-
-    dates_sse = []
-    dates_ths = []
-    if dates_path_sse:
-        try:
-            with open(dates_path_sse) as data_file:
-                dates_sse = json.load(data_file)
-        except Exception as e:
-            logger.warn(e)
-    if dates_path_ths:
-        try:
-            with open(dates_path_ths) as data_file:
-                dates_ths = json.load(data_file)
-        except  Exception as e:
-            logger.warn(e)
-
-    dates_tmp = set(dates_sse) | set(dates_ths)
-    dates = list(dates_tmp)
-
-    dates.sort()
-    if ignore_today:
-        dates = [the_date for the_date in dates if the_date != datetime.datetime.today().strftime('%Y-%m-%d')]
-
-    return dates
-
-
 def is_available_tick(path):
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
@@ -207,7 +177,7 @@ def read_csv(f, encoding, sep=None, na_values=None):
 
 
 def sina_tick_to_csv(security_item, the_content, the_date):
-    csv_path = get_tick_path_csv(security_item, the_date)
+    csv_path = get_tick_path(security_item, the_date)
     df = read_csv(the_content, "GB2312", sep='\s+')
     df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
     df.columns = TICK_COLUNM

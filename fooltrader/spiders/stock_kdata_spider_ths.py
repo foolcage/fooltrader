@@ -9,10 +9,9 @@ from scrapy import signals
 from fooltrader.api.quote import get_security_list
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
 from fooltrader.contract import data_contract
-from fooltrader.contract.files_contract import get_kdata_path_csv_ths
-from fooltrader.utils.utils import get_trading_dates_path_ths
+from fooltrader.contract.files_contract import get_kdata_path, get_trading_dates_path_ths
 
-# 同花顺的数据质量也堪忧，跟交易所的数据一样，也出现不少周末的交易数据
+
 class StockKDataSpiderTHS(scrapy.Spider):
     name = "stock_kdata_ths"
 
@@ -40,7 +39,7 @@ class StockKDataSpiderTHS(scrapy.Spider):
     def start_requests(self):
         for _, item in get_security_list().iterrows():
             for fuquan in ['hfq', 'bfq']:
-                data_path = get_kdata_path_csv_ths(item, fuquan)
+                data_path = get_kdata_path(item, fuquan=fuquan, source='ths')
                 data_exist = os.path.isfile(data_path)
                 if not data_exist or True:
                     # get day k data

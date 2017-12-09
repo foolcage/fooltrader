@@ -10,7 +10,6 @@ from scrapy import signals
 from fooltrader.api.quote import get_security_list, kdata_exist, merge_kdata_to_one, remove_quarter_kdata
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract
-from fooltrader.contract.files_contract import get_kdata_path_csv
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
 from fooltrader.utils.utils import get_quarters, get_year_quarter
 
@@ -45,7 +44,7 @@ class StockKDataSpider(scrapy.Spider):
         # get day k data
         for year, quarter in the_quarters:
             for fuquan in ('hfq', 'bfq'):
-                data_path = get_kdata_path_csv(item, year, quarter, fuquan)
+                data_path = get_kdata_path(item, year, quarter, fuquan)
                 data_exist = os.path.isfile(data_path) or kdata_exist(item, year, quarter, fuquan)
 
                 if not data_exist or force_download:

@@ -16,7 +16,7 @@ class MaTrader(Trader):
             print(the_close)
             the_ma = technical.ma(self.universe, start=self.event_time, end=self.event_time)['close_ma5'][0]
             print(the_ma)
-            if the_close > the_ma:
+            if the_close > the_ma and not self.account.get_position(self.universe):
                 self.order(security_id=self.universe, amount=100, current_price=the_close)
             else:
                 self.order(security_id=self.universe, amount=-100, current_price=the_close)

@@ -7,8 +7,8 @@ from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.consts import SSE_KDATA_HEADER
+from fooltrader.contract.files_contract import get_trading_dates_path_sse
 from fooltrader.settings import TIME_FORMAT_DAY
-from fooltrader.utils.utils import get_trading_dates_path_sse
 
 
 # 本来想以交易所网站的数据为标准,结果发现数据质量堪忧，比如很多股票的交易日跑到周末去了，上市前也有数据

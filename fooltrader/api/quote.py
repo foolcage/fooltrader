@@ -7,7 +7,7 @@ import pandas as pd
 from fooltrader import settings
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
-from fooltrader.contract.files_contract import get_kdata_dir_csv, get_kdata_path_csv, get_kdata_path_163
+from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path
 from fooltrader.datasource import tdx
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import get_file_name
@@ -75,10 +75,8 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
     if type(security_item) == str:
         security_item = get_security_item(security_item)
 
-    if source == '163':
-        the_path = get_kdata_path_163(security_item, fuquan=fuquan)
-    else:
-        the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
+    the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
+
     if os.path.isfile(the_path):
         if not dtype:
             dtype = {"code": str}
@@ -142,14 +140,14 @@ def merge_to_current_kdata(security_item, df, fuquan='bfq'):
     df1 = df1.drop_duplicates(subset='timestamp', keep='last')
     df1 = df1.sort_index()
 
-    the_path = files_contract.get_kdata_path_csv(security_item, fuquan=fuquan)
+    the_path = files_contract.get_kdata_path(security_item, fuquan=fuquan)
     df1.to_csv(the_path, index=False)
 
 
 def merge_kdata_to_one(replace=False):
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
-            dayk_path = get_kdata_path_csv(security_item, fuquan=fuquan)
+            dayk_path = get_kdata_path(security_item, fuquan=fuquan)
             if fuquan == 'hfq':
                 df = pd.DataFrame(
                     columns=data_contract.KDATA_COLUMN_FQ)
@@ -157,7 +155,7 @@ def merge_kdata_to_one(replace=False):
                 df = pd.DataFrame(
                     columns=data_contract.KDATA_COLUMN)
 
-            the_dir = get_kdata_dir_csv(security_item, fuquan=fuquan)
+            the_dir = get_kdata_dir(security_item, fuquan=fuquan)
 
             if os.path.exists(the_dir):
                 files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if
@@ -178,7 +176,7 @@ def merge_kdata_to_one(replace=False):
 def remove_quarter_kdata():
     for index, security_item in get_security_list().iterrows():
         for fuquan in ('bfq', 'hfq'):
-            dir = get_kdata_dir_csv(security_item, fuquan)
+            dir = get_kdata_dir(security_item, fuquan)
             if os.path.exists(dir):
                 files = [os.path.join(dir, f) for f in os.listdir(dir) if
                          (f != 'dayk.csv' and os.path.isfile(os.path.join(dir, f)))]
