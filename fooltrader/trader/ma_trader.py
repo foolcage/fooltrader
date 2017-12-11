@@ -16,10 +16,12 @@ class MaTrader(Trader):
             print(the_close)
             the_ma = technical.ma(self.universe, start=self.event_time, end=self.event_time)['close_ma5'][0]
             print(the_ma)
-            if the_close > the_ma and not self.account.get_position(self.universe):
-                self.order(security_id=self.universe, amount=100, current_price=the_close)
-            else:
-                self.order(security_id=self.universe, amount=-100, current_price=the_close)
+            # 站上5日线,并且没仓位
+            if the_close > the_ma and not self.account_service.get_position(self.universe):
+                self.buy(security_id=self.universe, current_price=the_close, pct=1.0)
+            # 跌破5日线,并且有仓位
+            elif the_close < the_ma and self.account_service.get_position(self.universe):
+                self.sell(security_id=self.universe, current_price=the_close, pct=1.0)
 
 
 if __name__ == '__main__':

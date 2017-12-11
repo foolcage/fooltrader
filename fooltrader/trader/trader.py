@@ -1,15 +1,15 @@
 import json
 import logging
 import time
+import uuid
 from datetime import datetime, timedelta
 
 from kafka import KafkaConsumer
 from kafka import TopicPartition
 
-from fooltrader.connector import fool_es
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
-from fooltrader.trader.account import Account, Order
+from fooltrader.trader.account import Order, AccountService
 
 logger = logging.getLogger(__name__)
 
@@ -30,25 +30,22 @@ class Trader(object):
         self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d')
         self.step = timedelta(days=1)
 
-        # 初始化账户
-        self.account = Account(base_capital=self.base_capital,
-                               buy_cost=self.buy_cost,
-                               sell_cost=self.sell_cost,
-                               slippage=self.slippage)
+        self.trader_id = "{}_{}".format(type(self).__name__.lower(), uuid.uuid4())
 
-        self.account.traderId = Account.generate_id(type(self).__name__.lower())
+        self.account_service = AccountService(self.trader_id,
+                                              self.event_time,
+                                              base_capital=self.base_capital,
+                                              slippage=self.slippage,
+                                              buy_cost=self.buy_cost,
+                                              sell_cost=self.sell_cost)
 
-        self.trader_id = self.account.traderId
+    def buy(self, security_id, current_price, amount=0, pct=1.0, order_price=0):
+        self.order(security_id, current_price, amount, pct, order_price, direction=1)
 
-        self.account.cash = self.base_capital
-        self.account.timestamp = self.start_date
+    def sell(self, security_id, current_price, amount=0, pct=1.0, order_price=0):
+        self.order(security_id, current_price, amount, pct, order_price, direction=-1)
 
-        fool_es.index_mapping("account", Account)
-        self.account.save()
-        logger.info("account:{} created".format(self.account.to_dict()))
-
-    def order(self, security_id, current_price, amount=0, pct=0.1, order_price=0, direction=1):
-        self.account.refresh()
+    def order(self, security_id, current_price, amount=0, pct=1.0, order_price=0, direction=1):
         try:
             # 市价交易
             if order_price == 0:
@@ -60,9 +57,9 @@ class Trader(object):
                 order.price = current_price
                 # 买
                 if direction == 1:
-                    self.account.update_position(security_id, amount, current_price, self.event_time)
+                    self.account_service.update_position(security_id, amount, pct, current_price, self.event_time)
                 elif direction == -1:
-                    self.account.update_position(security_id, -amount, current_price, self.event_time)
+                    self.account_service.update_position(security_id, -amount, -pct, current_price, self.event_time)
 
                 order.status = "deal"
                 order.timestamp = self.event_time
@@ -85,7 +82,7 @@ class Trader(object):
 
     def on_time_elapsed(self):
         logger.info('event_time:{}'.format(self.event_time))
-        self.account.refresh()
+        self.account_service.refresh()
         self.move_on(self.step)
 
     def on_tick(self, tick_item):
@@ -122,7 +119,7 @@ class Trader(object):
                             if self.end_date and (message.value[
                                                       'timestamp'] > self.end_date or message.offset + 1 == end_offset):
                                 consumer.close()
-                                break;
+                                break
                             getattr(self, func)(message.value)
                     else:
                         consumer.poll(5, 1)

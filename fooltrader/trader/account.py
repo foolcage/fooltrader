@@ -2,90 +2,125 @@ from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short
 from elasticsearch_dsl import MetaField
 
 
+class AccountService(object):
+    def __init__(self, trader_id, timestamp,
+                 base_capital=1000000,
+                 buy_cost=0.001,
+                 sell_cost=0.001,
+                 slippage=0.001):
+        self.base_capital = base_capital
+        self.buy_cost = buy_cost
+        self.sell_cost = sell_cost
+        self.slippage = slippage
+        self.trader_id = trader_id
+
+        # 初始化账户
+        self.index = "account_{}".format(self.trader_id)
+        self.account = Account()
+        self.account.traderId = trader_id
+        self.account.cash = base_capital
+        self.account.positions = []
+        self.account.timestamp = timestamp
+        self.save()
+
+    def save(self):
+        self.account.save(index=self.index)
+
+    def get_position(self, security_id):
+        for position in self.account.positions:
+            if position.securityId == security_id:
+                return position
+        return None
+
+    def refresh(self):
+        s = Account.search(index=self.index)
+        # the search is already limited to the index and doc_type of our document
+        s = s.query("match_all").sort('-timestamp')
+
+        results = s.execute()
+
+        if len(results) > 0:
+            self.account = results[0]
+
+    def update_position(self, security_id, amount_change, pct_change, current_price, timestamp):
+        self.refresh()
+
+        current_position = None
+        has_position = False
+        for position in self.account.positions:
+            if position.securityId == security_id:
+                current_position = position
+                has_position = True
+        if not current_position:
+            current_position = Position()
+            current_position.securityId = security_id
+            current_position.amount = 0
+            current_position.availableAmount = 0
+            current_position.value = 0
+            current_position.cost = 0
+            current_position.profit = 0
+
+        # 按数量交易
+        if amount_change != 0:
+            # 买
+            if amount_change > 0:
+                # 不差钱
+                need_money = (amount_change * current_price) * (1 + self.slippage + self.buy_cost)
+                if self.account.cash >= need_money:
+                    self.account.cash -= need_money
+                    current_position.amount += amount_change
+                else:
+                    raise Exception("not enough money")
+            # 卖
+            elif amount_change < 0:
+                # 不差货
+                amount_change = abs(amount_change)
+                if current_position.amount >= amount_change:
+                    current_position.amount -= amount_change
+                    self.account.cash += (amount_change * current_price) * (1 - self.slippage - self.sell_cost)
+                else:
+                    raise Exception("not enough pos")
+        # 按仓位比例交易
+        elif pct_change != 0:
+            if pct_change > 0:
+                # 不差钱
+                cost = current_price * (1 + self.slippage + self.buy_cost)
+                want_buy = self.account.cash * pct_change
+                if want_buy >= cost:
+                    amount_change = want_buy // cost
+                    self.account.cash -= (want_buy - want_buy % cost)
+                    current_position.amount += amount_change
+                else:
+                    raise Exception("not enough money")
+            elif pct_change < 0:
+                # 不差货
+                amount_change = current_position.amount * abs(pct_change)
+                if amount_change >= 1:
+                    current_position.amount -= amount_change
+                    self.account.cash += (amount_change * current_price) * (1 - self.slippage - self.sell_cost)
+                else:
+                    raise Exception("not enough pos")
+
+        if not has_position:
+            self.account.positions.append(current_position)
+        self.account.timestamp = timestamp
+        self.account.save()
+
+
+# 一个索引对应一个账户,索引的名字就是traderId,以id为时间戳为id(精确到秒)
 class Account(DocType):
     traderId = Keyword()
     cash = Float()
     positions = Nested()
     timestamp = Date()
 
-    transaction_setting = {}
-
-    def __init__(self, base_capital=1000000,
-                 buy_cost=0.001,
-                 sell_cost=0.001,
-                 slippage=0.001, meta=None, **kwargs):
-        super().__init__(meta, **kwargs)
-        self.base_capital = base_capital
-        self.buy_cost = buy_cost
-        self.sell_cost = sell_cost
-        self.slippage = slippage
-
     def save(self, using=None, index=None, validate=True, **kwargs):
-        self.meta.id = self.traderId
+        self.meta.id = self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
         return super().save(using, index, validate, **kwargs)
 
-    @classmethod
-    def generate_id(cls, id):
-        # 保证id唯一
-        account = Account.get(id=id, ignore=404)
-        if account:
-            i = id.rfind('_')
-            if i == 0:
-                id = "{}_{}".format(id, 1)
-            else:
-                count = int(id[i + 1:])
-                id = "{}_{}".format(id, count)
-            return Account.generate_id(id=id)
-        else:
-            return id
-
     class Meta:
-        index = 'account'
         doc_type = 'doc'
         all = MetaField(enabled=False)
-
-    def get_position(self, security_id):
-        for position in self.positions:
-            if position.securityId == security_id:
-                return position
-        return None
-
-    def refresh(self):
-        current = self.get(id=self.traderId)
-        print(current)
-
-    def update_position(self, security_id, amount_change, current_price, timestamp):
-        current_position = None
-        has_position = False
-        for position in self.positions:
-            if position.securityId == security_id:
-                current_position = position
-                has_position = True
-        if not current_position:
-            current_position = Position()
-
-        # 买
-        if amount_change > 0:
-            # 不差钱
-            need_money = (amount_change * current_price) * (1 + self.slippage + self.buy_cost)
-            if self.cash >= need_money:
-                self.cash -= need_money
-                current_position.amount += amount_change
-            else:
-                raise Exception("not enough money")
-        # 卖
-        elif amount_change < 0:
-            # 不差货
-            if current_position.amount >= abs(amount_change):
-                current_position.amount += amount_change
-                self.cash += (amount_change * current_price) * (1 - self.slippage - self.sell_cost)
-            else:
-                raise Exception("not enough pos")
-
-        if not has_position:
-            self.positions.append(current_position)
-        self.timestamp = timestamp
-        self.save()
 
 
 class Position(DocType):
@@ -101,6 +136,8 @@ class Position(DocType):
     value = Float()
     # 成本价
     cost = Float()
+    # 交易类型(0代表T+0,1代表T+1)
+    tradingT = Short()
 
 
 class Order(DocType):
