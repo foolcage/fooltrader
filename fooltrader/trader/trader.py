@@ -21,13 +21,13 @@ class Trader(object):
         self.sell_cost = 0.001;
         self.slippage = 0.001;
 
-        self.start_date = '2013-01-01'
+        self.start_date = '2013-01-0100:00:00'
         # listen for ever if not set
         self.end_date = datetime.now().strftime(TIME_FORMAT_DAY)
 
         self.universe = ('stock_sh_600000', 'stock_sh_600004')
 
-        self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d')
+        self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d%H:%M:%S')
         self.step = timedelta(days=1)
 
         self.trader_id = "{}_{}".format(type(self).__name__.lower(), uuid.uuid4())
@@ -82,8 +82,6 @@ class Trader(object):
 
     def on_time_elapsed(self):
         logger.info('event_time:{}'.format(self.event_time))
-        self.account_service.refresh()
-        self.move_on(self.step)
 
     def on_tick(self, tick_item):
         logger.info('on_tick:{}'.format(tick_item))
@@ -134,6 +132,9 @@ class Trader(object):
     def run(self):
         while True:
             self.on_time_elapsed()
+            self.move_on(self.step)
+            self.account_service.save(self.event_time)
+
         for security_id in self.universe:
             if 'on_tick' in dir(self):
                 topic = get_kafka_tick_topic(security_id)

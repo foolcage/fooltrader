@@ -1,6 +1,8 @@
 from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short
 from elasticsearch_dsl import MetaField
 
+from fooltrader.api.quote import get_kdata
+
 
 class AccountService(object):
     def __init__(self, trader_id, timestamp,
@@ -20,10 +22,24 @@ class AccountService(object):
         self.account.traderId = trader_id
         self.account.cash = base_capital
         self.account.positions = []
+        self.account.allValue = base_capital
         self.account.timestamp = timestamp
-        self.save()
+        self.save(timestamp)
 
-    def save(self):
+    def save(self, timestamp):
+        self.account = self.account.clone()
+        self.account.timestamp = timestamp
+        self.account.allValue = 0
+        for position in self.account.positions:
+            df = get_kdata(position.securityId, timestamp)
+            if len(df) > 0:
+                position.value = position.amount * df['close']
+            self.account.allValue += position.value
+            if position.amount == 0:
+                self.account.positions.remove(position)
+
+        self.account.allValue += self.account.cash
+
         self.account.save(index=self.index)
 
     def get_position(self, security_id):
@@ -32,19 +48,7 @@ class AccountService(object):
                 return position
         return None
 
-    def refresh(self):
-        s = Account.search(index=self.index)
-        # the search is already limited to the index and doc_type of our document
-        s = s.query("match_all").sort('-timestamp')
-
-        results = s.execute()
-
-        if len(results) > 0:
-            self.account = results[0]
-
     def update_position(self, security_id, amount_change, pct_change, current_price, timestamp):
-        self.refresh()
-
         current_position = None
         has_position = False
         for position in self.account.positions:
@@ -103,8 +107,8 @@ class AccountService(object):
 
         if not has_position:
             self.account.positions.append(current_position)
-        self.account.timestamp = timestamp
-        self.account.save()
+
+        self.save(timestamp)
 
 
 # 一个索引对应一个账户,索引的名字就是traderId,以id为时间戳为id(精确到秒)
@@ -112,10 +116,20 @@ class Account(DocType):
     traderId = Keyword()
     cash = Float()
     positions = Nested()
+    allValue = Float()
     timestamp = Date()
 
+    def clone(self):
+        account = Account()
+        account.cash = self.cash
+        account.traderId = self.traderId
+        account.allValue = self.allValue
+        account.positions = self.positions
+        account.timestamp = account.timestamp
+        return account
+
     def save(self, using=None, index=None, validate=True, **kwargs):
-        self.meta.id = self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        self.meta.id = self.timestamp.strftime('%Y-%m-%d%H:%M:%S')
         return super().save(using, index, validate, **kwargs)
 
     class Meta:
