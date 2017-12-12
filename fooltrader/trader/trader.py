@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 import time
 import uuid
 from datetime import datetime, timedelta
@@ -21,13 +22,17 @@ class Trader(object):
         self.sell_cost = 0.001;
         self.slippage = 0.001;
 
-        self.start_date = '2013-01-0100:00:00'
-        # listen for ever if not set
+        # 回测的开始日期
+        self.start_date = '2013-01-01'
+        # 回测的结束日期,为None的话会always running
         self.end_date = datetime.now().strftime(TIME_FORMAT_DAY)
 
-        self.universe = ('stock_sh_600000', 'stock_sh_600004')
+        # 证券标的,可以动态增删,从而动态接收行情
+        # 为None的话,可采用poll的方式去查任何标的的行情
+        # 当然,两种方式可以同时进行,它们会跑在不同的线程
+        self.universe = None
 
-        self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d%H:%M:%S')
+        self.event_time = datetime.strptime(self.start_date, '%Y-%m-%d')
         self.step = timedelta(days=1)
 
         self.trader_id = "{}_{}".format(type(self).__name__.lower(), uuid.uuid4())
@@ -130,19 +135,19 @@ class Trader(object):
                 logger.error("topic:{} not in kafka".format(topic))
 
     def run(self):
+        if self.universe:
+            for security_id in self.universe:
+                if 'on_tick' in dir(self):
+                    topic = get_kafka_tick_topic(security_id)
+                    threading.Thread(target=self.__consume_topic_with_func, args=(topic, 'on_tick')).start()
+                for level in ('month', 'week', 'day', 'hour', '60', '30', '15', '5', '1'):
+                    the_func = 'on_{}_bar'.format(level)
+                    topic = get_kafka_kdata_topic(security_id, True, level)
+                    threading.Thread(target=self.__consume_topic_with_func, args=(topic, the_func)).start()
         while True:
             self.on_time_elapsed()
             self.move_on(self.step)
             self.account_service.save(self.event_time)
-
-        for security_id in self.universe:
-            if 'on_tick' in dir(self):
-                topic = get_kafka_tick_topic(security_id)
-                self.__consume_topic_with_func(topic, 'on_tick')
-            for level in ('month', 'week', 'day', 'hour', '60', '30', '15', '5', '1'):
-                the_func = 'on_{}_bar'.format(level)
-                topic = get_kafka_kdata_topic(security_id, True, level)
-                self.__consume_topic_with_func(topic, the_func)
 
 
 if __name__ == '__main__':
