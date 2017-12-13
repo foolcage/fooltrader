@@ -28,7 +28,7 @@ def tick_to_kafka():
 
 def kdata_to_kafka(fuquan):
     for _, security_item in get_security_list().iterrows():
-        for _, kdata_item in get_kdata(security_item, fuquan=fuquan).iterrows():
+        for _, kdata_item in get_kdata(security_item, source='sina', fuquan=fuquan).iterrows():
             the_json = kdata_item.to_json(force_ascii=False)
             producer.send(get_kafka_kdata_topic(security_item['id'], fuquan),
                           bytes(the_json, encoding='utf8'),
@@ -63,4 +63,4 @@ def delete_all_topics():
 
 # consume_topic('stock_sh_600000_day_kdata')
 if __name__ == '__main__':
-    tick_to_kafka()
+    kdata_to_kafka(fuquan='hfq')

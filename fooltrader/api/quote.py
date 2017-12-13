@@ -26,9 +26,13 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
     return df
 
 
-def get_security_item(code):
-    df = get_security_list(start=code, end=code)
-    df = df.set_index(df['code'])
+def get_security_item(code=None, id=None):
+    df = get_security_list()
+    if id:
+        df.set_index(df['id'])
+        return df.loc[id,]
+    if code:
+        df = df.set_index(df['code'])
     return df.loc[code,]
 
 
@@ -73,7 +77,7 @@ def get_available_tick_dates(security_item):
 # kdata
 def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None, source='163', level='day'):
     if type(security_item) == str:
-        security_item = get_security_item(security_item)
+        security_item = get_security_item(code=security_item)
 
     the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
 

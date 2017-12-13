@@ -116,7 +116,7 @@ if __name__ == '__main__':
     from elasticsearch_dsl.connections import connections
 
     connections.create_connection(hosts=['localhost'], timeout=20)
-    kdata_to_es()
+    kdata_to_es(fuquan='hfq')
     # balance_sheet_to_es()
     # income_statement_to_es()
     # cash_flow_statement_to_es()
