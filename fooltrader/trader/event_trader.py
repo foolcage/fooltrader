@@ -6,7 +6,7 @@ from fooltrader.trader.trader import Trader
 class EventTrader(Trader):
     def __init__(self):
         super().__init__()
-        self.universe = ['stock_sz_000001', 'stock_sz_000002']
+        self.universe = ['stock_sz_000002']
 
     def on_day_bar(self, bar_item):
         df = pd.DataFrame()
