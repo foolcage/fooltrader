@@ -8,7 +8,7 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
-from fooltrader.contract.data_contract import KDATA_COLUMN_FULL
+from fooltrader.contract.data_contract import KDATA_COLUMN_FULL, KDATA_COLUMN_163
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.utils import utils
 
@@ -77,12 +77,13 @@ class StockKdataSpider163(scrapy.Spider):
             df = df.loc[:,
                  ['日期', 'code', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额', '涨跌幅', '换手率',
                   '总市值', '流通市值']]
+            df['factor'] = None
             df.columns = KDATA_COLUMN_FULL
 
             # 合并到当前csv中
             df_current = df_current.append(df, ignore_index=True)
 
-            df_current = df_current.dropna()
+            df_current = df_current.dropna(subset=KDATA_COLUMN_163)
             df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
             df_current = df_current.set_index(df_current['timestamp'])
             df_current.index = pd.to_datetime(df_current.index)

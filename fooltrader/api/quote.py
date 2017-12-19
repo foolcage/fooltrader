@@ -75,7 +75,7 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, dtype=None, source='163', level='day'):
+def get_kdata(security_item, the_date=None, start=None, end=None, fuquan='bfq', dtype=None, source='163', level='day'):
     if type(security_item) == str:
         if 'stock' in security_item:
             security_item = get_security_item(id=security_item)
@@ -107,8 +107,8 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan=None, d
     return pd.DataFrame()
 
 
-def get_latest_download_trading_date(security_item, return_next=True):
-    df = get_kdata(security_item)
+def get_latest_download_trading_date(security_item, return_next=True, source='163'):
+    df = get_kdata(security_item, source=source)
     if len(df) == 0:
         return pd.Timestamp(security_item['listDate'])
     if return_next:
@@ -117,8 +117,8 @@ def get_latest_download_trading_date(security_item, return_next=True):
         return df.index[-1]
 
 
-def get_trading_dates(security_item, dtype='list', ignore_today=False, source='163'):
-    df = get_kdata(security_item, source=source)
+def get_trading_dates(security_item, dtype='list', ignore_today=False, source='163', fuquan='bfq'):
+    df = get_kdata(security_item, source=source, fuquan=fuquan)
     if dtype is 'list' and len(df.index) > 0:
         dates = df.index.strftime('%Y-%m-%d').tolist()
         if ignore_today:
@@ -128,8 +128,8 @@ def get_trading_dates(security_item, dtype='list', ignore_today=False, source='1
     return df.index
 
 
-def kdata_exist(security_item, year, quarter, fuquan=None):
-    df = get_kdata(security_item, fuquan=fuquan)
+def kdata_exist(security_item, year, quarter, fuquan=None, source='163'):
+    df = get_kdata(security_item, fuquan=fuquan, source=source)
     if "{}Q{}".format(year, quarter) in df.index:
         return True
     return False
@@ -141,20 +141,57 @@ def merge_to_current_kdata(security_item, df, fuquan='bfq'):
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
-    df1 = get_kdata(security_item, fuquan=fuquan, dtype=str)
+    df1 = get_kdata(security_item, source='sina', fuquan=fuquan, dtype=str)
     df1 = df1.append(df)
 
     df1 = df1.drop_duplicates(subset='timestamp', keep='last')
     df1 = df1.sort_index()
 
-    the_path = files_contract.get_kdata_path(security_item, fuquan=fuquan)
+    the_path = files_contract.get_kdata_path(security_item, source='sina', fuquan=fuquan)
     df1.to_csv(the_path, index=False)
 
 
-def merge_kdata_to_one(replace=False):
-    for index, security_item in get_security_list().iterrows():
-        for fuquan in ('bfq', 'hfq'):
-            dayk_path = get_kdata_path(security_item, fuquan=fuquan)
+def time_index_df(df):
+    df = df.set_index(df['timestamp'])
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
+    return df
+
+
+def add_factor_to_163(security_item):
+    path_163 = get_kdata_path(security_item, source='163', fuquan='bfq')
+    df_163 = pd.read_csv(path_163, dtype=str)
+    df_163 = time_index_df(df_163)
+
+    if 'factor' in df_163.columns:
+        df = df_163[df_163['factor'].isna()]
+
+        if df.empty:
+            logger.info("{} 163 factor is ok", security_item['code'])
+            return
+
+    path_sina = get_kdata_path(security_item, source='sina', fuquan='hfq')
+    df_sina = pd.read_csv(path_sina, dtype=str)
+    df_sina = time_index_df(df_sina)
+
+    df_163['factor'] = df_sina['factor']
+    df_163.to_csv(path_163, index=False)
+
+
+def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
+    if type(security_item) != 'NoneType':
+        items = pd.DataFrame().append(security_item).iterrows()
+    else:
+        items = get_security_list().iterrows()
+
+    if fuquan:
+        fuquans = [fuquan]
+    else:
+        fuquans = ['bfq', 'hfq']
+
+    for index, security_item in items:
+        for fuquan in fuquans:
+            dayk_path = get_kdata_path(security_item, source='sina', fuquan=fuquan)
             if fuquan == 'hfq':
                 df = pd.DataFrame(
                     columns=data_contract.KDATA_COLUMN_FQ)
@@ -166,7 +203,7 @@ def merge_kdata_to_one(replace=False):
 
             if os.path.exists(the_dir):
                 files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if
-                         (f != 'dayk.csv' and os.path.isfile(os.path.join(the_dir, f)))]
+                         ('dayk.csv' not in f and os.path.isfile(os.path.join(the_dir, f)))]
                 for f in files:
                     df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
             if df.size > 0:
@@ -179,20 +216,14 @@ def merge_kdata_to_one(replace=False):
                 else:
                     merge_to_current_kdata(security_item, df, fuquan=fuquan)
 
+            for f in files:
+                logger.info("remove {}".format(f))
+                os.remove(f)
 
-def remove_quarter_kdata():
-    for index, security_item in get_security_list().iterrows():
-        for fuquan in ('bfq', 'hfq'):
-            dir = get_kdata_dir(security_item, fuquan)
-            if os.path.exists(dir):
-                files = [os.path.join(dir, f) for f in os.listdir(dir) if
-                         (f != 'dayk.csv' and os.path.isfile(os.path.join(dir, f)))]
-                for f in files:
-                    logger.info("remove {}".format(f))
-                    os.remove(f)
+            if fuquan == 'hfq':
+                add_factor_to_163(security_item)
 
 
-# tick
 if __name__ == '__main__':
     item = {"code": "000001", "type": "stock", "exchange": "sz"}
     assert kdata_exist(item, 1991, 2) == True

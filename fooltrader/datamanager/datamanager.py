@@ -11,6 +11,7 @@ from fooltrader.api.quote import get_security_list, get_latest_download_trading_
     get_available_tick_dates
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
+from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_163 import StockKdataSpider163
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
 
@@ -40,7 +41,8 @@ def crawl_stock_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
     for _, security_item in get_security_list(start=start_code, end=end_code).iterrows():
         # 抓取日K线
         logger.info("{} get kdata start".format(security_item['code']))
-        start_date = get_latest_download_trading_date(security_item)
+
+        start_date = get_latest_download_trading_date(security_item, source='163')
         end_date = pd.Timestamp.today()
         if start_date > end_date:
             logger.info("{} kdata is ok".format(security_item['code']))
@@ -48,10 +50,23 @@ def crawl_stock_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
             process_crawl(StockKdataSpider163, {"security_item": security_item,
                                                 "start_date": start_date,
                                                 "end_date": end_date})
-            logger.info("{} get kdata end".format(security_item['code']))
+
+        logger.info("{} get kdata from 163 end".format(security_item['code']))
+
+        base_dates = set(get_trading_dates(security_item, source='163'))
+        for fuquan in ('bfq', 'hfq'):
+            sina_dates = set(get_trading_dates(security_item, source='sina', fuquan=fuquan))
+            diff_dates = base_dates - sina_dates
+            if diff_dates:
+                logger.info("{} get {} kdata from sina start".format(security_item['code'], fuquan))
+                process_crawl(StockKDataSpider, {"security_item": security_item,
+                                                 "trading_dates": diff_dates,
+                                                 "fuquan": fuquan})
+                logger.info("{} get {} kdata from sina end".format(security_item['code'], fuquan))
+            else:
+                logger.info("{} {} kdata from sina is ok".format(security_item['code'], fuquan))
 
         # 抓取tick
-        base_dates = set(get_trading_dates(security_item))
         tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
         diff_dates = tick_dates - set(get_available_tick_dates(security_item))
 
@@ -66,8 +81,8 @@ def crawl_stock_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_code', default='000338', help='the stock start code to be crawled')
-    parser.add_argument('-e', '--end_code', default='000338', help='the stock end code to be crawled')
+    parser.add_argument('-s', '--start_code', default='300570', help='the stock start code to be crawled')
+    parser.add_argument('-e', '--end_code', default='300570', help='the stock end code to be crawled')
 
     args = parser.parse_args()
 

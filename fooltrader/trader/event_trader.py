@@ -22,8 +22,10 @@ class EventTrader(Trader):
         if len(current_df.index) == 10:
             ma5 = np.mean(current_df.loc[5:, 'close'])
             ma10 = np.mean(current_df.loc[:, 'close'])
+            # 5日线在10日线上,并且没有持仓,就买入
             if ma5 > ma10 and not self.account_service.get_position(current_security):
                 self.buy(security_id=current_security, current_price=bar_item['close'])
+            # 5日线在10日线下,并且有持仓,就卖出
             elif ma5 < ma10 and self.account_service.get_position(current_security):
                 self.sell(security_id=current_security, current_price=bar_item['close'])
             current_df = current_df.loc[1:, ]

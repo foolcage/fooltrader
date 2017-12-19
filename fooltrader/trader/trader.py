@@ -55,7 +55,8 @@ class Trader(object):
         # 时间步长,用来控制操作的级别
         self.step = timedelta(days=1)
 
-        self.trader_id = "{}_{}".format(type(self).__name__.lower(), uuid.uuid4())
+        # self.trader_id = "{}_{}".format(type(self).__name__.lower(), uuid.uuid4())
+        self.trader_id = type(self).__name__.lower()
 
         # 如果想以always running的方式运行,建议使用hfq(后复权)
         # 只是单纯回测,可以使用qfq(前复权)

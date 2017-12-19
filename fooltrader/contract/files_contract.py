@@ -17,8 +17,7 @@ def get_kdata_dir(item, fuquan='bfq'):
     return os.path.join(get_security_dir(item), 'kdata', _to_valid_fuquan(fuquan))
 
 
-def get_kdata_path(item, source='sina', fuquan='bfq', year=None, quarter=None):
-    # 默认用新浪数据源
+def get_kdata_path(item, source='163', fuquan='bfq', year=None, quarter=None):
     if source == 'sina':
         if not year and not quarter:
             return os.path.join(get_kdata_dir(item, fuquan), 'dayk.csv')
@@ -68,6 +67,7 @@ def _to_valid_fuquan(fuquan='bfq'):
         return fuquan
     else:
         return 'bfq'
+
 
 def get_trading_dates_path_ths(item):
     return os.path.join(get_security_dir(item), 'trading_dates_ths.json')

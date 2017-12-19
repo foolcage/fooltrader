@@ -7,9 +7,10 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list, kdata_exist, merge_kdata_to_one, remove_quarter_kdata
+from fooltrader.api.quote import get_security_list, kdata_exist, merge_kdata_to_one
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract
+from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
 from fooltrader.utils.utils import get_quarters, get_year_quarter
 
@@ -29,11 +30,9 @@ class StockKDataSpider(scrapy.Spider):
     if AUTO_KAFKA:
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
-    def yield_request(self, item, trading_dates=[]):
+    def yield_request(self, item, trading_dates=[], fuquan=None):
         the_quarters = []
-        force_download = False
         if trading_dates:
-            force_download = True
             for the_date in trading_dates:
                 the_quarters.append(get_year_quarter(the_date))
         else:
@@ -41,13 +40,18 @@ class StockKDataSpider(scrapy.Spider):
 
         the_quarters = set(the_quarters)
 
+        if fuquan:
+            fuquans = [fuquan]
+        else:
+            fuquans = ['bfq', 'hfq']
+
         # get day k data
         for year, quarter in the_quarters:
-            for fuquan in ('hfq', 'bfq'):
-                data_path = get_kdata_path(item, year, quarter, fuquan)
-                data_exist = os.path.isfile(data_path) or kdata_exist(item, year, quarter, fuquan)
+            for fuquan in fuquans:
+                data_path = get_kdata_path(item, source='sina', year=year, quarter=quarter, fuquan=fuquan)
+                data_exist = os.path.exists(data_path) or kdata_exist(item, year, quarter, fuquan, source='sina')
 
-                if not data_exist or force_download:
+                if not data_exist:
                     url = self.get_k_data_url(item['code'], year, quarter, fuquan)
                     yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
                                   meta={'path': data_path, 'item': item, 'fuquan': fuquan},
@@ -59,8 +63,9 @@ class StockKDataSpider(scrapy.Spider):
         # 2)指定，用于修复
         item = self.settings.get("security_item")
         trading_dates = self.settings.get("trading_dates")
+        fuquan = self.settings.get("fuquan")
         if item is not None:
-            for request in self.yield_request(item, trading_dates):
+            for request in self.yield_request(item, trading_dates, fuquan):
                 yield request
         else:
             for _, item in get_security_list().iterrows():
@@ -111,8 +116,7 @@ class StockKDataSpider(scrapy.Spider):
 
     def spider_closed(self, spider, reason):
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
-        merge_kdata_to_one()
-        remove_quarter_kdata()
+        merge_kdata_to_one(security_item=self.settings.get("security_item"), fuquan=self.settings.get("fuquan"))
 
     def get_k_data_url(self, code, year, quarter, fuquan):
         if fuquan == 'hfq':
