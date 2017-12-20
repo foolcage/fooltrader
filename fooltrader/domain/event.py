@@ -16,3 +16,11 @@ class ForecastEvent(DocType):
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
+
+
+class FinanceReportEvent(DocType):
+    id = Keyword()
+    securityId = Keyword()
+    reportDate = Date()
+    reportPeriod = Date()
+    reportUrl = Keyword()
