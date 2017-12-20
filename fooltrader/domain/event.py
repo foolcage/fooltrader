@@ -23,4 +23,5 @@ class FinanceReportEvent(DocType):
     securityId = Keyword()
     reportDate = Date()
     reportPeriod = Date()
-    reportUrl = Keyword()
+    title = Keyword()
+    url = Keyword()
