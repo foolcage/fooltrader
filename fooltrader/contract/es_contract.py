@@ -1,4 +1,4 @@
-def get_es_kdata_index(security_id, level='day', fuquan='hfq'):
+def get_es_kdata_index(security_id, level='day', fuquan='bfq'):
     if fuquan == 'qfq' or fuquan == 'hfq':
         return '{}_{}_{}_kdata'.format(security_id, fuquan, level)
     else:

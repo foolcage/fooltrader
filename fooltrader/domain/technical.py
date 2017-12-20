@@ -2,8 +2,7 @@ from elasticsearch_dsl import DocType, Keyword, Date, Float
 from elasticsearch_dsl import MetaField
 
 
-# 不复权
-class BaseKData(DocType):
+class KData(DocType):
     id = Keyword()
     securityId = Keyword()
     timestamp = Date()
@@ -14,15 +13,12 @@ class BaseKData(DocType):
     low = Float()
     volume = Float()
     turnover = Float()
-
-
-class BfqDayKData(BaseKData):
-    class Meta:
-        all = MetaField(enabled=False)
-        doc_type = 'doc'
-
-
-class HfqDayKData(BaseKData):
+    preClose = Float()
+    change = Float()
+    changePct = Float()
+    turnoverRate = Float()
+    tCap = Float()
+    mCap = Float()
     factor = Float()
 
     class Meta:

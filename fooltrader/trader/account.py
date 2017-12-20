@@ -27,7 +27,6 @@ class AccountService(object):
         self.account_lock = threading.RLock()
 
         # 初始化账户
-        self.index = "account_{}".format(self.trader_id)
         self.account = Account()
         self.account.traderId = trader_id
         self.account.cash = base_capital
@@ -35,7 +34,6 @@ class AccountService(object):
         self.account.allValue = base_capital
         self.account.timestamp = timestamp
         self.save_account(timestamp)
-
 
     def save_account(self, timestamp, trading_close=False):
         self.account_lock.acquire()
@@ -56,7 +54,7 @@ class AccountService(object):
 
         self.account.allValue += self.account.cash
 
-        self.account.save(index=self.index)
+        self.account.save()
 
         self.account_lock.release()
 
@@ -154,7 +152,7 @@ class Account(DocType):
         return account
 
     def save(self, using=None, index=None, validate=True, **kwargs):
-        self.meta.id = self.timestamp.strftime('%Y-%m-%d%H:%M:%S')
+        self.meta.id = "{}_{}".format(self.traderId, self.timestamp.strftime('%Y-%m-%d %H:%M:%S'))
         return super().save(using, index, validate, **kwargs)
 
     class Meta:

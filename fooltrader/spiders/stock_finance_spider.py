@@ -1,5 +1,4 @@
 import scrapy
-from kafka import KafkaProducer
 from scrapy import Request
 from scrapy import signals
 
@@ -7,7 +6,7 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.consts import DEFAULT_BALANCE_SHEET_HEADER
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
-from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
+from fooltrader.settings import AUTO_KAFKA
 
 
 class StockFinanceSpider(scrapy.Spider):
@@ -21,9 +20,6 @@ class StockFinanceSpider(scrapy.Spider):
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
         }
     }
-
-    if AUTO_KAFKA:
-        producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
     def start_requests(self):
         for _, item in get_security_list().iterrows():

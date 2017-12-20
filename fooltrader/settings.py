@@ -94,7 +94,7 @@ FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
 SH_STOCK_FILE = 'sh.txt'
 SZ_STOCK_FILE = 'sz.xlsx'
 
-STOCK_START_CODE = '000001'
+STOCK_START_CODE = '000002'
 STOCK_END_CODE = '000002'
 
 AVAILABLE_TICK_DATE = '2004-10-8'

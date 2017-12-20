@@ -10,7 +10,7 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
 from fooltrader.domain.meta import StockMeta
-from fooltrader.domain.technical import BfqDayKData, HfqDayKData
+from fooltrader.domain.technical import KData
 from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
@@ -38,34 +38,24 @@ def security_meta_to_es():
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
 
 
-def kdata_to_es(fuquan='bfq'):
+def kdata_to_es():
     for _, security_item in get_security_list().iterrows():
         # 创建索引
-        index_name = get_es_kdata_index(security_item['id'], fuquan=fuquan)
-        if fuquan == 'hfq':
-            index_mapping(index_name, HfqDayKData)
-        else:
-            index_mapping(index_name, BfqDayKData)
+        index_name = get_es_kdata_index(security_item['id'])
+        index_mapping(index_name, KData)
 
-        for _, kdata_item in get_kdata(security_item, fuquan=fuquan).iterrows():
+        for _, kdata_item in get_kdata(security_item).iterrows():
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
-                if fuquan == 'hfq':
-                    kdata = HfqDayKData(
-                        meta={'id': id},
-                        id=id)
-                else:
-                    kdata = BfqDayKData(
-                        meta={'id': id},
-                        id=id)
+                kdata = KData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save()
+                kdata.save(index=index_name)
             except Exception as e:
-                logger.warn("wrong KdataDay:{},fuquan:{},error:{}", kdata_item, fuquan, e)
+                logger.warn("wrong KdataDay:{},fuquan:{},error:{}", kdata_item, e)
 
 
 def balance_sheet_to_es():
-    for security_item in get_security_list():
+    for _, security_item in get_security_list().iterrows():
         for json_object in get_balance_sheet_items(security_item):
             try:
                 balance_sheet = BalanceSheet(meta={'id': json_object['id']})
@@ -76,7 +66,7 @@ def balance_sheet_to_es():
 
 
 def income_statement_to_es():
-    for security_item in get_security_list():
+    for _, security_item in get_security_list().iterrows():
         for json_object in get_income_statement_items(security_item):
             try:
                 income_statement = IncomeStatement(meta={'id': json_object['id']})
@@ -87,7 +77,7 @@ def income_statement_to_es():
 
 
 def cash_flow_statement_to_es():
-    for security_item in get_security_list():
+    for _, security_item in get_security_list().iterrows():
         for json_object in get_cash_flow_statement_items(security_item):
             try:
                 cash_flow_statement = CashFlowStatement(meta={'id': json_object['id']})
@@ -98,7 +88,7 @@ def cash_flow_statement_to_es():
 
 
 def forecast_event_to_es():
-    for security_item in get_security_list():
+    for _, security_item in get_security_list().iterrows():
         # 创建索引
         index_name = get_es_forecast_event_index(security_item['id'])
         index_mapping(index_name, ForecastEvent)
@@ -116,8 +106,8 @@ if __name__ == '__main__':
     from elasticsearch_dsl.connections import connections
 
     connections.create_connection(hosts=['localhost'], timeout=20)
-    kdata_to_es(fuquan='hfq')
-    # balance_sheet_to_es()
-    # income_statement_to_es()
-    # cash_flow_statement_to_es()
-    # forecast_event_to_es()
+    # kdata_to_es()
+    balance_sheet_to_es()
+    income_statement_to_es()
+    cash_flow_statement_to_es()
+    forecast_event_to_es()
