@@ -8,6 +8,7 @@ class BalanceSheet(DocType):
     securityId = Keyword()
     code = Keyword()
     reportDate = Date()
+    reportEventDate = Date()
     # 货币资金
     moneyFunds = Float()
     # 交易性金融资产
@@ -190,7 +191,11 @@ class BalanceSheet(DocType):
 
 
 class IncomeStatement(DocType):
-    reportDate = Float()
+    id = Keyword()
+    securityId = Keyword()
+    code = Keyword()
+    reportDate = Date()
+    reportEventDate = Date()
     # /*营业总收入*/
     # 营业收入
     operatingRevenue = Float()
@@ -255,7 +260,12 @@ class IncomeStatement(DocType):
 
 
 class CashFlowStatement(DocType):
-    reportDate = Float()
+    id = Keyword()
+    securityId = Keyword()
+    code = Keyword()
+    reportDate = Date()
+    reportEventDate = Date()
+
     # /*一、经营活动产生的现金流量*/
     # 销售商品、提供劳务收到的现金
     cashFromSellingCommoditiesOrOfferingLabor = Float()

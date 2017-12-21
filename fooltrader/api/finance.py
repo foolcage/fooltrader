@@ -2,6 +2,7 @@ import logging
 import os
 
 from fooltrader import settings
+from fooltrader.api.event import get_report_event_date
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
 from fooltrader.items import SecurityItem
@@ -200,9 +201,12 @@ def get_balance_sheet_items(security_item):
         totalLiabilitiesAndOwnersEquity = lines[84].split()[1:-1]
 
         for idx, _ in enumerate(reportDate):
+            reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+
             yield {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportDate": reportDate[idx],
+                "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
                 # 货币资金
@@ -452,9 +456,11 @@ def get_income_statement_items(security_item):
         # 归属于少数股东的综合收益总额
         attributableToMinorityShareholders = lines[30].split()[1:-1]
     for idx, _ in enumerate(reportDate):
+        reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
         yield {
             "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
             "reportDate": reportDate[idx],
+            "reportEventDate": reportEventDate,
             "securityId": security_item["id"],
             "code": security_item["code"],
             # /*营业总收入*/
@@ -676,9 +682,12 @@ def get_cash_flow_statement_items(security_item):
         # 现金及现金等价物的净增加额
         netIncreaseInCashAndCashEquivalents = lines[76].split()[1:-1]
     for idx, _ in enumerate(reportDate):
+        reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+
         yield {
             "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
             "reportDate": reportDate[idx],
+            "reportEventDate": reportEventDate,
             "securityId": security_item["id"],
             "code": security_item["code"],
             # /*一、经营活动产生的现金流量*/
@@ -842,5 +851,5 @@ def get_cash_flow_statement_items(security_item):
 
 if __name__ == '__main__':
     for item in get_cash_flow_statement_items(
-            SecurityItem(type='stock', code='000004', exchange='sz', id='stock_sz_000004')):
+            SecurityItem(type='stock', code='300570', exchange='sz', id='stock_sz_000004')):
         print(item)

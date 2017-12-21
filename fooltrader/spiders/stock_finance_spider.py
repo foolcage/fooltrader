@@ -6,7 +6,6 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.consts import DEFAULT_BALANCE_SHEET_HEADER
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
-from fooltrader.settings import AUTO_KAFKA
 
 
 class StockFinanceSpider(scrapy.Spider):
@@ -22,16 +21,34 @@ class StockFinanceSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        for _, item in get_security_list().iterrows():
-            for (data_url, data_path) in (
-                    (self.get_balance_sheet_url(item['code']), get_balance_sheet_path(item)),
-                    (self.get_income_statement_url(item['code']), get_income_statement_path(item)),
-                    (self.get_cash_flow_statement_url(item['code']), get_cash_flow_statement_path(item))):
-                yield Request(url=data_url,
-                              meta={'path': data_path,
-                                    'item': item},
-                              headers=DEFAULT_BALANCE_SHEET_HEADER,
-                              callback=self.download_finance_sheet)
+        security_item = self.settings.get("security_item")
+        finance_type = self.settings.get("report_type")
+        if security_item is not None:
+            for request in self.yield_request(security_item, finance_type):
+                yield request
+        else:
+            for _, item in get_security_list().iterrows():
+                for request in self.yield_request(item):
+                    yield request
+
+    def yield_request(self, item=None, finance_type=None):
+        if finance_type == 'balance_sheet':
+            url_and_path = [(self.get_balance_sheet_url(item['code']), get_balance_sheet_path(item))]
+        elif finance_type == 'income_statement':
+            url_and_path = [(self.get_income_statement_url(item['code']), get_income_statement_path(item))]
+        elif finance_type == 'cash_flow':
+            url_and_path = [(self.get_cash_flow_statement_url(item['code']), get_cash_flow_statement_path(item))]
+        else:
+            url_and_path = [
+                (self.get_balance_sheet_url(item['code']), get_balance_sheet_path(item)),
+                (self.get_income_statement_url(item['code']), get_income_statement_path(item)),
+                (self.get_cash_flow_statement_url(item['code']), get_cash_flow_statement_path(item))]
+        for (data_url, data_path) in url_and_path:
+            yield Request(url=data_url,
+                          meta={'path': data_path,
+                                'item': item},
+                          headers=DEFAULT_BALANCE_SHEET_HEADER,
+                          callback=self.download_finance_sheet)
 
     def download_finance_sheet(self, response):
         content_type_header = response.headers.get('content-type', None)
@@ -42,9 +59,6 @@ class StockFinanceSpider(scrapy.Spider):
             with open(path, "wb") as f:
                 f.write(response.body)
                 f.flush()
-                if AUTO_KAFKA:
-                    # todo: parse the sheet and send it to kafka
-                    pass
         else:
             self.logger.error(
                 "get finance sheet error:url={} content type={} body={}".format(response.url, content_type_header,
