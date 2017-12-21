@@ -187,3 +187,10 @@ def sina_tick_to_csv(security_item, the_content, the_date):
 
 def get_file_name(the_path):
     return os.path.basename(the_path).split(".")[0]
+
+
+def index_df_with_time(df, time_col='timestamp'):
+    df = df.set_index(df[time_col])
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
+    return df

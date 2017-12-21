@@ -21,7 +21,7 @@ class ForecastEvent(DocType):
 class FinanceReportEvent(DocType):
     id = Keyword()
     securityId = Keyword()
+    reportEventDate = Date()
     reportDate = Date()
-    reportPeriod = Date()
     title = Keyword()
     url = Keyword()
