@@ -33,5 +33,4 @@ if [ ! -f "$BASEDIR/ve/updated" -o $BASEDIR/requirements.txt -nt $BASEDIR/ve/upd
     echo "Requirements installed."
 fi
 
-echo $BASEDIR
-exec python $BASEDIR/fooltrader/main.py
+echo "env ok"
