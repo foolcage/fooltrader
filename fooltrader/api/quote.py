@@ -56,16 +56,18 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
                           os.listdir(tick_dir)]
 
         for tick_path in sorted(tick_paths):
-            yield parse_tick(tick_path)
+            yield parse_tick(tick_path, security_item)
 
 
-def parse_tick(tick_path):
+def parse_tick(tick_path, security_item):
     if os.path.isfile(tick_path):
         df = pd.read_csv(tick_path)
         df['timestamp'] = get_file_name(tick_path) + " " + df['timestamp']
         df = df.set_index(df['timestamp'])
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
+        df['code'] = security_item['code']
+        df['securityId'] = security_item['id']
         return df
 
 

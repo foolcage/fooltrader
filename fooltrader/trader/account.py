@@ -1,6 +1,7 @@
 import logging
 import threading
 
+import pandas as pd
 from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean
 from elasticsearch_dsl import MetaField
 
@@ -45,7 +46,7 @@ class AccountService(object):
             # 对于T+1的,下个交易日all available
             if trading_close and position.tradingT == 1:
                 position.availableAmount = position.amount
-            df = get_kdata(position.securityId, timestamp, fuquan=self.stock_fuquan)
+            df = get_kdata(position.securityId, pd.Timestamp(timestamp).date(), source='sina', fuquan=self.stock_fuquan)
             if len(df) > 0:
                 position.value = position.amount * df['close']
             self.account.allValue += position.value
@@ -54,7 +55,7 @@ class AccountService(object):
 
         self.account.allValue += self.account.cash
 
-        self.account.save()
+        self.account.save(index='account')
 
         self.account_lock.release()
 

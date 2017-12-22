@@ -13,8 +13,6 @@ from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_k
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 from fooltrader.trader.account import Order, AccountService
 
-logger = logging.getLogger(__name__)
-
 
 class Trader(object):
     def on_init(self):
@@ -37,6 +35,8 @@ class Trader(object):
                                               stock_fuquan=self.stock_fuquan)
 
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
         self.base_capital = 1000000;
         self.buy_cost = 0.001;
         self.sell_cost = 0.001;
@@ -76,6 +76,7 @@ class Trader(object):
                            'on_week_bar': timedelta(weeks=1)}
 
         self.trading_type = 'time'
+        self.only_event_mode = False
 
         self.on_init()
 
@@ -110,14 +111,14 @@ class Trader(object):
                 order.status = "deal"
                 order.timestamp = self.current_time
                 # order.save()
-                logger.info(
+                self.logger.info(
                     "{} {} {} {} with price {} success".format(self.trader_id, direction, amount, security_id,
                                                                current_price))
         except Exception as e:
-            logger.info(
+            self.logger.info(
                 "{} {} {} {} with price {} failed".format(self.trader_id, direction, amount, security_id,
                                                           current_price))
-            logger.error(e)
+            self.logger.error(e)
 
     def move_on(self, step):
         # 对于回测来说,时间只是加一下
@@ -127,7 +128,7 @@ class Trader(object):
             time.sleep(self.step.total_seconds())
 
     def on_time_elapsed(self, current_time):
-        logger.info('current_time:{}'.format(current_time))
+        self.logger.info('current_time:{}'.format(current_time))
 
     # def on_tick(self, tick_item):
     #     logger.info('on_tick:{}'.format(tick_item))
@@ -183,7 +184,7 @@ class Trader(object):
                 message = consumer.poll(5000, 1)
                 kafka_start_date = datetime.fromtimestamp(message[topic_partition][0].timestamp).strftime(
                     TIME_FORMAT_DAY)
-                logger.warn("start:{} is after the last record:{}".format(self.start_date, kafka_start_date))
+                self.logger.warn("start:{} is after the last record:{}".format(self.start_date, kafka_start_date))
 
     def run(self):
         # 对相应标的的行情进行监听,可以多标的多级别同时进行
@@ -201,7 +202,7 @@ class Trader(object):
                             threading.Thread(target=self.__consume_topic_with_func, args=(topic, 'on_tick')))
                         self.trading_type = 'event'
                     else:
-                        logger.error("topic:{} not in kafka".format(topic))
+                        self.logger.error("topic:{} not in kafka".format(topic))
 
                 for level in ('week', 'day', '60', '30', '15', '5', '1'):
                     the_func = 'on_{}_bar'.format(level)
@@ -214,26 +215,30 @@ class Trader(object):
                                 threading.Thread(target=self.__consume_topic_with_func, args=(topic, the_func)))
                             self.trading_type = 'event'
                         else:
-                            logger.error("topic:{} not in kafka".format(topic))
+                            self.logger.error("topic:{} not in kafka".format(topic))
 
         # 用于同步各级别行情消费
         if len(self.threads) >= 1:
-            self.barrier = threading.Barrier(len(self.threads) + 1)
+            if self.only_event_mode:
+                self.barrier = threading.Barrier(len(self.threads))
+            else:
+                self.barrier = threading.Barrier(len(self.threads) + 1)
 
         for the_thread in self.threads:
             the_thread.start()
         # 主线程,是时间漫步的方式,一般来说,step用日线就可以了,主要用在那种大级别的操作
         # 账户的每日市值更新也是在这里计算的
-        while True:
-            self.on_time_elapsed(self.current_time)
-            if self.trading_type == 'time':
-                current_time = self.current_time
-                self.move_on(self.step)
-                time_delta = self.current_time.date() - current_time.date()
-                if time_delta.days >= 1:
-                    self.account_service.save_account(current_time, trading_close=True)
-            else:
-                self.barrier.wait()
+        if not self.only_event_mode:
+            while True:
+                self.on_time_elapsed(self.current_time)
+                if self.trading_type == 'time':
+                    current_time = self.current_time
+                    self.move_on(self.step)
+                    time_delta = self.current_time.date() - current_time.date()
+                    if time_delta.days >= 1:
+                        self.account_service.save_account(current_time, trading_close=True)
+                else:
+                    self.barrier.wait()
 
 
 if __name__ == '__main__':

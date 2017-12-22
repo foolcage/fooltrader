@@ -128,25 +128,25 @@ def crawl_stock_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
             else:
                 logger.info("{} {} kdata from sina is ok".format(security_item['code'], fuquan))
 
-                # 抓取tick
-                tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
-                diff_dates = tick_dates - set(get_available_tick_dates(security_item))
+        # 抓取tick
+        tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
+        diff_dates = tick_dates - set(get_available_tick_dates(security_item))
 
-                if diff_dates:
-                    logger.info("{} get tick start".format(security_item['code']))
-                    process_crawl(StockTickSpider, {"security_item": security_item,
-                                                    "trading_dates": diff_dates})
-                    logger.info("{} get tick end".format(security_item['code']))
-                else:
-                    logger.info("{} tick is ok".format(security_item['code']))
+        if diff_dates:
+            logger.info("{} get tick start".format(security_item['code']))
+            process_crawl(StockTickSpider, {"security_item": security_item,
+                                            "trading_dates": diff_dates})
+            logger.info("{} get tick end".format(security_item['code']))
+        else:
+            logger.info("{} tick is ok".format(security_item['code']))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_code', default='300570', help='the stock start code to be crawled')
-    parser.add_argument('-e', '--end_code', default='300570', help='the stock end code to be crawled')
+    parser.add_argument('-s', '--start_code', default='000002', help='the stock start code to be crawled')
+    parser.add_argument('-e', '--end_code', default='000002', help='the stock end code to be crawled')
 
     args = parser.parse_args()
 
-    # crawl_stock_data(args.start_code, args.end_code)
-    crawl_finance_data(args.start_code, args.end_code)
+    crawl_stock_data(args.start_code, args.end_code)
+    # crawl_finance_data(args.start_code, args.end_code)
