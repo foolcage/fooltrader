@@ -7,6 +7,7 @@ from fooltrader.utils.utils import is_same_date, index_df_with_time
 
 class TickTrader(Trader):
     def on_init(self):
+        self.trader_id = 'bb'
         self.only_event_mode = True
         self.universe = ['stock_sz_000002']
         self.today_traded = False
@@ -17,7 +18,6 @@ class TickTrader(Trader):
         if not is_same_date(self.current_time, tick_item['timestamp']):
             self.today_traded = False
             if not self.df.empty:
-                print(self.df)
                 self.df = pd.DataFrame()
         else:
             if not self.today_traded:
@@ -46,9 +46,13 @@ class TickTrader(Trader):
                     self.today_traded = True
 
 
-if __name__ == '__main__':
+def run():
     from elasticsearch_dsl.connections import connections
 
     connections.create_connection(hosts=['localhost'], timeout=20)
 
     TickTrader().run()
+
+
+if __name__ == '__main__':
+    run()

@@ -127,8 +127,8 @@ class Trader(object):
         else:
             time.sleep(self.step.total_seconds())
 
-    def on_time_elapsed(self, current_time):
-        self.logger.info('current_time:{}'.format(current_time))
+    def on_time_elapsed(self):
+        self.logger.info('current_time:{}'.format(self.current_time))
 
     # def on_tick(self, tick_item):
     #     logger.info('on_tick:{}'.format(tick_item))
@@ -230,7 +230,7 @@ class Trader(object):
         # 账户的每日市值更新也是在这里计算的
         if not self.only_event_mode:
             while True:
-                self.on_time_elapsed(self.current_time)
+                self.on_time_elapsed()
                 if self.trading_type == 'time':
                     current_time = self.current_time
                     self.move_on(self.step)

@@ -2,8 +2,9 @@ from fooltrader.api import quote
 from fooltrader.api.quote import get_security_item
 
 
-def ma(security_id, start, end, level='day', fuquan='bfq', window=5, col=['close', 'volume', 'turnover']):
-    df = quote.get_kdata(security_id, fuquan=fuquan, level=level)
+def ma(security_id, start, end, level='day', fuquan='bfq', source='sina', window=5,
+       col=['close', 'volume', 'turnover']):
+    df = quote.get_kdata(security_id, fuquan=fuquan, source=source, level=level)
     # 向前补全计算window
     df1 = df[:start]
     df2 = df1[-window + 1:]
@@ -14,8 +15,8 @@ def ma(security_id, start, end, level='day', fuquan='bfq', window=5, col=['close
     return df_result
 
 
-def ema(security_id, start, end, level='day', fuquan='bfq', window=12, col=['close'], pre_count=0):
-    df = quote.get_kdata(security_id, fuquan=fuquan, level=level)
+def ema(security_id, start, end, level='day', fuquan='bfq', source='sina', window=12, col=['close'], pre_count=0):
+    df = quote.get_kdata(security_id, fuquan=fuquan, source=source, level=level)
     # 向前补全计算window
     df1 = df[:start]
     df2 = df1[-window - pre_count + 1:]
@@ -30,7 +31,7 @@ def ema(security_id, start, end, level='day', fuquan='bfq', window=12, col=['clo
     return df_result
 
 
-def macd(security_id, start, end, level='day', fuquan='bfq', slow=26, fast=12, n=9, col=['close']):
+def macd(security_id, start, end, level='day', fuquan='bfq', source='sina', slow=26, fast=12, n=9, col=['close']):
     ema_fast = ema(security_id, start, end, level, fuquan, window=fast, pre_count=n, col=col)
     ema_fast.columns = ['ema']
 

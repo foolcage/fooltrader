@@ -5,8 +5,9 @@ from fooltrader.trader.trader import Trader
 
 
 class EventTrader(Trader):
-    def __init__(self):
-        super().__init__()
+    def on_init(self):
+        self.trader_id = 'aa'
+        self.only_event_mode = True
         self.universe = ['stock_sz_000002']
         self.df_map = {}
 
@@ -36,10 +37,12 @@ class EventTrader(Trader):
         df = df.append(bar_item, ignore_index=True)
         print(df)
 
-
-if __name__ == '__main__':
+def run():
     from elasticsearch_dsl.connections import connections
 
     connections.create_connection(hosts=['localhost'], timeout=20)
 
     EventTrader().run()
+
+if __name__ == '__main__':
+    run()
