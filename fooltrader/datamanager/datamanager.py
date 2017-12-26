@@ -21,7 +21,7 @@ from fooltrader.spiders.stock_finance_spider import StockFinanceSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_kdata_spider_163 import StockKdataSpider163
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
-from fooltrader.utils.utils import get_current_report_date
+from fooltrader.utils.utils import get_report_date
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
             # 先抓事件,有些后续抓取依赖事件
             process_crawl(StockFinanceReportEventSpider, {"security_item": security_item})
 
-            current_report_date = get_current_report_date()
+            current_report_date = get_report_date()
 
             # 资产负债表
             path = get_balance_sheet_path(security_item)
@@ -152,4 +152,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     crawl_stock_data(args.start_code, args.end_code)
-    # crawl_finance_data(args.start_code, args.end_code)
+    crawl_finance_data(args.start_code, args.end_code)

@@ -45,8 +45,13 @@ class StockFinanceReportEventSpider(scrapy.Spider):
                           callback=self.download_fi_report_event_data)
 
     @staticmethod
-    def report_period_from_title(title, period_type):
-        year = re.match('.*(\d{4}).*', title).group(1)
+    def report_period_from_title(title, period_type, report_event_date):
+        try:
+            year = re.match('.*(\d{4}).*', title).group(1)
+        except Exception as e:
+            year = pd.Timestamp(report_event_date).date().year
+            if period_type == 'ndbg':
+                year -= 1
         if period_type == 'yjdbg':
             return "{}-03-31".format(year)
         elif period_type == 'zqbg':
@@ -73,7 +78,7 @@ class StockFinanceReportEventSpider(scrapy.Spider):
             for i, tr in enumerate(report_contents):
                 href = Selector(text=tr).xpath('//@href').extract()[0]
                 title = Selector(text=tr).xpath('//text()').extract()[0]
-                report_period = self.report_period_from_title(title, period_type)
+                report_period = self.report_period_from_title(title, period_type, report_event_dates[i])
 
                 # 如果最新的事件已经抓取,直接返回
                 if i == 0:

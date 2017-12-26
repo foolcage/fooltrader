@@ -200,13 +200,12 @@ def is_same_date(one, two):
     return pd.Timestamp(one).date() == pd.Timestamp(two).date()
 
 
-def get_current_report_date():
-    today = datetime.datetime.today().date()
-    if today.month > 10:
-        return "{}{}".format(today.year, '0930')
-    elif today.month > 7:
-        return "{}{}".format(today.year, '0630')
-    elif today.month > 4:
-        return "{}{}".format(today.year, '0331')
+def get_report_date(the_date=datetime.datetime.today().date()):
+    if the_date.month > 10:
+        return "{}{}".format(the_date.year, '0930')
+    elif the_date.month > 7:
+        return "{}{}".format(the_date.year, '0630')
+    elif the_date.month > 4:
+        return "{}{}".format(the_date.year, '0331')
     else:
-        return "{}{}".format(today.year - 1, '1231')
+        return "{}{}".format(the_date.year - 1, '1231')
