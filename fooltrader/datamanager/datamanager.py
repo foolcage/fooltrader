@@ -40,56 +40,59 @@ def process_crawl(spider, setting):
 
 def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
     for _, security_item in get_security_list(start=start_code, end=end_code).iterrows():
-        # 先抓事件,有些后续抓取依赖事件
-        process_crawl(StockFinanceReportEventSpider, {"security_item": security_item})
+        try:
+            # 先抓事件,有些后续抓取依赖事件
+            process_crawl(StockFinanceReportEventSpider, {"security_item": security_item})
 
-        current_report_date = get_current_report_date()
+            current_report_date = get_current_report_date()
 
-        # 资产负债表
-        path = get_balance_sheet_path(security_item)
-        if not os.path.exists(path):
-            process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                               "report_type": "balance_sheet"})
-        else:
-            for balance_sheet_item in get_balance_sheet_items(security_item):
-                # 当前报告期还没抓取
-                if balance_sheet_item['reportDate'] != current_report_date:
-                    # 报告出来了
-                    df = event.get_finance_report_event(security_item, index='reportDate')
-                    if current_report_date in df.index:
-                        process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                                           "report_type": "balance_sheet"})
-                break
+            # 资产负债表
+            path = get_balance_sheet_path(security_item)
+            if not os.path.exists(path):
+                process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                   "report_type": "balance_sheet"})
+            else:
+                for balance_sheet_item in get_balance_sheet_items(security_item):
+                    # 当前报告期还没抓取
+                    if balance_sheet_item['reportDate'] != current_report_date:
+                        # 报告出来了
+                        df = event.get_finance_report_event(security_item, index='reportDate')
+                        if current_report_date in df.index:
+                            process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                               "report_type": "balance_sheet"})
+                    break
 
-        # 利润表
-        path = get_income_statement_path(security_item)
-        if not os.path.exists(path):
-            process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                               "report_type": "income_statement"})
-        else:
-            for balance_sheet_item in get_income_statement_items(security_item):
-                if balance_sheet_item['reportDate'] != current_report_date:
-                    # 报告出来了
-                    df = event.get_finance_report_event(security_item, index='reportDate')
-                    if current_report_date in df.index:
-                        process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                                           "report_type": "income_statement"})
-                break
+            # 利润表
+            path = get_income_statement_path(security_item)
+            if not os.path.exists(path):
+                process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                   "report_type": "income_statement"})
+            else:
+                for balance_sheet_item in get_income_statement_items(security_item):
+                    if balance_sheet_item['reportDate'] != current_report_date:
+                        # 报告出来了
+                        df = event.get_finance_report_event(security_item, index='reportDate')
+                        if current_report_date in df.index:
+                            process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                               "report_type": "income_statement"})
+                    break
 
-    # 现金流量表
-    path = get_cash_flow_statement_path(security_item)
-    if not os.path.exists(path):
-        process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                           "report_type": "cash_flow"})
-    else:
-        for balance_sheet_item in get_cash_flow_statement_items(security_item):
-            if balance_sheet_item['reportDate'] != current_report_date:
-                # 报告出来了
-                df = event.get_finance_report_event(security_item, index='reportDate')
-                if current_report_date in df.index:
-                    process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                                       "report_type": "cash_flow"})
-            break
+            # 现金流量表
+            path = get_cash_flow_statement_path(security_item)
+            if not os.path.exists(path):
+                process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                   "report_type": "cash_flow"})
+            else:
+                for balance_sheet_item in get_cash_flow_statement_items(security_item):
+                    if balance_sheet_item['reportDate'] != current_report_date:
+                        # 报告出来了
+                        df = event.get_finance_report_event(security_item, index='reportDate')
+                        if current_report_date in df.index:
+                            process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                               "report_type": "cash_flow"})
+                    break
+        except Exception as e:
+            logger.error(e)
 
 
 def crawl_stock_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
