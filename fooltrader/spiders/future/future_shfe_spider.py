@@ -13,8 +13,8 @@ from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.utils import utils
 
 
-class StockKdataSpider163(scrapy.Spider):
-    name = "stock_kdata_163"
+class FutureShfeSpider(scrapy.Spider):
+    name = "future_shfe_spider"
 
     custom_settings = {
         # 'DOWNLOAD_DELAY': 2,
@@ -94,13 +94,17 @@ class StockKdataSpider163(scrapy.Spider):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(StockKdataSpider163, cls).from_crawler(crawler, *args, **kwargs)
+        spider = super(FutureShfeSpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
         return spider
 
     def spider_closed(self, spider, reason):
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
 
-    def get_k_data_url(self, exchange, code, start, end):
-        return 'http://quotes.money.163.com/service/chddata.html?code={}{}&start={}&end={}'.format(
-            exchange, code, start, end)
+    def get_k_data_url(self, the_date=None, the_year=2009):
+        if the_year:
+            return 'http://www.shfe.com.cn/historyData/MarketData_Year_{}.zip'.format(the_year)
+        elif the_date:
+            return 'http://www.shfe.com.cn/data/dailydata/kx/kx{}.dat'.format(the_date)
+    def get_trading_date_url(self):
+        return 'http://www.shfe.com.cn/bourseService/businessdata/calendar/20171201all.dat'
