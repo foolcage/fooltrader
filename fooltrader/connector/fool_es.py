@@ -55,6 +55,7 @@ def kdata_to_es():
 
 
 def balance_sheet_to_es():
+    index_mapping('balance_sheet', BalanceSheet)
     for _, security_item in get_security_list().iterrows():
         for json_object in get_balance_sheet_items(security_item):
             try:
@@ -66,6 +67,8 @@ def balance_sheet_to_es():
 
 
 def income_statement_to_es():
+    index_mapping('income_statement', IncomeStatement)
+
     for _, security_item in get_security_list().iterrows():
         for json_object in get_income_statement_items(security_item):
             try:
@@ -77,6 +80,8 @@ def income_statement_to_es():
 
 
 def cash_flow_statement_to_es():
+    index_mapping('cash_flow_statement', CashFlowStatement)
+
     for _, security_item in get_security_list().iterrows():
         for json_object in get_cash_flow_statement_items(security_item):
             try:
@@ -107,7 +112,7 @@ if __name__ == '__main__':
 
     connections.create_connection(hosts=['localhost'], timeout=20)
     # kdata_to_es()
-    balance_sheet_to_es()
-    income_statement_to_es()
-    cash_flow_statement_to_es()
+    # balance_sheet_to_es()
+    # income_statement_to_es()
+    # cash_flow_statement_to_es()
     forecast_event_to_es()

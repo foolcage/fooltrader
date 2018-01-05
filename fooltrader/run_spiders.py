@@ -65,7 +65,7 @@ def crawl():
 
     # yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)
-    yield runner.crawl(StockFinanceReportEventSpider)
+    # yield runner.crawl(StockFinanceReportEventSpider)
     # yield runner.crawl(StockGNSpider)
     yield runner.crawl(StockForecastSpider)
     # yield runner.crawl(ProxySpider)

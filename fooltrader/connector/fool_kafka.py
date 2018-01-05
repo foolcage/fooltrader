@@ -63,5 +63,5 @@ def delete_all_topics():
 
 # consume_topic('stock_sh_600000_day_kdata')
 if __name__ == '__main__':
-    # kdata_to_kafka(fuquan='hfq')
-    tick_to_kafka()
+    kdata_to_kafka(fuquan='hfq')
+    # tick_to_kafka()

@@ -30,6 +30,10 @@ def get_finance_report_event(security_item, index='reportEventDate'):
 def get_report_event_date(security_item, report_date):
     df = get_finance_report_event(security_item, index='reportDate')
     if report_date in df.index:
-        return df.loc[report_date, 'reportEventDate']
+        se = df.loc[report_date, 'reportEventDate']
+        if type(se) == str:
+            return se
+        else:
+            return se[-1]
     else:
         return report_date
