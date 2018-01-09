@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from ast import literal_eval
 
 import pandas as pd
 
@@ -15,11 +16,20 @@ from fooltrader.utils.utils import get_file_name
 logger = logging.getLogger(__name__)
 
 
+def convert_to_list_if_need(input):
+    if "[" in input:
+        return literal_eval(input)
+    else:
+        return input
+
+
 # meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE):
     df = pd.DataFrame()
     for exchange in exchanges:
-        df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange), converters={'code': str})
+        df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
+                          converters={'code': str,
+                                      'sinaIndustry': convert_to_list_if_need})
         df = df.append(df1, ignore_index=True)
     df = df[df["code"] <= end]
     df = df[df["code"] >= start]
