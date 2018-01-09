@@ -23,6 +23,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
         df = df.append(df1, ignore_index=True)
     df = df[df["code"] <= end]
     df = df[df["code"] >= start]
+    df = df.set_index(df['code'])
     return df
 
 

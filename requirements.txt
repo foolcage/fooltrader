@@ -7,6 +7,8 @@ Twisted == 17.5.0
 
 chardet == 2.3.0
 
+demjson == 2.2.4
+
 elasticsearch-dsl>=6.0.0,<7.0.0
 
 kafka_python == 1.3.4

@@ -1,0 +1,57 @@
+import json
+
+import demjson
+import scrapy
+from scrapy import Request
+from scrapy import signals
+
+from fooltrader.api.quote import get_security_list
+from fooltrader.contract.files_contract import get_security_list_path
+from fooltrader.utils.utils import get_exchange
+
+
+class SinaIndustrySpider(scrapy.Spider):
+    name = "sina_industry"
+
+    def start_requests(self):
+        self.sh_df = get_security_list(exchanges=['sh'])
+        self.sz_df = get_security_list(exchanges=['sz'])
+        yield Request(
+            url='http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php',
+            callback=self.download_sina_industry)
+
+    def download_sina_industry(self, response):
+        tmp_str = response.body.decode('GB2312')
+        json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]
+        tmp_json = json.loads(json_str)
+        for ind_code in tmp_json:
+            yield Request(
+                url='http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=1024&sort=symbol&asc=1&node={}&symbol=&_s_r_a=page'.format(
+                    ind_code),
+                meta={'ind_code': ind_code,
+                      'ind_name': tmp_json[ind_code].split(',')[1]},
+                callback=self.download_sina_industry_detail)
+
+    def download_sina_industry_detail(self, response):
+        ind_jsons = demjson.decode(response.text)
+        for ind in ind_jsons:
+            if get_exchange(ind['code']) == 'sh':
+                df = self.sh_df
+            elif get_exchange(ind['code']) == 'sz':
+                df = self.sz_df
+            if 'sinaIndustry' not in df.columns:
+                df['sinaIndustry'] = [{} for i in range(df.index.size)]
+            if ind['code'] in df.index:
+                df.at[ind['code'], 'sinaIndustry'] = {'code': response.meta['ind_code'],
+                                                      'name': response.meta['ind_name']}
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(SinaIndustrySpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed(self, spider, reason):
+        self.sh_df.to_csv(get_security_list_path('stock', 'sh'))
+        self.sz_df.to_csv(get_security_list_path('stock', 'sz'))
+        spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)

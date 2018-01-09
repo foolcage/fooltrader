@@ -3,6 +3,18 @@ import os
 from fooltrader import settings
 
 
+# 分类相关
+def get_category_path(security_type='stock', classified='industry', source='sina', category_item=None):
+    if category_item:
+        return os.path.join(get_category_dir(security_type), '{}_{}_{}.csv'.format(source, classified, category_item))
+    else:
+        return os.path.join(get_category_dir(security_type), '{}_{}.csv'.format(source, classified))
+
+
+def get_category_dir(security_type='stock'):
+    return os.path.join(settings.FILES_STORE, security_type, 'category')
+
+
 # 标的相关
 def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FILES_STORE, security_type, '{}.csv'.format(exchange))
