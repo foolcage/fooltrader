@@ -1,4 +1,4 @@
-from elasticsearch_dsl import DocType, Keyword, Date, Float, Nested
+from elasticsearch_dsl import DocType, Keyword, Date, Float
 from elasticsearch_dsl.connections import connections
 
 # Define a default Elasticsearch client
@@ -12,9 +12,9 @@ class StockMeta(DocType):
     code = Keyword()
     name = Keyword()
     listDate = Date()
-    indexCategory = Nested()
-    sinaIndustry = Nested()
-    sinaConcept = Nested()
+    indexCategory = Keyword()
+    sinaIndustry = Keyword()
+    sinaConcept = Keyword()
 
     class Meta:
         index = 'stock_meta'

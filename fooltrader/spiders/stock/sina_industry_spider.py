@@ -1,4 +1,5 @@
 import json
+import threading
 
 import demjson
 import scrapy
@@ -13,9 +14,22 @@ from fooltrader.utils.utils import get_exchange
 class SinaIndustrySpider(scrapy.Spider):
     name = "sina_industry"
 
-    def start_requests(self):
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
+
+        'SPIDER_MIDDLEWARES': {
+            'fooltrader.middlewares.FoolErrorMiddleware': 1000,
+        }
+    }
+
+    def __init__(self, name=None, **kwargs):
+        super().__init__(name, **kwargs)
         self.sh_df = get_security_list(exchanges=['sh'])
         self.sz_df = get_security_list(exchanges=['sz'])
+        self.file_lock = threading.RLock()
+
+    def start_requests(self):
         yield Request(
             url='http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php',
             callback=self.download_sina_industry)
@@ -25,25 +39,37 @@ class SinaIndustrySpider(scrapy.Spider):
         json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]
         tmp_json = json.loads(json_str)
         for ind_code in tmp_json:
-            yield Request(
-                url='http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=1024&sort=symbol&asc=1&node={}&symbol=&_s_r_a=page'.format(
-                    ind_code),
-                meta={'ind_code': ind_code,
-                      'ind_name': tmp_json[ind_code].split(',')[1]},
-                callback=self.download_sina_industry_detail)
+            for page in range(1, 4):
+                yield Request(
+                    url='http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page={}&num=1024&sort=symbol&asc=1&node={}&symbol=&_s_r_a=page'.format(
+                        page, ind_code),
+                    meta={'ind_code': ind_code,
+                          'ind_name': tmp_json[ind_code].split(',')[1]},
+                    callback=self.download_sina_industry_detail)
 
     def download_sina_industry_detail(self, response):
+        if response.text == 'null' or response.text is None:
+            return
         ind_jsons = demjson.decode(response.text)
         for ind in ind_jsons:
+            self.file_lock.acquire()
             if get_exchange(ind['code']) == 'sh':
                 df = self.sh_df
             elif get_exchange(ind['code']) == 'sz':
                 df = self.sz_df
             if 'sinaIndustry' not in df.columns:
-                df['sinaIndustry'] = [{} for i in range(df.index.size)]
+                df['sinaIndustry'] = ""
             if ind['code'] in df.index:
-                df.at[ind['code'], 'sinaIndustry'] = {'code': response.meta['ind_code'],
-                                                      'name': response.meta['ind_name']}
+                current_ind = df.at[ind['code'], 'sinaIndustry']
+                if current_ind:
+                    if type(current_ind) == list and response.meta['ind_name'] not in current_ind:
+                        current_ind.append(response.meta['ind_name'])
+                    elif type(current_ind) == str and response.meta['ind_name'] != current_ind:
+                        current_ind = [current_ind, response.meta['ind_name']]
+                else:
+                    current_ind = response.meta['ind_name']
+                df.at[ind['code'], 'sinaIndustry'] = current_ind
+            self.file_lock.release()
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -52,6 +78,6 @@ class SinaIndustrySpider(scrapy.Spider):
         return spider
 
     def spider_closed(self, spider, reason):
-        self.sh_df.to_csv(get_security_list_path('stock', 'sh'))
-        self.sz_df.to_csv(get_security_list_path('stock', 'sz'))
+        self.sh_df.to_csv(get_security_list_path('stock', 'sh'), index=False)
+        self.sz_df.to_csv(get_security_list_path('stock', 'sz'), index=False)
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
