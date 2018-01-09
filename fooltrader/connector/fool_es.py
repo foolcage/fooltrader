@@ -28,11 +28,11 @@ def index_mapping(index_name, doc_type):
 
 
 def security_meta_to_es():
+    index_mapping('stock_meta', StockMeta)
     for _, item in get_security_list().iterrows():
         try:
-            stock_meta = StockMeta(meta={'id': item['id']}, id=item['id'], type=item['type'],
-                                   exchange=item['exchange'], code=item['code'], listDate=item['listDate'],
-                                   name=item['name'])
+            stock_meta = StockMeta(meta={'id': item['id']})
+            fill_doc_type(stock_meta, json.loads(item.to_json()))
             stock_meta.save()
         except Exception as e:
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
@@ -111,8 +111,9 @@ if __name__ == '__main__':
     from elasticsearch_dsl.connections import connections
 
     connections.create_connection(hosts=['localhost'], timeout=20)
+    security_meta_to_es()
     # kdata_to_es()
-    balance_sheet_to_es()
-    income_statement_to_es()
-    cash_flow_statement_to_es()
-    forecast_event_to_es()
+    # balance_sheet_to_es()
+    # income_statement_to_es()
+    # cash_flow_statement_to_es()
+    # forecast_event_to_es()
