@@ -11,8 +11,8 @@ from fooltrader.contract.files_contract import get_security_list_path
 from fooltrader.utils.utils import get_exchange
 
 
-class SinaIndustrySpider(scrapy.Spider):
-    name = "sina_industry"
+class SinaCategorySpider(scrapy.Spider):
+    name = "sina_category"
 
     custom_settings = {
         'DOWNLOAD_DELAY': 2,
@@ -30,11 +30,22 @@ class SinaIndustrySpider(scrapy.Spider):
         self.file_lock = threading.RLock()
 
     def start_requests(self):
-        yield Request(
-            url='http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php',
-            callback=self.download_sina_industry)
+        self.category_type = self.settings.get("category_type")
 
-    def download_sina_industry(self, response):
+        if self.category_type == 'sinaIndustry':
+            url = 'http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php'
+        elif self.category_type == 'sinaConcept':
+            url = 'http://money.finance.sina.com.cn/q/view/newFLJK.php?param=class'
+        elif self.category_type == 'sinaArea':
+            url = 'http://money.finance.sina.com.cn/q/view/newFLJK.php?param=area'
+        else:
+            return
+
+        yield Request(
+            url=url,
+            callback=self.download_sina_category)
+
+    def download_sina_category(self, response):
         tmp_str = response.body.decode('GB2312')
         json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]
         tmp_json = json.loads(json_str)
@@ -45,9 +56,9 @@ class SinaIndustrySpider(scrapy.Spider):
                         page, ind_code),
                     meta={'ind_code': ind_code,
                           'ind_name': tmp_json[ind_code].split(',')[1]},
-                    callback=self.download_sina_industry_detail)
+                    callback=self.download_sina_category_detail)
 
-    def download_sina_industry_detail(self, response):
+    def download_sina_category_detail(self, response):
         if response.text == 'null' or response.text is None:
             return
         ind_jsons = demjson.decode(response.text)
@@ -57,10 +68,10 @@ class SinaIndustrySpider(scrapy.Spider):
                 df = self.sh_df
             elif get_exchange(ind['code']) == 'sz':
                 df = self.sz_df
-            if 'sinaIndustry' not in df.columns:
-                df['sinaIndustry'] = ""
+            if self.category_type not in df.columns:
+                df[self.category_type] = ""
             if ind['code'] in df.index:
-                current_ind = df.at[ind['code'], 'sinaIndustry']
+                current_ind = df.at[ind['code'], self.category_type]
                 if current_ind:
                     if type(current_ind) == list and response.meta['ind_name'] not in current_ind:
                         current_ind.append(response.meta['ind_name'])
@@ -68,12 +79,12 @@ class SinaIndustrySpider(scrapy.Spider):
                         current_ind = [current_ind, response.meta['ind_name']]
                 else:
                     current_ind = response.meta['ind_name']
-                df.at[ind['code'], 'sinaIndustry'] = current_ind
+                df.at[ind['code'], self.category_type] = current_ind
             self.file_lock.release()
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(SinaIndustrySpider, cls).from_crawler(crawler, *args, **kwargs)
+        spider = super(SinaCategorySpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
         return spider
 

@@ -15,6 +15,7 @@ class StockMeta(DocType):
     indexCategory = Keyword()
     sinaIndustry = Keyword()
     sinaConcept = Keyword()
+    sinaArea = Keyword()
 
     class Meta:
         index = 'stock_meta'

@@ -16,6 +16,7 @@ from fooltrader.contract.files_contract import get_balance_sheet_path, get_incom
     get_cash_flow_statement_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
+from fooltrader.spiders.stock.sina_category_spider import SinaCategorySpider
 from fooltrader.spiders.stock_finance_report_event_spider import StockFinanceReportEventSpider
 from fooltrader.spiders.stock_finance_spider import StockFinanceSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
@@ -36,6 +37,18 @@ def process_crawl(spider, setting):
     p = Process(target=crawl, args=(spider, setting))
     p.start()
     p.join(5 * 60)
+
+
+def crawl_stock_meta():
+    # 更新股票列表
+    # TODO:看是否有必要判断有新股上市，目前每天抓一次列表，问题不大
+    if False:
+        logger.info('download stock list start')
+        process_crawl(SecurityListSpider, {})
+        logger.info('download stock list finish')
+    # process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
+    # process_crawl(SinaCategorySpider, {'category_type': 'sinaConcept'})
+    process_crawl(SinaCategorySpider, {'category_type': 'sinaArea'})
 
 
 def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
@@ -96,13 +109,6 @@ def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
 
 
 def crawl_stock_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
-    # 更新股票列表
-    # TODO:看是否有必要判断有新股上市，目前每天抓一次列表，问题不大
-    if False:
-        logger.info('download stock list start')
-        process_crawl(SecurityListSpider, {})
-        logger.info('download stock list finish')
-
     for _, security_item in get_security_list(start=start_code, end=end_code).iterrows():
         # 抓取日K线
         logger.info("{} get kdata start".format(security_item['code']))
@@ -151,5 +157,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    crawl_stock_meta()
     # crawl_stock_data(args.start_code, args.end_code)
-    crawl_finance_data(args.start_code, args.end_code)
+    # crawl_finance_data(args.start_code, args.end_code)

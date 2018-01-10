@@ -11,7 +11,6 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, \
     get_kdata_dir
 from fooltrader.spiders.security_list_spider import SecurityListSpider
-from fooltrader.spiders.stock.sina_industry_spider import SinaIndustrySpider
 
 configure_logging()
 
@@ -54,7 +53,7 @@ init_env()
 
 @defer.inlineCallbacks
 def crawl():
-    yield runner.crawl(SecurityListSpider)
+    # yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockKdataSpider163)
     # yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
@@ -65,7 +64,6 @@ def crawl():
     # yield runner.crawl(StockFinanceReportEventSpider)
     # yield runner.crawl(StockGNSpider)
     # yield runner.crawl(StockForecastSpider)
-    yield runner.crawl(SinaIndustrySpider)
     # yield runner.crawl(ProxySpider)
 
     reactor.stop()

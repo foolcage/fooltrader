@@ -29,7 +29,9 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
     for exchange in exchanges:
         df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
                           converters={'code': str,
-                                      'sinaIndustry': convert_to_list_if_need})
+                                      'sinaIndustry': convert_to_list_if_need,
+                                      'sinaConcept': convert_to_list_if_need,
+                                      'sinaArea': convert_to_list_if_need})
         df = df.append(df1, ignore_index=True)
     df = df[df["code"] <= end]
     df = df[df["code"] >= start]
