@@ -25,17 +25,62 @@ def convert_to_list_if_need(input):
 
 # meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE):
-    df = pd.DataFrame()
-    for exchange in exchanges:
-        df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
-                          converters={'code': str,
-                                      'sinaIndustry': convert_to_list_if_need,
-                                      'sinaConcept': convert_to_list_if_need,
-                                      'sinaArea': convert_to_list_if_need})
-        df = df.append(df1, ignore_index=True)
-    df = df[df["code"] <= end]
-    df = df[df["code"] >= start]
-    df = df.set_index(df['code'])
+    if security_type == 'stock':
+        df = pd.DataFrame()
+        for exchange in exchanges:
+            df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
+                              converters={'code': str,
+                                          'sinaIndustry': convert_to_list_if_need,
+                                          'sinaConcept': convert_to_list_if_need,
+                                          'sinaArea': convert_to_list_if_need})
+            df = df.append(df1, ignore_index=True)
+        df = df[df["code"] <= end]
+        df = df[df["code"] >= start]
+        df = df.set_index(df['code'])
+    elif security_type == 'index':
+        df = pd.DataFrame([{'id': 'index_sh_000001',
+                            'code': '000001',
+                            'name': '上证指数',
+                            'listDate': '1990-12-19',
+                            'exchange': 'sh',
+                            'type': 'index'},
+                           {'id': 'index_sh_000016',
+                            'code': '000016',
+                            'name': '上证50',
+                            'listDate': '2004-01-02',
+                            'exchange': 'sh',
+                            'type': 'index'},
+                           {'id': 'index_sh_000905',
+                            'code': '000905',
+                            'name': '中证500',
+                            'listDate': '2005-01-04',
+                            'exchange': 'sh',
+                            'type': 'index'},
+                           {'id': 'index_sz_399001',
+                            'code': '399001',
+                            'name': '深证成指',
+                            'listDate': '1991-04-03',
+                            'exchange': 'sz',
+                            'type': 'index'},
+                           {'id': 'index_sz_399300',
+                            'code': '399300',
+                            'name': '沪深300',
+                            'listDate': '2002-01-04',
+                            'exchange': 'sz',
+                            'type': 'index'},
+                           {'id': 'index_sz_399005',
+                            'code': '399005',
+                            'name': '中小板指',
+                            'listDate': '2006-01-24',
+                            'exchange': 'sz',
+                            'type': 'index'},
+                           {'id': 'index_sz_399006',
+                            'code': '399006',
+                            'name': '创业板指',
+                            'listDate': '2010-06-01',
+                            'exchange': 'sz',
+                            'type': 'index'}
+                           ])
     return df
 
 

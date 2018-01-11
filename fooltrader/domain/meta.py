@@ -22,6 +22,19 @@ class StockMeta(DocType):
         doc_type = 'doc'
 
 
+class IndexMeta(DocType):
+    id = Keyword()
+    type = Keyword()
+    exchange = Keyword()
+    code = Keyword()
+    name = Keyword()
+    listDate = Date()
+
+    class Meta:
+        index = 'index_meta'
+        doc_type = 'doc'
+
+
 class StockTickItem(DocType):
     securityId = Keyword()
     code = Keyword()

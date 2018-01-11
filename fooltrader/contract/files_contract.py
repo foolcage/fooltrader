@@ -26,7 +26,10 @@ def get_security_dir(item):
 
 # k线相关
 def get_kdata_dir(item, fuquan='bfq'):
-    return os.path.join(get_security_dir(item), 'kdata', _to_valid_fuquan(fuquan))
+    if item['type'] == 'index':
+        return os.path.join(get_security_dir(item), 'kdata')
+    elif item['type'] == 'stock':
+        return os.path.join(get_security_dir(item), 'kdata', _to_valid_fuquan(fuquan))
 
 
 def get_kdata_path(item, source='163', fuquan='bfq', year=None, quarter=None):
