@@ -155,7 +155,7 @@ class BalanceSheet(DocType):
 
     # / *所有者权益 * /
     # 实收资本(或股本)
-    registeredCapital = Float()
+    totalShareCapital = Float()
 
     # 资本公积
     capitalSurplus = Float()
@@ -172,14 +172,14 @@ class BalanceSheet(DocType):
     generalRiskPreparation = Float()
     # 未分配利润
     undistributedProfits = Float()
-    # 归属于母公司股东权益合计
-    consolidatedIncomeBelongingToParentCompany = Float()
+    # 归属于母公司股东权益合计(净资产)
+    bookValue = Float()
 
     # 少数股东权益
-    minorityStockholderInterest = Float()
+    minorityBookValue = Float()
 
     # 所有者权益(或股东权益)合计
-    totalInvestorsEquity = Float()
+    totalBookValue = Float()
 
     # 负债和所有者权益(或股东权益)总计
     totalLiabilitiesAndOwnersEquity = Float()
@@ -241,9 +241,9 @@ class IncomeStatement(DocType):
     minorityInterestIncome = Float()
     # /*每股收益*/
     # 基本每股收益(元/股)
-    basicEarningsPerShare = Float()
+    EPS = Float()
     # 稀释每股收益(元/股)
-    fullyDilutedEarningsPerShare = Float()
+    dilutedEPS = Float()
     # /*其他综合收益*/
     otherComprehensiveIncome = Float()
     # /*综合收益总额*/
@@ -349,7 +349,7 @@ class CashFlowStatement(DocType):
     # 净利润
     netProfit = Float()
     # 少数股东权益
-    minorityStockholderInterest = Float()
+    minorityBookValue = Float()
     # 未确认的投资损失
     unrealisedInvestmentLosses = Float()
     # 资产减值准备

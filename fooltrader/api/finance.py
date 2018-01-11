@@ -171,7 +171,7 @@ def get_balance_sheet_items(security_item):
 
         # / *所有者权益 * /
         # 实收资本(或股本)
-        registeredCapital = lines[73].split()[1:-1]
+        totalShareCapital = lines[73].split()[1:-1]
 
         # 资本公积
         capitalSurplus = lines[74].split()[1:-1]
@@ -188,14 +188,14 @@ def get_balance_sheet_items(security_item):
         generalRiskPreparation = lines[79].split()[1:-1]
         # 未分配利润
         undistributedProfits = lines[80].split()[1:-1]
-        # 归属于母公司股东权益合计
-        consolidatedIncomeBelongingToParentCompany = lines[81].split()[1:-1]
+        # 归属于母公司股东权益合计(净资产)
+        bookValue = lines[81].split()[1:-1]
 
         # 少数股东权益
-        minorityStockholderInterest = lines[82].split()[1:-1]
+        minorityBookValue = lines[82].split()[1:-1]
 
         # 所有者权益(或股东权益)合计
-        totalInvestorsEquity = lines[83].split()[1:-1]
+        totalBookValue = lines[83].split()[1:-1]
 
         # 负债和所有者权益(或股东权益)总计
         totalLiabilitiesAndOwnersEquity = lines[84].split()[1:-1]
@@ -355,7 +355,7 @@ def get_balance_sheet_items(security_item):
 
                 # / *所有者权益 * /
                 # 实收资本(或股本)
-                "registeredCapital": to_float(registeredCapital[idx]),
+                "totalShareCapital": to_float(totalShareCapital[idx]),
 
                 # 资本公积
                 "capitalSurplus": to_float(capitalSurplus[idx]),
@@ -372,14 +372,14 @@ def get_balance_sheet_items(security_item):
                 "generalRiskPreparation": to_float(generalRiskPreparation[idx]),
                 # 未分配利润
                 "undistributedProfits": to_float(undistributedProfits[idx]),
-                # 归属于母公司股东权益合计
-                "consolidatedIncomeBelongingToParentCompany": to_float(consolidatedIncomeBelongingToParentCompany[idx]),
+                # 归属于母公司股东权益合计(净资产)
+                "bookValue": to_float(bookValue[idx]),
 
                 # 少数股东权益
-                "minorityStockholderInterest": to_float(minorityStockholderInterest[idx]),
+                "minorityBookValue": to_float(minorityBookValue[idx]),
 
                 # 所有者权益(或股东权益)合计
-                "totalInvestorsEquity": to_float(totalInvestorsEquity[idx]),
+                "totalBookValue": to_float(totalBookValue[idx]),
 
                 # 负债和所有者权益(或股东权益)总计
                 "totalLiabilitiesAndOwnersEquity": to_float(totalLiabilitiesAndOwnersEquity[idx])
@@ -444,9 +444,9 @@ def get_income_statement_items(security_item):
         minorityInterestIncome = lines[23].split()[1:-1]
         # /*每股收益*/
         # 基本每股收益(元/股)
-        basicEarningsPerShare = lines[25].split()[1:-1]
+        EPS = lines[25].split()[1:-1]
         # 稀释每股收益(元/股)
-        fullyDilutedEarningsPerShare = lines[26].split()[1:-1]
+        dilutedEPS = lines[26].split()[1:-1]
         # /*其他综合收益*/
         otherComprehensiveIncome = lines[27].split()[1:-1]
         # /*综合收益总额*/
@@ -509,9 +509,9 @@ def get_income_statement_items(security_item):
             "minorityInterestIncome": to_float(minorityInterestIncome[idx]),
             # /*每股收益*/
             # 基本每股收益(元/股)
-            "basicEarningsPerShare": to_float(basicEarningsPerShare[idx]),
+            "EPS": to_float(EPS[idx]),
             # 稀释每股收益(元/股)
-            "fullyDilutedEarningsPerShare": to_float(fullyDilutedEarningsPerShare[idx]),
+            "dilutedEPS": to_float(dilutedEPS[idx]),
             # /*其他综合收益*/
             "otherComprehensiveIncome": to_float(otherComprehensiveIncome[idx]),
             # /*综合收益总额*/
@@ -618,7 +618,7 @@ def get_cash_flow_statement_items(security_item):
         # 净利润
         netProfit = lines[44].split()[1:-1]
         # 少数股东权益
-        minorityStockholderInterest = lines[45].split()[1:-1]
+        minorityBookValue = lines[45].split()[1:-1]
         # 未确认的投资损失
         unrealisedInvestmentLosses = lines[46].split()[1:-1]
         # 资产减值准备
@@ -781,7 +781,7 @@ def get_cash_flow_statement_items(security_item):
             # 净利润
             "netProfit": to_float(netProfit[idx]),
             # 少数股东权益
-            "minorityStockholderInterest": to_float(minorityStockholderInterest[idx]),
+            "minorityBookValue": to_float(minorityBookValue[idx]),
             # 未确认的投资损失
             "unrealisedInvestmentLosses": to_float(unrealisedInvestmentLosses[idx]),
             # 资产减值准备
