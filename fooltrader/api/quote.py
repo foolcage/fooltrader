@@ -24,15 +24,20 @@ def convert_to_list_if_need(input):
 
 
 # meta
-def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE):
+def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE,
+                      mode='simple'):
     if security_type == 'stock':
         df = pd.DataFrame()
         for exchange in exchanges:
-            df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
-                              converters={'code': str,
-                                          'sinaIndustry': convert_to_list_if_need,
-                                          'sinaConcept': convert_to_list_if_need,
-                                          'sinaArea': convert_to_list_if_need})
+            if mode == 'simple':
+                df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
+                                  converters={'code': str})
+            else:
+                df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
+                                  converters={'code': str,
+                                              'sinaIndustry': convert_to_list_if_need,
+                                              'sinaConcept': convert_to_list_if_need,
+                                              'sinaArea': convert_to_list_if_need})
             df = df.append(df1, ignore_index=True)
         df = df[df["code"] <= end]
         df = df[df["code"] >= start]
@@ -59,6 +64,12 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
                            {'id': 'index_sz_399001',
                             'code': '399001',
                             'name': '深证成指',
+                            'listDate': '1991-04-03',
+                            'exchange': 'sz',
+                            'type': 'index'},
+                           {'id': 'index_sz_399106',
+                            'code': '399106',
+                            'name': '深证综指',
                             'listDate': '1991-04-03',
                             'exchange': 'sz',
                             'type': 'index'},

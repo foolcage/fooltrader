@@ -11,12 +11,13 @@ from fooltrader import settings
 from fooltrader.api import event
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items
 from fooltrader.api.quote import get_security_list, get_latest_download_trading_date, get_trading_dates, \
-    get_available_tick_dates
+    get_available_tick_dates, get_kdata
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock.sina_category_spider import SinaCategorySpider
+from fooltrader.spiders.stock.stock_summary_spider import StockSummarySpider
 from fooltrader.spiders.stock_finance_report_event_spider import StockFinanceReportEventSpider
 from fooltrader.spiders.stock_finance_spider import StockFinanceSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
@@ -124,6 +125,16 @@ def crawl_index_quote():
 
         logger.info("{} get index kdata from 163 end".format(security_item['code']))
 
+        # 补全数据
+        if security_item['id'] == 'index_sh_000001':
+            df = get_kdata(security_item=security_item)
+            df = df[df['turnoverRate'].isna() | df['tCap'].isna() | df['mCap'].isna() | df[
+                'pe'].isna()]
+            if not df.empty:
+                dates = df.index.strftime('%Y-%m-%d').tolist()
+                process_crawl(StockSummarySpider, {"security_item": security_item,
+                                                   "the_dates": dates})
+
 
 def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
     # 抓取股票k线
@@ -176,6 +187,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # crawl_stock_meta()
-    crawl_index_quote()
-    # crawl_stock_data(args.start_code, args.end_code)
+    # crawl_index_quote()
+    crawl_stock_quote(args.start_code, args.end_code)
     # crawl_finance_data(args.start_code, args.end_code)

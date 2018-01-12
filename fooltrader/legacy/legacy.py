@@ -9,7 +9,7 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
-    get_security_dir, get_kdata_path_ths, get_kdata_path
+    get_security_dir, get_kdata_path
 from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
 
 logger = logging.getLogger(__name__)

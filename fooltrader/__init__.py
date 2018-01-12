@@ -1,6 +1,8 @@
 import logging
 import os
 
+import pandas as pd
+
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir
@@ -61,6 +63,8 @@ def init_env():
         if not os.path.exists(kdata_dir):
             os.makedirs(kdata_dir)
 
+
+pd.set_option('expand_frame_repr', False)
 
 init_log()
 init_env()

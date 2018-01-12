@@ -29,7 +29,7 @@ def index_mapping(index_name, doc_type):
 
 def security_meta_to_es():
     index_mapping('stock_meta', StockMeta)
-    for _, item in get_security_list().iterrows():
+    for _, item in get_security_list(mode='es').iterrows():
         try:
             stock_meta = StockMeta(meta={'id': item['id']})
             fill_doc_type(stock_meta, json.loads(item.to_json()))

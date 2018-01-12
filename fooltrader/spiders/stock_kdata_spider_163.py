@@ -8,7 +8,8 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
-from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163
+from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
+    KDATA_COLUMN_INDEX
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.utils import utils
 
@@ -68,32 +69,46 @@ class StockKdataSpider163(scrapy.Spider):
             # 已经保存的csv数据
             if os.path.exists(path):
                 df_current = pd.read_csv(path, dtype=str)
+                # 补全历史数据
+                if 'name' not in df_current.columns:
+                    df_current['name'] = item['name']
             else:
                 df_current = pd.DataFrame()
 
             df = utils.read_csv(io.BytesIO(response.body), encoding='GB2312', na_values='None')
             df['code'] = item['code']
             df['securityId'] = item['id']
+            df['name'] = item['name']
+            # 指数数据
             if item['type'] == 'index':
                 df = df.loc[:,
-                     ['日期', 'code', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额', '涨跌幅']]
+                     ['日期', 'code', 'name', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额',
+                      '涨跌幅']]
                 df['turnoverRate'] = None
                 df['tCap'] = None
                 df['mCap'] = None
+                df['pe'] = None
+                df.columns = KDATA_COLUMN_INDEX
+            # 股票数据
             else:
                 df = df.loc[:,
-                     ['日期', 'code', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额', '涨跌幅', '换手率',
-                      '总市值', '流通市值']]
-            df['factor'] = None
-            df.columns = KDATA_COLUMN_STOCK
+                     ['日期', 'code', 'name', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额',
+                      '涨跌幅', '换手率', '总市值', '流通市值']]
+                df['factor'] = None
+                df.columns = KDATA_COLUMN_STOCK
 
             # 合并到当前csv中
             df_current = df_current.append(df, ignore_index=True)
 
             if item['type'] == 'index':
                 df_current = df_current.dropna(subset=KDATA_INDEX_COLUMN_163)
+                # 保证col顺序
+                df_current = df_current.loc[:, KDATA_COLUMN_INDEX]
             else:
                 df_current = df_current.dropna(subset=KDATA_COLUMN_163)
+                # 保证col顺序
+                df_current = df_current.loc[:, KDATA_COLUMN_STOCK]
+
             df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
             df_current = df_current.set_index(df_current['timestamp'])
             df_current.index = pd.to_datetime(df_current.index)
