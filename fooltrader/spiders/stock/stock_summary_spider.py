@@ -1,6 +1,8 @@
+import io
 import threading
 
 import demjson
+import pandas as pd
 import scrapy
 from scrapy import Request
 from scrapy import signals
@@ -18,11 +20,13 @@ class StockSummarySpider(scrapy.Spider):
         super().__init__(name, **kwargs)
         self.security_item = None
         self.sh_df = None
+        self.sz_df = None
         self.file_lock = threading.RLock()
 
     def start_requests(self):
         self.security_item = self.settings.get("security_item")
         the_dates = self.settings.get("the_dates")
+        # 上海市场概况放在 上证指数
         if self.security_item['id'] == 'index_sh_000001':
             self.sh_df = get_kdata(security_item=self.security_item)
 
@@ -32,9 +36,25 @@ class StockSummarySpider(scrapy.Spider):
                         the_date),
                     headers=DEFAULT_SH_SUMMARY_HEADER,
                     meta={'searchDate': the_date},
-                    callback=self.download_stock_summary)
+                    callback=self.download_sh_summary)
+        # 深圳市场概况放在 深证综指
+        elif self.security_item['id'] == 'index_sz_399106':
+            self.sz_df = get_kdata(security_item=self.security_item)
 
-    def download_stock_summary(self, response):
+            for the_date in the_dates:
+                if pd.Timestamp(the_date).date().year >= 2005:
+                    yield Request(
+                        url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=excel&CATALOGID=1803&txtQueryDate={}&ENCODE=1&TABKEY=tab1'.format(
+                            the_date),
+                        meta={'searchDate': the_date},
+                        callback=self.download_sz_summary)
+
+    def download_sz_summary(self, response):
+        searchDate = response.meta['searchDate']
+        df = pd.read_excel(io.BytesIO(response.body))
+        print(df)
+
+    def download_sh_summary(self, response):
         searchDate = response.meta['searchDate']
 
         results = demjson.decode(response.text[response.text.index("(") + 1:response.text.index(")")])['result']
@@ -42,10 +62,31 @@ class StockSummarySpider(scrapy.Spider):
         if result and len(result) == 1:
             result_json = result[0]
             self.file_lock.acquire()
-            self.sh_df.at[searchDate, 'pe'] = result_json['profitRate']
-            self.sh_df.at[searchDate, 'tCap'] = result_json['marketValue1'] * 100000000
-            self.sh_df.at[searchDate, 'mCap'] = result_json['negotiableValue1'] * 100000000
-            self.sh_df.at[searchDate, 'turnoverRate'] = result_json['exchangeRate']
+            # 有些较老的数据不存在,默认设为0.0
+            try:
+                self.sh_df.at[searchDate, 'pe'] = float(result_json['profitRate']) * 1.0
+            except Exception as e:
+                self.sh_df.at[searchDate, 'pe'] = 0.0
+                self.logger.warn(e)
+
+            try:
+                self.sh_df.at[searchDate, 'tCap'] = float(result_json['marketValue1']) * 100000000
+            except Exception as e:
+                self.sh_df.at[searchDate, 'tCap'] = 0.0
+                self.logger.warn(e)
+
+            try:
+                self.sh_df.at[searchDate, 'mCap'] = float(result_json['negotiableValue1']) * 100000000
+            except Exception as e:
+                self.sh_df.at[searchDate, 'mCap'] = 0.0
+                self.logger.warn(e)
+
+            try:
+                self.sh_df.at[searchDate, 'turnoverRate'] = float(result_json['exchangeRate']) * 1.0
+            except Exception as e:
+                self.sh_df.at[searchDate, 'turnoverRate'] = 0.0
+                self.logger.warn(e)
+
             self.file_lock.release()
 
     @classmethod

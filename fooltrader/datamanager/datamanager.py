@@ -125,13 +125,22 @@ def crawl_index_quote():
 
         logger.info("{} get index kdata from 163 end".format(security_item['code']))
 
-        # 补全数据
-        if security_item['id'] == 'index_sh_000001':
+        # 获取市场概况数据
+        if security_item['id'] == 'index_sh_000001' and False:
             df = get_kdata(security_item=security_item)
             df = df[df['turnoverRate'].isna() | df['tCap'].isna() | df['mCap'].isna() | df[
                 'pe'].isna()]
             if not df.empty:
                 dates = df.index.strftime('%Y-%m-%d').tolist()
+                process_crawl(StockSummarySpider, {"security_item": security_item,
+                                                   "the_dates": dates})
+        elif security_item['id'] == 'index_sz_399106':
+            df = get_kdata(security_item=security_item)
+            df = df[df['turnoverRate'].isna() | df['tCap'].isna() | df['mCap'].isna() | df[
+                'pe'].isna()]
+            if not df.empty:
+                dates = [the_date for the_date in df.index.strftime('%Y-%m-%d').tolist() if
+                         pd.Timestamp(the_date).date().year >= 2005]
                 process_crawl(StockSummarySpider, {"security_item": security_item,
                                                    "the_dates": dates})
 
@@ -187,6 +196,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # crawl_stock_meta()
-    # crawl_index_quote()
-    crawl_stock_quote(args.start_code, args.end_code)
+    crawl_index_quote()
+    # crawl_stock_quote(args.start_code, args.end_code)
     # crawl_finance_data(args.start_code, args.end_code)
