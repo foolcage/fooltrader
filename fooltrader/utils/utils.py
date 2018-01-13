@@ -136,11 +136,11 @@ def fill_doc_type(doc_type, json_object):
         doc_type[key] = json_object[key]
 
 
-def to_float(str):
+def to_float(str, default=None):
     try:
         return float(str)
     except Exception as e:
-        return None
+        return default
 
 
 def get_exchange(code):

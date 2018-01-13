@@ -1,16 +1,17 @@
-import io
 import threading
 
 import demjson
 import pandas as pd
 import scrapy
 from scrapy import Request
+from scrapy import Selector
 from scrapy import signals
 
 from fooltrader.api.quote import get_kdata
 from fooltrader.consts import DEFAULT_SH_SUMMARY_HEADER
 from fooltrader.contract.data_contract import KDATA_COLUMN_INDEX
 from fooltrader.contract.files_contract import get_kdata_path
+from fooltrader.utils.utils import to_float
 
 
 class StockSummarySpider(scrapy.Spider):
@@ -19,43 +20,78 @@ class StockSummarySpider(scrapy.Spider):
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
         self.security_item = None
-        self.sh_df = None
-        self.sz_df = None
+        self.current_df = None
         self.file_lock = threading.RLock()
 
     def start_requests(self):
         self.security_item = self.settings.get("security_item")
+        self.current_df = get_kdata(security_item=self.security_item)
+
         the_dates = self.settings.get("the_dates")
         # 上海市场概况放在 上证指数
         if self.security_item['id'] == 'index_sh_000001':
-            self.sh_df = get_kdata(security_item=self.security_item)
-
             for the_date in the_dates:
                 yield Request(
-                    url='http://query.sse.com.cn/marketdata/tradedata/queryTradingByProdTypeData.do?jsonCallBack=jsonpCallback30731&searchDate={}&prodType=gp&_=1515717065511'.format(
+                    url='http://query.sse.com.cn/marketdata/tradedata/queryTradingByProdTypeData.do?jsonCallBack=jsonpCallback30731&search_date={}&prodType=gp&_=1515717065511'.format(
                         the_date),
                     headers=DEFAULT_SH_SUMMARY_HEADER,
-                    meta={'searchDate': the_date},
+                    meta={'search_date': the_date},
                     callback=self.download_sh_summary)
         # 深圳市场概况放在 深证综指
         elif self.security_item['id'] == 'index_sz_399106':
-            self.sz_df = get_kdata(security_item=self.security_item)
-
             for the_date in the_dates:
                 if pd.Timestamp(the_date).date().year >= 2005:
                     yield Request(
                         url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=excel&CATALOGID=1803&txtQueryDate={}&ENCODE=1&TABKEY=tab1'.format(
                             the_date),
-                        meta={'searchDate': the_date},
+                        meta={'search_date': the_date},
                         callback=self.download_sz_summary)
+        # 中小板
+        elif self.security_item['id'] == 'index_sz_399005':
+            for the_date in the_dates:
+                yield Request(
+                    url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=excel&CATALOGID=1803&txtQueryDate={}&ENCODE=1&TABKEY=tab3'.format(
+                        the_date),
+                    meta={'search_date': the_date},
+                    callback=self.download_sz_summary)
+        # 创业板
+        elif self.security_item['id'] == 'index_sz_399006':
+            for the_date in the_dates:
+                yield Request(
+                    url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=excel&CATALOGID=1803&txtQueryDate=2011-01-19&ENCODE=1&TABKEY=tab4'.format(
+                        the_date),
+                    meta={'search_date': the_date},
+                    callback=self.download_sz_summary)
 
     def download_sz_summary(self, response):
-        searchDate = response.meta['searchDate']
-        df = pd.read_excel(io.BytesIO(response.body))
-        print(df)
+        search_date = response.meta['search_date']
+        trs = response.xpath('//table/tr').extract()
+
+        if self.security_item['id'] == 'index_sz_399106':
+            tCap = to_float(Selector(text=trs[8]).xpath('//td//text()').extract()[1], default=0.0)
+            mCap = to_float(Selector(text=trs[9]).xpath('//td//text()').extract()[1], default=0.0)
+            turnoverRate = to_float(Selector(text=trs[-1]).xpath('//td//text()').extract()[1], default=0.0)
+            pe = to_float(Selector(text=trs[-2]).xpath('//td//text()').extract()[1], default=0.0)
+        elif self.security_item['id'] == 'index_sz_399005':
+            tCap = to_float(Selector(text=trs[4]).xpath('//td//text()').extract()[1], default=0.0)
+            mCap = to_float(Selector(text=trs[5]).xpath('//td//text()').extract()[1], default=0.0)
+            turnoverRate = 0.0
+            pe = to_float(Selector(text=trs[-1]).xpath('//td//text()').extract()[1], default=0.0)
+        elif self.security_item['id'] == 'index_sz_399006':
+            tCap = to_float(Selector(text=trs[5]).xpath('//td//text()').extract()[1], default=0.0)
+            mCap = to_float(Selector(text=trs[6]).xpath('//td//text()').extract()[1], default=0.0)
+            turnoverRate = 0.0
+            pe = to_float(Selector(text=trs[10]).xpath('//td//text()').extract()[1], default=0.0)
+        self.file_lock.acquire()
+        # 有些较老的数据不存在,默认设为0.0
+        self.current_df.at[search_date, 'pe'] = pe
+        self.current_df.at[search_date, 'tCap'] = tCap
+        self.current_df.at[search_date, 'mCap'] = mCap
+        self.current_df.at[search_date, 'turnoverRate'] = turnoverRate
+        self.file_lock.release()
 
     def download_sh_summary(self, response):
-        searchDate = response.meta['searchDate']
+        search_date = response.meta['search_date']
 
         results = demjson.decode(response.text[response.text.index("(") + 1:response.text.index(")")])['result']
         result = [result for result in results if result['productType'] == '1']
@@ -63,30 +99,10 @@ class StockSummarySpider(scrapy.Spider):
             result_json = result[0]
             self.file_lock.acquire()
             # 有些较老的数据不存在,默认设为0.0
-            try:
-                self.sh_df.at[searchDate, 'pe'] = float(result_json['profitRate']) * 1.0
-            except Exception as e:
-                self.sh_df.at[searchDate, 'pe'] = 0.0
-                self.logger.warn(e)
-
-            try:
-                self.sh_df.at[searchDate, 'tCap'] = float(result_json['marketValue1']) * 100000000
-            except Exception as e:
-                self.sh_df.at[searchDate, 'tCap'] = 0.0
-                self.logger.warn(e)
-
-            try:
-                self.sh_df.at[searchDate, 'mCap'] = float(result_json['negotiableValue1']) * 100000000
-            except Exception as e:
-                self.sh_df.at[searchDate, 'mCap'] = 0.0
-                self.logger.warn(e)
-
-            try:
-                self.sh_df.at[searchDate, 'turnoverRate'] = float(result_json['exchangeRate']) * 1.0
-            except Exception as e:
-                self.sh_df.at[searchDate, 'turnoverRate'] = 0.0
-                self.logger.warn(e)
-
+            self.current_df.at[search_date, 'pe'] = to_float(result_json['profitRate'], 0.0)
+            self.current_df.at[search_date, 'tCap'] = to_float(result_json['marketValue1'], 0.0) * 100000000
+            self.current_df.at[search_date, 'mCap'] = to_float(result_json['negotiableValue1'], 0.0) * 100000000
+            self.current_df.at[search_date, 'turnoverRate'] = to_float(result_json['exchangeRate'], 0.0)
             self.file_lock.release()
 
     @classmethod
@@ -96,7 +112,7 @@ class StockSummarySpider(scrapy.Spider):
         return spider
 
     def spider_closed(self, spider, reason):
-        self.sh_df = self.sh_df.loc[:, KDATA_COLUMN_INDEX]
-        print(self.sh_df)
-        self.sh_df.to_csv(get_kdata_path(item=self.security_item), index=False)
+        self.current_df = self.current_df.loc[:, KDATA_COLUMN_INDEX]
+        print(self.current_df)
+        self.current_df.to_csv(get_kdata_path(item=self.security_item), index=False)
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
