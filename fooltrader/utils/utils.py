@@ -138,7 +138,7 @@ def fill_doc_type(doc_type, json_object):
 
 def to_float(str, default=None):
     try:
-        return float(str)
+        return float(str.replace(',', ''))
     except Exception as e:
         return default
 

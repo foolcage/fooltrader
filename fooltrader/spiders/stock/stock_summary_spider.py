@@ -58,7 +58,7 @@ class StockSummarySpider(scrapy.Spider):
         elif self.security_item['id'] == 'index_sz_399006':
             for the_date in the_dates:
                 yield Request(
-                    url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=excel&CATALOGID=1803&txtQueryDate=2011-01-19&ENCODE=1&TABKEY=tab4'.format(
+                    url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=excel&CATALOGID=1803&txtQueryDate={}&ENCODE=1&TABKEY=tab4'.format(
                         the_date),
                     meta={'search_date': the_date},
                     callback=self.download_sz_summary)
@@ -67,21 +67,31 @@ class StockSummarySpider(scrapy.Spider):
         search_date = response.meta['search_date']
         trs = response.xpath('//table/tr').extract()
 
+        turnOver = None
         if self.security_item['id'] == 'index_sz_399106':
-            tCap = to_float(Selector(text=trs[8]).xpath('//td//text()').extract()[1], default=0.0)
-            mCap = to_float(Selector(text=trs[9]).xpath('//td//text()').extract()[1], default=0.0)
-            turnoverRate = to_float(Selector(text=trs[-1]).xpath('//td//text()').extract()[1], default=0.0)
-            pe = to_float(Selector(text=trs[-2]).xpath('//td//text()').extract()[1], default=0.0)
-        elif self.security_item['id'] == 'index_sz_399005':
-            tCap = to_float(Selector(text=trs[4]).xpath('//td//text()').extract()[1], default=0.0)
-            mCap = to_float(Selector(text=trs[5]).xpath('//td//text()').extract()[1], default=0.0)
-            turnoverRate = 0.0
-            pe = to_float(Selector(text=trs[-1]).xpath('//td//text()').extract()[1], default=0.0)
-        elif self.security_item['id'] == 'index_sz_399006':
-            tCap = to_float(Selector(text=trs[5]).xpath('//td//text()').extract()[1], default=0.0)
-            mCap = to_float(Selector(text=trs[6]).xpath('//td//text()').extract()[1], default=0.0)
-            turnoverRate = 0.0
-            pe = to_float(Selector(text=trs[10]).xpath('//td//text()').extract()[1], default=0.0)
+            for tr in trs[1:]:
+                str_list = Selector(text=tr).xpath('//td//text()').extract()
+                if '股票总市值' in str_list[0]:
+                    tCap = to_float(str_list[1], 0.0)
+                elif '股票流通市值' in str_list[0]:
+                    mCap = to_float(str_list[1], 0.0)
+                elif '平均市盈率' in str_list[0]:
+                    pe = to_float(str_list[1], 0.0)
+                elif '平均换手率' in str_list[0]:
+                    turnoverRate = to_float(str_list[1], 0.0)
+        else:
+            for tr in trs[1:]:
+                str_list = Selector(text=tr).xpath('//td//text()').extract()
+                if '上市公司市价总值' in str_list[0]:
+                    tCap = to_float(str_list[1], 0.0)
+                elif '上市公司流通市值' in str_list[0]:
+                    mCap = to_float(str_list[1], 0.0)
+                elif '平均市盈率' in str_list[0]:
+                    pe = to_float(str_list[1], 0.0)
+                elif '总成交金额' in str_list[0]:
+                    turnOver = to_float(str_list[1], 0.0)
+            if turnOver:
+                turnoverRate = 100 * turnOver / tCap
         self.file_lock.acquire()
         # 有些较老的数据不存在,默认设为0.0
         self.current_df.at[search_date, 'pe'] = pe

@@ -132,12 +132,12 @@ def crawl_index_quote():
                 'pe'].isna()]
             if not df.empty:
                 dates = df.index.strftime('%Y-%m-%d').tolist()
-                if security_item['id'] == 'index_sz_399106':
-                    dates = [the_date for the_date in dates if
-                             pd.Timestamp(the_date).date().year >= 2005]
-
-                process_crawl(StockSummarySpider, {"security_item": security_item,
-                                                   "the_dates": dates})
+                # if security_item['id'] == 'index_sz_399106':
+                # dates = [the_date for the_date in dates if
+                #          pd.Timestamp(the_date).date().year >= 2018]
+                if dates:
+                    process_crawl(StockSummarySpider, {"security_item": security_item,
+                                                       "the_dates": dates})
 
 
 def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):

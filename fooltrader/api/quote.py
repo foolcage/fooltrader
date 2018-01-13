@@ -6,6 +6,7 @@ from ast import literal_eval
 import pandas as pd
 
 from fooltrader import settings
+from fooltrader.consts import CHINA_STOCK_INDEX
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path
@@ -43,55 +44,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
         df = df[df["code"] >= start]
         df = df.set_index(df['code'])
     elif security_type == 'index':
-        df = pd.DataFrame([{'id': 'index_sh_000001',
-                            'code': '000001',
-                            'name': '上证指数',
-                            'listDate': '1990-12-19',
-                            'exchange': 'sh',
-                            'type': 'index'},
-                           {'id': 'index_sh_000016',
-                            'code': '000016',
-                            'name': '上证50',
-                            'listDate': '2004-01-02',
-                            'exchange': 'sh',
-                            'type': 'index'},
-                           {'id': 'index_sh_000905',
-                            'code': '000905',
-                            'name': '中证500',
-                            'listDate': '2005-01-04',
-                            'exchange': 'sh',
-                            'type': 'index'},
-                           {'id': 'index_sz_399001',
-                            'code': '399001',
-                            'name': '深证成指',
-                            'listDate': '1991-04-03',
-                            'exchange': 'sz',
-                            'type': 'index'},
-                           {'id': 'index_sz_399106',
-                            'code': '399106',
-                            'name': '深证综指',
-                            'listDate': '1991-04-03',
-                            'exchange': 'sz',
-                            'type': 'index'},
-                           {'id': 'index_sz_399300',
-                            'code': '399300',
-                            'name': '沪深300',
-                            'listDate': '2002-01-04',
-                            'exchange': 'sz',
-                            'type': 'index'},
-                           {'id': 'index_sz_399005',
-                            'code': '399005',
-                            'name': '中小板指',
-                            'listDate': '2006-01-24',
-                            'exchange': 'sz',
-                            'type': 'index'},
-                           {'id': 'index_sz_399006',
-                            'code': '399006',
-                            'name': '创业板指',
-                            'listDate': '2010-06-01',
-                            'exchange': 'sz',
-                            'type': 'index'}
-                           ])
+        df = pd.DataFrame(CHINA_STOCK_INDEX)
     return df
 
 

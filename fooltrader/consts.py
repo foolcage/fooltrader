@@ -94,7 +94,7 @@ Connection: keep-alive
 Upgrade-Insecure-Requests: 1
 ''')
 
-DEFAULT_SH_SUMMARY_HEADER=chrome_copy_header_to_dict('''
+DEFAULT_SH_SUMMARY_HEADER = chrome_copy_header_to_dict('''
 Host: query.sse.com.cn
 Connection: keep-alive
 User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
@@ -103,5 +103,54 @@ Referer: http://www.sse.com.cn/market/stockdata/overview/day/
 Accept-Encoding: gzip, deflate
 Accept-Language: zh-CN,zh;q=0.8,en;q=0.6
 Cookie: yfx_c_g_u_id_10000042=_ck17122009304714819234313401740; VISITED_COMPANY_CODE=%5B%22000016%22%5D; VISITED_INDEX_CODE=%5B%22000016%22%5D; yfx_f_l_v_t_10000042=f_t_1513733447386__r_t_1515716891222__v_t_1515721033042__r_c_3; VISITED_MENU=%5B%228464%22%2C%229666%22%2C%229668%22%2C%229669%22%2C%228454%22%2C%228460%22%2C%229665%22%2C%228459%22%2C%229692%22%2C%228451%22%2C%228466%22%5D
-'''
-)
+''')
+
+CHINA_STOCK_INDEX = [{'id': 'index_sh_000001',
+                      'code': '000001',
+                      'name': '上证指数',
+                      'listDate': '1990-12-19',
+                      'exchange': 'sh',
+                      'type': 'index'},
+                     {'id': 'index_sh_000016',
+                      'code': '000016',
+                      'name': '上证50',
+                      'listDate': '2004-01-02',
+                      'exchange': 'sh',
+                      'type': 'index'},
+                     {'id': 'index_sh_000905',
+                      'code': '000905',
+                      'name': '中证500',
+                      'listDate': '2005-01-04',
+                      'exchange': 'sh',
+                      'type': 'index'},
+                     {'id': 'index_sz_399001',
+                      'code': '399001',
+                      'name': '深证成指',
+                      'listDate': '1991-04-03',
+                      'exchange': 'sz',
+                      'type': 'index'},
+                     {'id': 'index_sz_399106',
+                      'code': '399106',
+                      'name': '深证综指',
+                      'listDate': '1991-04-03',
+                      'exchange': 'sz',
+                      'type': 'index'},
+                     {'id': 'index_sz_399300',
+                      'code': '399300',
+                      'name': '沪深300',
+                      'listDate': '2002-01-04',
+                      'exchange': 'sz',
+                      'type': 'index'},
+                     {'id': 'index_sz_399005',
+                      'code': '399005',
+                      'name': '中小板指',
+                      'listDate': '2006-01-24',
+                      'exchange': 'sz',
+                      'type': 'index'},
+                     {'id': 'index_sz_399006',
+                      'code': '399006',
+                      'name': '创业板指',
+                      'listDate': '2010-06-01',
+                      'exchange': 'sz',
+                      'type': 'index'}
+                     ]
