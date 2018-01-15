@@ -9,7 +9,7 @@ from fooltrader import settings
 from fooltrader.api.quote import get_security_list, get_trading_dates, get_kdata
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path
-from fooltrader.utils.utils import is_available_tick, get_datetime, kdata_to_tick, sina_tick_to_csv
+from fooltrader.utils.utils import get_datetime, kdata_to_tick, sina_tick_to_csv
 
 
 class StockTickSpider(scrapy.Spider):
@@ -34,7 +34,7 @@ class StockTickSpider(scrapy.Spider):
                 continue
             path = get_tick_path(item, trading_date)
 
-            if os.path.isfile(path) and is_available_tick(path):
+            if os.path.exists(path):
                 continue
             yield Request(url=self.get_tick_url(trading_date, item['exchange'] + item['code']),
                           meta={'proxy': None,

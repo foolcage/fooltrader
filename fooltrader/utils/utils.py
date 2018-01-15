@@ -93,18 +93,6 @@ def detect_encoding(url):
     usock.close()
     return detector.result.get('encoding')
 
-
-def is_available_tick(path):
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
-    try:
-        with open(path, encoding=encoding) as fr:
-            line = fr.readline()
-            return u'成交时间', u'成交价', u'价格变动', u'成交量(手)', u'成交额(元)', u'性质' == line.split()
-    except Exception:
-        return False
-
-
 def get_datetime(str):
     return datetime.datetime.strptime(str, TIME_FORMAT_DAY)
 
