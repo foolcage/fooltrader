@@ -21,3 +21,5 @@ KDATA_COLUMN_STOCK = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high
 KDATA_COLUMN_FUTURE = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
                        'preClose', 'change', 'changePct', 'openInterest', 'settlement', 'preSettlement', 'change1',
                        'changePct1']
+
+STOCK_META_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaArea']

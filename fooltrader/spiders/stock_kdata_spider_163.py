@@ -110,7 +110,7 @@ class StockKdataSpider163(scrapy.Spider):
                 df_current = df_current.loc[:, KDATA_COLUMN_STOCK]
 
             df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
-            df_current = df_current.set_index(df_current['timestamp'])
+            df_current = df_current.set_index(df_current['timestamp'],drop=False)
             df_current.index = pd.to_datetime(df_current.index)
             df_current = df_current.sort_index()
             df_current.to_csv(path, index=False)

@@ -252,11 +252,11 @@ def check_convert_result():
 
 
 def assert_df(df1, df2):
-    df1 = df1.set_index(df1['timestamp'])
+    df1 = df1.set_index(df1['timestamp'],drop=False)
     df1.index = pd.to_datetime(df1.index)
     df1 = df1.sort_index()
 
-    df2 = df2.set_index(df2['timestamp'])
+    df2 = df2.set_index(df2['timestamp'],drop=False)
     df2 = df2.sort_index()
     df2.index = pd.to_datetime(df2.index)
 

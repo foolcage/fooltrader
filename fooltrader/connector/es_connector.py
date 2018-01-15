@@ -1,7 +1,9 @@
 import json
 import logging
 
+from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Index
+from elasticsearch_dsl.connections import connections
 
 from fooltrader.api.event import get_forecast_items
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items
@@ -14,6 +16,9 @@ from fooltrader.domain.technical import KData
 from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
+
+connections.create_connection(hosts=['localhost'])
+es = Elasticsearch()
 
 
 def index_mapping(index_name, doc_type):
@@ -108,9 +113,6 @@ def forecast_event_to_es():
 
 
 if __name__ == '__main__':
-    from elasticsearch_dsl.connections import connections
-
-    connections.create_connection(hosts=['localhost'], timeout=20)
     security_meta_to_es()
     # kdata_to_es()
     # balance_sheet_to_es()

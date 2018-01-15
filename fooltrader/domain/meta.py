@@ -1,11 +1,12 @@
 from elasticsearch_dsl import DocType, Keyword, Date, Float
 from elasticsearch_dsl.connections import connections
 
-# Define a default Elasticsearch client
+from fooltrader.domain import BaseDocType
+
 connections.create_connection(hosts=['localhost'])
 
 
-class StockMeta(DocType):
+class StockMeta(BaseDocType):
     id = Keyword()
     type = Keyword()
     exchange = Keyword()

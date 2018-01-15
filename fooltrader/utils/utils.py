@@ -190,7 +190,7 @@ def get_file_name(the_path):
 
 
 def index_df_with_time(df, index='timestamp'):
-    df = df.set_index(df[index])
+    df = df.set_index(df[index],drop=False)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
     return df
