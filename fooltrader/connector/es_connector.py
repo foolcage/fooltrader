@@ -12,7 +12,7 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
 from fooltrader.domain.meta import StockMeta
-from fooltrader.domain.technical import KData
+from fooltrader.domain.technical import StockKData, IndexKData
 from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
@@ -43,20 +43,36 @@ def security_meta_to_es():
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
 
 
-def kdata_to_es():
+def stock_kdata_to_es():
     for _, security_item in get_security_list().iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['id'])
-        index_mapping(index_name, KData)
+        index_mapping(index_name, StockKData)
 
         for _, kdata_item in get_kdata(security_item).iterrows():
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
-                kdata = KData(meta={'id': id}, id=id)
+                kdata = StockKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
                 kdata.save(index=index_name)
             except Exception as e:
-                logger.warn("wrong KdataDay:{},fuquan:{},error:{}", kdata_item, e)
+                logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
+
+
+def index_kdata_to_es():
+    for _, security_item in get_security_list(security_type='index').iterrows():
+        # 创建索引
+        index_name = get_es_kdata_index(security_item['id'])
+        index_mapping(index_name, IndexKData)
+
+        for _, kdata_item in get_kdata(security_item).iterrows():
+            try:
+                id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
+                kdata = IndexKData(meta={'id': id}, id=id)
+                fill_doc_type(kdata, json.loads(kdata_item.to_json()))
+                kdata.save(index=index_name)
+            except Exception as e:
+                logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
 
 def balance_sheet_to_es():
@@ -113,8 +129,9 @@ def forecast_event_to_es():
 
 
 if __name__ == '__main__':
-    security_meta_to_es()
-    # kdata_to_es()
+    # security_meta_to_es()
+    # stock_kdata_to_es()
+    index_kdata_to_es()
     # balance_sheet_to_es()
     # income_statement_to_es()
     # cash_flow_statement_to_es()

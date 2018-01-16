@@ -222,7 +222,7 @@ class IncomeStatement(DocType):
     # 汇兑收益
     exchangeGains = Float()
     # /*营业利润*/
-    salesProfit = Float()
+    operatingProfit = Float()
     # 加:营业外收入
     nonOperatingIncome = Float()
     # 减：营业外支出
