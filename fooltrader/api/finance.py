@@ -425,7 +425,7 @@ def get_income_statement_items(security_item):
         # 汇兑收益
         exchangeGains = lines[14].split()[1:-1]
         # /*营业利润*/
-        salesProfit = lines[15].split()[1:-1]
+        operatingProfit = lines[15].split()[1:-1]
         # 加:营业外收入
         nonOperatingIncome = lines[16].split()[1:-1]
         # 减：营业外支出
@@ -490,7 +490,7 @@ def get_income_statement_items(security_item):
             # 汇兑收益
             "exchangeGains": to_float(exchangeGains[idx]),
             # /*营业利润*/
-            "salesProfit": to_float(salesProfit[idx]),
+            "operatingProfit": to_float(operatingProfit[idx]),
             # 加:营业外收入
             "nonOperatingIncome": to_float(nonOperatingIncome[idx]),
             # 减：营业外支出
