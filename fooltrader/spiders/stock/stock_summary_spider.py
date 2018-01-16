@@ -17,6 +17,16 @@ from fooltrader.utils.utils import to_float
 class StockSummarySpider(scrapy.Spider):
     name = "stock_summary"
 
+    custom_settings = {
+        'DOWNLOAD_DELAY': 2,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
+
+        'SPIDER_MIDDLEWARES': {
+            'fooltrader.middlewares.FoolErrorMiddleware': 1000,
+        }
+    }
+
+
     def __init__(self, name=None, **kwargs):
         super().__init__(name, **kwargs)
         self.security_item = None

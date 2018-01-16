@@ -127,6 +127,7 @@ def crawl_index_quote():
 
         # 获取市场概况数据[上海,深圳,中小板,创业板]
         if security_item['id'] in ['index_sh_000001', 'index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
+        # if security_item['id'] in ['index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
             df = get_kdata(security_item=security_item)
             df = df[df['turnoverRate'].isna() | df['tCap'].isna() | df['mCap'].isna() | df[
                 'pe'].isna()]
@@ -191,6 +192,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # crawl_stock_meta()
-    # crawl_index_quote()
-    crawl_stock_quote(args.start_code, args.end_code)
+    crawl_index_quote()
+    # crawl_stock_quote(args.start_code, args.end_code)
     # crawl_finance_data(args.start_code, args.end_code)
