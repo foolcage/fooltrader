@@ -79,39 +79,39 @@ def index_kdata_to_es(force=False):
 def balance_sheet_to_es():
     index_mapping('balance_sheet', BalanceSheet)
     for _, security_item in get_security_list().iterrows():
-        for json_object in get_balance_sheet_items(security_item):
-            try:
+        try:
+            for json_object in get_balance_sheet_items(security_item):
                 balance_sheet = BalanceSheet(meta={'id': json_object['id']})
                 fill_doc_type(balance_sheet, json_object)
                 balance_sheet.save()
-            except Exception as e:
-                logger.warn("wrong BalanceSheet:{},error:{}", json_object, e)
+        except Exception as e:
+            logger.warn("wrong BalanceSheet:{},error:{}", json_object, e)
 
 
 def income_statement_to_es():
     index_mapping('income_statement', IncomeStatement)
 
     for _, security_item in get_security_list().iterrows():
-        for json_object in get_income_statement_items(security_item):
-            try:
+        try:
+            for json_object in get_income_statement_items(security_item):
                 income_statement = IncomeStatement(meta={'id': json_object['id']})
                 fill_doc_type(income_statement, json_object)
                 income_statement.save()
-            except Exception as e:
-                logger.warn("wrong IncomeStatement:{},error:{}", json_object, e)
+        except Exception as e:
+            logger.warn("wrong IncomeStatement:{},error:{}", json_object, e)
 
 
 def cash_flow_statement_to_es():
     index_mapping('cash_flow_statement', CashFlowStatement)
 
     for _, security_item in get_security_list().iterrows():
-        for json_object in get_cash_flow_statement_items(security_item):
-            try:
+        try:
+            for json_object in get_cash_flow_statement_items(security_item):
                 cash_flow_statement = CashFlowStatement(meta={'id': json_object['id']})
                 fill_doc_type(cash_flow_statement, json_object)
                 cash_flow_statement.save()
-            except Exception as e:
-                logger.warn("wrong CashFlowStatement:{},error:{}", json_object, e)
+        except Exception as e:
+            logger.warn("wrong CashFlowStatement:{},error:{}", json_object, e)
 
 
 def forecast_event_to_es():
