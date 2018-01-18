@@ -13,11 +13,12 @@ from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
 from fooltrader.domain.meta import StockMeta
 from fooltrader.domain.technical import StockKData, IndexKData
+from fooltrader.settings import ES_HOSTS
 from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
 
-connections.create_connection(hosts=['localhost'])
+connections.create_connection(hosts=ES_HOSTS)
 es = Elasticsearch()
 
 
@@ -59,7 +60,7 @@ def stock_kdata_to_es():
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
 
-def index_kdata_to_es():
+def index_kdata_to_es(force=False):
     for _, security_item in get_security_list(security_type='index').iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['id'])
@@ -70,7 +71,7 @@ def index_kdata_to_es():
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = IndexKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save(index=index_name)
+                kdata.save(index=index_name, force=force)
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
@@ -131,7 +132,7 @@ def forecast_event_to_es():
 if __name__ == '__main__':
     # security_meta_to_es()
     # stock_kdata_to_es()
-    index_kdata_to_es()
+    index_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # income_statement_to_es()
     # cash_flow_statement_to_es()

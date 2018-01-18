@@ -122,3 +122,5 @@ TIME_FORMAT_SEC = '%Y-%m-%d %H:%M:%S'
 TIME_FORMAT_DAY = '%Y-%m-%d'
 
 STATUS_SHOW_NOT_OK_DATE = False
+
+ES_HOSTS = ['172.16.92.109:9200']

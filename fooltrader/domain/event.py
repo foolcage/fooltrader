@@ -1,8 +1,10 @@
 from elasticsearch_dsl import DocType, Keyword, Date, Text, Float
 from elasticsearch_dsl import MetaField
 
+from fooltrader.domain import BaseDocType
 
-class ForecastEvent(DocType):
+
+class ForecastEvent(BaseDocType):
     id = Keyword()
     securityId = Keyword()
     reportDate = Date()
@@ -18,7 +20,7 @@ class ForecastEvent(DocType):
         all = MetaField(enabled=False)
 
 
-class FinanceReportEvent(DocType):
+class FinanceReportEvent(BaseDocType):
     id = Keyword()
     securityId = Keyword()
     reportEventDate = Date()

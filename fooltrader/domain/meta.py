@@ -23,7 +23,7 @@ class StockMeta(BaseDocType):
         doc_type = 'doc'
 
 
-class IndexMeta(DocType):
+class IndexMeta(BaseDocType):
     id = Keyword()
     type = Keyword()
     exchange = Keyword()
@@ -36,7 +36,7 @@ class IndexMeta(DocType):
         doc_type = 'doc'
 
 
-class StockTickItem(DocType):
+class StockTickItem(BaseDocType):
     securityId = Keyword()
     code = Keyword()
     timestamp = Date()

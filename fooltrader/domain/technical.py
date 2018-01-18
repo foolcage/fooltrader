@@ -1,8 +1,10 @@
 from elasticsearch_dsl import DocType, Keyword, Date, Float
 from elasticsearch_dsl import MetaField
 
+from fooltrader.domain import BaseDocType
 
-class StockKData(DocType):
+
+class StockKData(BaseDocType):
     id = Keyword()
     securityId = Keyword()
     timestamp = Date()
@@ -26,7 +28,7 @@ class StockKData(DocType):
         doc_type = 'doc'
 
 
-class IndexKData(DocType):
+class IndexKData(BaseDocType):
     id = Keyword()
     securityId = Keyword()
     timestamp = Date()
