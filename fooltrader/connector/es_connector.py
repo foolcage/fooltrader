@@ -85,7 +85,7 @@ def balance_sheet_to_es():
                 fill_doc_type(balance_sheet, json_object)
                 balance_sheet.save()
         except Exception as e:
-            logger.warn("wrong BalanceSheet:{},error:{}", json_object, e)
+            logger.warn("wrong BalanceSheet:{},error:{}", security_item, e)
 
 
 def income_statement_to_es():
@@ -98,7 +98,7 @@ def income_statement_to_es():
                 fill_doc_type(income_statement, json_object)
                 income_statement.save()
         except Exception as e:
-            logger.warn("wrong IncomeStatement:{},error:{}", json_object, e)
+            logger.warn("wrong IncomeStatement:{},error:{}", security_item, e)
 
 
 def cash_flow_statement_to_es():
@@ -111,7 +111,7 @@ def cash_flow_statement_to_es():
                 fill_doc_type(cash_flow_statement, json_object)
                 cash_flow_statement.save()
         except Exception as e:
-            logger.warn("wrong CashFlowStatement:{},error:{}", json_object, e)
+            logger.warn("wrong CashFlowStatement:{},error:{}", security_item, e)
 
 
 def forecast_event_to_es():
