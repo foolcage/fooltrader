@@ -42,7 +42,7 @@ class StockSummarySpider(scrapy.Spider):
         if self.security_item['id'] == 'index_sh_000001':
             for the_date in the_dates:
                 yield Request(
-                    url='http://query.sse.com.cn/marketdata/tradedata/queryTradingByProdTypeData.do?jsonCallBack=jsonpCallback30731&search_date={}&prodType=gp&_=1515717065511'.format(
+                    url='http://query.sse.com.cn/marketdata/tradedata/queryTradingByProdTypeData.do?jsonCallBack=jsonpCallback30731&searchDate={}&prodType=gp&_=1515717065511'.format(
                         the_date),
                     headers=DEFAULT_SH_SUMMARY_HEADER,
                     meta={'search_date': the_date},
