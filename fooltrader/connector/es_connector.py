@@ -44,8 +44,8 @@ def security_meta_to_es():
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
 
 
-def stock_kdata_to_es():
-    for _, security_item in get_security_list().iterrows():
+def stock_kdata_to_es(start='000001', end='666666', force=False):
+    for _, security_item in get_security_list(start=start, end=end).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['id'])
         index_mapping(index_name, StockKData)
@@ -55,7 +55,7 @@ def stock_kdata_to_es():
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = StockKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save(index=index_name)
+                kdata.save(index=index_name, force=force)
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
@@ -132,7 +132,7 @@ def forecast_event_to_es():
 if __name__ == '__main__':
     # security_meta_to_es()
     # stock_kdata_to_es()
-    index_kdata_to_es(force=True)
+    stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # income_statement_to_es()
     # cash_flow_statement_to_es()
