@@ -129,7 +129,7 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan='bfq', 
         if not end:
             end = datetime.datetime.today()
 
-        df.loc[start:end]
+        df = df.loc[start:end]
         return df
     return pd.DataFrame()
 

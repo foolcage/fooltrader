@@ -205,11 +205,9 @@ def forecast_event_to_es():
 
 
 if __name__ == '__main__':
-    latest_record = es_get_latest_record(index='index_sh_000001_day_kdata')
-    print(latest_record)
 
     # security_meta_to_es()
-    # stock_kdata_to_es()
+    stock_kdata_to_es(start='000338',end='000338')
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # income_statement_to_es()
