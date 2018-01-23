@@ -1,5 +1,6 @@
 import json
 import logging
+from ast import literal_eval
 
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Index
@@ -22,7 +23,7 @@ connections.create_connection(hosts=ES_HOSTS)
 es = Elasticsearch()
 
 
-def index_mapping(index_name, doc_type):
+def es_index_mapping(index_name, doc_type, force=False):
     # 创建索引
     index = Index(index_name)
     index.doc_type(doc_type)
@@ -30,16 +31,57 @@ def index_mapping(index_name, doc_type):
     if not index.exists():
         index.create()
     else:
-        index.upgrade()
+        if force:
+            index.upgrade()
 
 
-def security_meta_to_es():
-    index_mapping('stock_meta', StockMeta)
-    for _, item in get_security_list(mode='es').iterrows():
+def es_get_latest_record(index, time_field='timestamp', query=None):
+    body = '''
+{
+    "query": {
+        "match_all": {}
+    },
+    "size": 1,
+    "sort": [
+        {
+            "timestamp": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+'''
+    if time_field != 'timestamp':
+        body = body.replace('timestamp', time_field)
+
+    body = literal_eval(body)
+    if query:
+        body['query'] = query
+
+    try:
+        logger.info("search index:{},body:{}".format(index, body))
+        response = es.search(index=index, body=body)
+        if response['hits']['hits']:
+            return response['hits']['hits'][0]['_source']
+    except Exception as e:
+        logger.warning(e)
+    return None
+
+
+def stock_meta_to_es(force=False):
+    es_index_mapping('stock_meta', StockMeta)
+    start_date = None
+    if not force:
+        latest_record = es_get_latest_record('stock_meta', time_field='listDate')
+        logger.info("latest_record:{}".format(latest_record))
+        if latest_record:
+            start_date = latest_record['latestDate']
+
+    for _, item in get_security_list(mode='es', start_date=start_date).iterrows():
         try:
             stock_meta = StockMeta(meta={'id': item['id']})
             fill_doc_type(stock_meta, json.loads(item.to_json()))
-            stock_meta.save()
+            stock_meta.save(force=force)
         except Exception as e:
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
 
@@ -48,9 +90,16 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
     for _, security_item in get_security_list(start=start, end=end).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['id'])
-        index_mapping(index_name, StockKData)
+        es_index_mapping(index_name, StockKData)
 
-        for _, kdata_item in get_kdata(security_item).iterrows():
+        start_date = None
+        if not force:
+            latest_record = es_get_latest_record(index_name)
+            logger.info("latest_record:{}".format(latest_record))
+            if latest_record:
+                start_date = latest_record['timestamp']
+
+        for _, kdata_item in get_kdata(security_item, start=start_date).iterrows():
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = StockKData(meta={'id': id}, id=id)
@@ -64,9 +113,16 @@ def index_kdata_to_es(force=False):
     for _, security_item in get_security_list(security_type='index').iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['id'])
-        index_mapping(index_name, IndexKData)
+        es_index_mapping(index_name, IndexKData)
 
-        for _, kdata_item in get_kdata(security_item).iterrows():
+        start_date = None
+        if not force:
+            latest_record = es_get_latest_record(index_name)
+            logger.info("latest_record:{}".format(latest_record))
+            if latest_record:
+                start_date = latest_record['timestamp']
+
+        for _, kdata_item in get_kdata(security_item, start=start_date).iterrows():
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = IndexKData(meta={'id': id}, id=id)
@@ -76,11 +132,18 @@ def index_kdata_to_es(force=False):
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
 
-def balance_sheet_to_es():
-    index_mapping('balance_sheet', BalanceSheet)
+def balance_sheet_to_es(force=False):
+    es_index_mapping('balance_sheet', BalanceSheet)
     for _, security_item in get_security_list().iterrows():
         try:
-            for json_object in get_balance_sheet_items(security_item):
+            start_date = None
+            if not force:
+                latest_record = es_get_latest_record('balance_sheet')
+                logger.info("latest_record:{}".format(latest_record))
+                if latest_record:
+                    start_date = latest_record['reportDate']
+
+            for json_object in get_balance_sheet_items(security_item, start=start_date):
                 balance_sheet = BalanceSheet(meta={'id': json_object['id']})
                 fill_doc_type(balance_sheet, json_object)
                 balance_sheet.save()
@@ -88,12 +151,19 @@ def balance_sheet_to_es():
             logger.warn("wrong BalanceSheet:{},error:{}", security_item, e)
 
 
-def income_statement_to_es():
-    index_mapping('income_statement', IncomeStatement)
+def income_statement_to_es(force=False):
+    es_index_mapping('income_statement', IncomeStatement)
 
     for _, security_item in get_security_list().iterrows():
         try:
-            for json_object in get_income_statement_items(security_item):
+            start_date = None
+            if not force:
+                latest_record = es_get_latest_record('balance_sheet')
+                logger.info("latest_record:{}".format(latest_record))
+                if latest_record:
+                    start_date = latest_record['reportDate']
+
+            for json_object in get_income_statement_items(security_item, start=start_date):
                 income_statement = IncomeStatement(meta={'id': json_object['id']})
                 fill_doc_type(income_statement, json_object)
                 income_statement.save()
@@ -101,12 +171,19 @@ def income_statement_to_es():
             logger.warn("wrong IncomeStatement:{},error:{}", security_item, e)
 
 
-def cash_flow_statement_to_es():
-    index_mapping('cash_flow_statement', CashFlowStatement)
+def cash_flow_statement_to_es(force=False):
+    es_index_mapping('cash_flow_statement', CashFlowStatement)
 
     for _, security_item in get_security_list().iterrows():
         try:
-            for json_object in get_cash_flow_statement_items(security_item):
+            start_date = None
+            if not force:
+                latest_record = es_get_latest_record('balance_sheet')
+                logger.info("latest_record:{}".format(latest_record))
+                if latest_record:
+                    start_date = latest_record['reportDate']
+
+            for json_object in get_cash_flow_statement_items(security_item, start=start_date):
                 cash_flow_statement = CashFlowStatement(meta={'id': json_object['id']})
                 fill_doc_type(cash_flow_statement, json_object)
                 cash_flow_statement.save()
@@ -118,7 +195,7 @@ def forecast_event_to_es():
     for _, security_item in get_security_list().iterrows():
         # 创建索引
         index_name = get_es_forecast_event_index(security_item['id'])
-        index_mapping(index_name, ForecastEvent)
+        es_index_mapping(index_name, ForecastEvent)
 
         for json_object in get_forecast_items(security_item):
             try:

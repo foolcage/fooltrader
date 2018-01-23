@@ -1,6 +1,8 @@
 import logging
 import os
 
+import pandas as pd
+
 from fooltrader import settings
 from fooltrader.api.event import get_report_event_date
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
@@ -11,7 +13,7 @@ from fooltrader.utils.utils import detect_encoding, to_float
 logger = logging.getLogger(__name__)
 
 
-def get_balance_sheet_items(security_item):
+def get_balance_sheet_items(security_item, start=None):
     path = get_balance_sheet_path(security_item)
     if not os.path.exists(path):
         return None
@@ -201,6 +203,10 @@ def get_balance_sheet_items(security_item):
         totalLiabilitiesAndOwnersEquity = lines[84].split()[1:-1]
 
         for idx, _ in enumerate(reportDate):
+            if start:
+                if pd.Timestamp(reportDate[idx]) <= pd.Timestamp(start):
+                    continue
+
             reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
             yield {
@@ -386,7 +392,7 @@ def get_balance_sheet_items(security_item):
             }
 
 
-def get_income_statement_items(security_item):
+def get_income_statement_items(security_item, start=None):
     path = get_income_statement_path(security_item)
     if not os.path.exists(path):
         return None
@@ -456,6 +462,10 @@ def get_income_statement_items(security_item):
         # 归属于少数股东的综合收益总额
         attributableToMinorityShareholders = lines[30].split()[1:-1]
     for idx, _ in enumerate(reportDate):
+        if start:
+            if pd.Timestamp(reportDate[idx]) <= pd.Timestamp(start):
+                continue
+
         reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
         yield {
             "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
@@ -523,7 +533,7 @@ def get_income_statement_items(security_item):
         }
 
 
-def get_cash_flow_statement_items(security_item):
+def get_cash_flow_statement_items(security_item, start=None):
     path = get_cash_flow_statement_path(security_item)
     if not os.path.exists(path):
         return None
@@ -682,6 +692,10 @@ def get_cash_flow_statement_items(security_item):
         # 现金及现金等价物的净增加额
         netIncreaseInCashAndCashEquivalents = lines[76].split()[1:-1]
     for idx, _ in enumerate(reportDate):
+        if start:
+            if pd.Timestamp(reportDate[idx]) <= pd.Timestamp(start):
+                continue
+
         reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
         yield {

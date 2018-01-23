@@ -26,7 +26,7 @@ def convert_to_list_if_need(input):
 
 # meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE,
-                      mode='simple'):
+                      mode='simple', start_date=None):
     if security_type == 'stock':
         df = pd.DataFrame()
         for exchange in exchanges:
@@ -42,7 +42,10 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
             df = df.append(df1, ignore_index=True)
         df = df[df["code"] <= end]
         df = df[df["code"] >= start]
-        df = df.set_index(df['code'],drop=False)
+        if start_date:
+            df['listDate'] = pd.to_datetime(df['listDate'])
+            df = df[df['listDate'] >= pd.Timestamp(start_date)]
+        df = df.set_index(df['code'], drop=False)
     elif security_type == 'index':
         df = pd.DataFrame(CHINA_STOCK_INDEX)
     return df
@@ -85,7 +88,7 @@ def parse_tick(tick_path, security_item):
     if os.path.isfile(tick_path):
         df = pd.read_csv(tick_path)
         df['timestamp'] = get_file_name(tick_path) + " " + df['timestamp']
-        df = df.set_index(df['timestamp'],drop=False)
+        df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
         df['code'] = security_item['code']
@@ -112,7 +115,7 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan='bfq', 
         if not dtype:
             dtype = {"code": str}
         df = pd.read_csv(the_path, dtype=dtype)
-        df = df.set_index(df['timestamp'],drop=False)
+        df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
         if the_date:
@@ -161,7 +164,7 @@ def kdata_exist(security_item, year, quarter, fuquan=None, source='163'):
 
 # TODO:use join
 def merge_to_current_kdata(security_item, df, fuquan='bfq'):
-    df = df.set_index(df['timestamp'],drop=False)
+    df = df.set_index(df['timestamp'], drop=False)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
@@ -265,7 +268,7 @@ if __name__ == '__main__':
     print(df1)
 
     df2 = tdx.get_tdx_kdata(item, '1991-04-01', '1991-12-31')
-    df2 = df2.set_index(df2['timestamp'],drop=False)
+    df2 = df2.set_index(df2['timestamp'], drop=False)
     df2 = df2.sort_index()
     print(df2)
 
