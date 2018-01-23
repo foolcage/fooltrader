@@ -144,7 +144,11 @@ def balance_sheet_to_es(force=False):
         try:
             start_date = None
             if not force:
-                latest_record = es_get_latest_record('balance_sheet')
+                query = {
+                    "term": {"securityId": ""}
+                }
+                query["term"]["securityId"] = security_item["id"]
+                latest_record = es_get_latest_record(index='balance_sheet', time_field='reportDate', query=query)
                 logger.info("latest_record:{}".format(latest_record))
                 if latest_record:
                     start_date = latest_record['reportDate']
@@ -167,7 +171,11 @@ def income_statement_to_es(force=False):
         try:
             start_date = None
             if not force:
-                latest_record = es_get_latest_record('balance_sheet')
+                query = {
+                    "term": {"securityId": ""}
+                }
+                query["term"]["securityId"] = security_item["id"]
+                latest_record = es_get_latest_record(index='income_statement', time_field='reportDate', query=query)
                 logger.info("latest_record:{}".format(latest_record))
                 if latest_record:
                     start_date = latest_record['reportDate']
@@ -190,7 +198,11 @@ def cash_flow_statement_to_es(force=False):
         try:
             start_date = None
             if not force:
-                latest_record = es_get_latest_record('balance_sheet')
+                query = {
+                    "term": {"securityId": ""}
+                }
+                query["term"]["securityId"] = security_item["id"]
+                latest_record = es_get_latest_record(index='cash_flow_statement', time_field='reportDate', query=query)
                 logger.info("latest_record:{}".format(latest_record))
                 if latest_record:
                     start_date = latest_record['reportDate']
