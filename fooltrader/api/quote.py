@@ -102,7 +102,7 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start=None, end=None, fuquan='bfq', dtype=None, source='163', level='day'):
+def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source='163', level='day'):
     if type(security_item) == str:
         if 'stock' in security_item:
             security_item = get_security_item(id=security_item)
@@ -124,12 +124,12 @@ def get_kdata(security_item, the_date=None, start=None, end=None, fuquan='bfq', 
             else:
                 return pd.DataFrame()
 
-        if not start:
-            start = security_item['listDate']
-        if not end:
-            end = datetime.datetime.today()
+        if not start_date:
+            start_date = security_item['listDate']
+        if not end_date:
+            end_date = datetime.datetime.today()
 
-        df = df.loc[start:end]
+        df = df.loc[start_date:end_date]
         return df
     return pd.DataFrame()
 

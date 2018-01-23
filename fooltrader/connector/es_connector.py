@@ -14,7 +14,7 @@ from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowSta
 from fooltrader.domain.meta import StockMeta
 from fooltrader.domain.technical import StockKData, IndexKData
 from fooltrader.settings import ES_HOSTS
-from fooltrader.utils.utils import fill_doc_type
+from fooltrader.utils.utils import fill_doc_type, is_same_date
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +76,8 @@ def stock_meta_to_es(force=False):
             start_date = latest_record['latestDate']
 
     for _, item in get_security_list(mode='es', start_date=start_date).iterrows():
+        if start_date and is_same_date(start_date, item['listDate']):
+            continue
         try:
             stock_meta = StockMeta(meta={'id': item['id']})
             fill_doc_type(stock_meta, json.loads(item.to_json()))
@@ -97,7 +99,10 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
             if latest_record:
                 start_date = latest_record['timestamp']
 
-        for _, kdata_item in get_kdata(security_item, start=start_date).iterrows():
+        for _, kdata_item in get_kdata(security_item, start_date=start_date).iterrows():
+            if start_date and is_same_date(start_date, kdata_item['timestamp']):
+                continue
+
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = StockKData(meta={'id': id}, id=id)
@@ -120,7 +125,10 @@ def index_kdata_to_es(force=False):
             if latest_record:
                 start_date = latest_record['timestamp']
 
-        for _, kdata_item in get_kdata(security_item, start=start_date).iterrows():
+        for _, kdata_item in get_kdata(security_item, start_date=start_date).iterrows():
+            if start_date and is_same_date(start_date, kdata_item['timestamp']):
+                continue
+
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = IndexKData(meta={'id': id}, id=id)
@@ -141,7 +149,10 @@ def balance_sheet_to_es(force=False):
                 if latest_record:
                     start_date = latest_record['reportDate']
 
-            for json_object in get_balance_sheet_items(security_item, start=start_date):
+            for json_object in get_balance_sheet_items(security_item, start_date=start_date):
+                if start_date and is_same_date(start_date, json_object['reportDate']):
+                    continue
+
                 balance_sheet = BalanceSheet(meta={'id': json_object['id']})
                 fill_doc_type(balance_sheet, json_object)
                 balance_sheet.save()
@@ -161,7 +172,10 @@ def income_statement_to_es(force=False):
                 if latest_record:
                     start_date = latest_record['reportDate']
 
-            for json_object in get_income_statement_items(security_item, start=start_date):
+            for json_object in get_income_statement_items(security_item, start_date=start_date):
+                if start_date and is_same_date(start_date, json_object['reportDate']):
+                    continue
+
                 income_statement = IncomeStatement(meta={'id': json_object['id']})
                 fill_doc_type(income_statement, json_object)
                 income_statement.save()
@@ -181,7 +195,10 @@ def cash_flow_statement_to_es(force=False):
                 if latest_record:
                     start_date = latest_record['reportDate']
 
-            for json_object in get_cash_flow_statement_items(security_item, start=start_date):
+            for json_object in get_cash_flow_statement_items(security_item, start_date=start_date):
+                if start_date and is_same_date(start_date, json_object['reportDate']):
+                    continue
+
                 cash_flow_statement = CashFlowStatement(meta={'id': json_object['id']})
                 fill_doc_type(cash_flow_statement, json_object)
                 cash_flow_statement.save()
@@ -205,9 +222,8 @@ def forecast_event_to_es():
 
 
 if __name__ == '__main__':
-
     # security_meta_to_es()
-    stock_kdata_to_es(start='000338',end='000338')
+    stock_kdata_to_es(start='000338', end='000338')
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # income_statement_to_es()
