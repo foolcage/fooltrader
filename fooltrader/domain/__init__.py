@@ -12,7 +12,7 @@ class BaseDocType(DocType):
         else:
             return False
 
-    def save(self, using=None, index=None, validate=True, force=False, **kwargs):
+    def save(self, using=None, index=None, validate=True, force=True, **kwargs):
         if force or not self.exist(index=index):
             return super().save(using, index, validate, **kwargs)
         else:
