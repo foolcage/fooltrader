@@ -81,7 +81,7 @@ def stock_meta_to_es(force=False):
         try:
             stock_meta = StockMeta(meta={'id': item['id']})
             fill_doc_type(stock_meta, json.loads(item.to_json()))
-            stock_meta.save(force=force)
+            stock_meta.save()
         except Exception as e:
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
 
@@ -107,7 +107,7 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = StockKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save(index=index_name, force=force)
+                kdata.save(index=index_name)
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
@@ -133,7 +133,7 @@ def index_kdata_to_es(force=False):
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = IndexKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save(index=index_name, force=force)
+                kdata.save(index=index_name)
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
 
