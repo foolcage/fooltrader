@@ -2,7 +2,6 @@ import json
 import logging
 from ast import literal_eval
 
-from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 
@@ -19,8 +18,7 @@ from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
 
-connections.create_connection(hosts=ES_HOSTS)
-es = Elasticsearch()
+es = connections.create_connection(hosts=ES_HOSTS)
 
 
 def es_index_mapping(index_name, doc_type, force=False):
@@ -207,9 +205,12 @@ def forecast_event_to_es():
 
 
 if __name__ == '__main__':
+    latest_record = es_get_latest_record(index='index_sh_000001_day_kdata')
+    print(latest_record)
+
     # security_meta_to_es()
     # stock_kdata_to_es()
-    stock_kdata_to_es(force=True)
+    # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # income_statement_to_es()
     # cash_flow_statement_to_es()
