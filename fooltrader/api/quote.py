@@ -30,24 +30,29 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
     if security_type == 'stock':
         df = pd.DataFrame()
         for exchange in exchanges:
-            if mode == 'simple':
-                df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
-                                  converters={'code': str})
-            else:
-                df1 = pd.read_csv(files_contract.get_security_list_path(security_type, exchange),
-                                  converters={'code': str,
-                                              'sinaIndustry': convert_to_list_if_need,
-                                              'sinaConcept': convert_to_list_if_need,
-                                              'sinaArea': convert_to_list_if_need})
-            df = df.append(df1, ignore_index=True)
+            the_path = files_contract.get_security_list_path(security_type, exchange)
+            if os.path.exists(the_path):
+                if mode == 'simple':
+                    df1 = pd.read_csv(the_path,
+                                      converters={'code': str})
+                else:
+                    df1 = pd.read_csv(the_path,
+                                      converters={'code': str,
+                                                  'sinaIndustry': convert_to_list_if_need,
+                                                  'sinaConcept': convert_to_list_if_need,
+                                                  'sinaArea': convert_to_list_if_need})
+                df = df.append(df1, ignore_index=True)
+    elif security_type == 'index':
+        df = pd.DataFrame(CHINA_STOCK_INDEX)
+
+    if df.size > 0:
         df = df[df["code"] <= end]
         df = df[df["code"] >= start]
         if start_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_date)]
         df = df.set_index(df['code'], drop=False)
-    elif security_type == 'index':
-        df = pd.DataFrame(CHINA_STOCK_INDEX)
+
     return df
 
 
@@ -102,7 +107,8 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source='163', level='day'):
+def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source='163',
+              level='day'):
     if type(security_item) == str:
         if 'stock' in security_item:
             security_item = get_security_item(id=security_item)
