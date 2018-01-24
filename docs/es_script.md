@@ -22,7 +22,7 @@ curl -XPOST 'localhost:9200/index_sh_000001_day_kdata/doc/_search?pretty' -H 'Co
 curl -XPOST 'localhost:9200/balance_sheet/doc/_search?pretty' -H 'Content-Type: application/json' -d'
 {
   "query": {
-    "match_all": {}
+    "term": { "securityId" : "stock_sz_000002" }
   },
   "size": 1,
   "sort": [
