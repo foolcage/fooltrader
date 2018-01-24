@@ -40,8 +40,50 @@ fooltrader是一个利用大数据技术设计的量化交易系统,包括数据
 金叉买,死叉卖,在不同级别上表现如何?在不同标的上表现如何?  
 相同的策略,如何快速的在所有标的上回测,并进行对比?  
 利润增长,股价也增长?或者提前反映?滞后反映?各种表现的比例如何?  
-各个策略之间如何通信,从而形成合力?     
-#### 没错:回测框架必须要考虑这些问题
+各个策略之间如何通信,从而形成合力?  
+#### 没错:回测框架必须要考虑这些问题  
+
+# 环境准备
+* 系统  
+操作系统:Ubuntu 16.04.3 LTS(原则上,其他也可以,系统使用的组件都是跨平台的)  
+内存:>16G  
+硬盘:越大越好  
+
+* 组件安装  
+  * python
+  如果你是使用ubuntu的话,原则上执行以下命令,python环境就好了:  
+  ```bash
+  $ git clone https://github.com/foolcage/fooltrader.git
+  $ cd fooltrader
+  $ ./init_env.sh
+  ```
+  * elastic-search and kibana(6.1.1)  
+  可以参考官方文档进行安装:https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html  
+  也可以用以下命令来完成:  
+  ```bash
+  $ #下载xpack
+  $ wget https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-6.1.1.zip
+  $ #下载es
+  $ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.1.1.zip
+  $ unzip elasticsearch-6.1.1.zip
+  $ cd elasticsearch-6.1.1/
+  $ #为es安装xpcck插件,就是刚刚下载的那个x-pack-6.1.1.zip,格式为file://+其路径
+  $ bin/elasticsearch-plugin install file:///path/to/file/x-pack-6.1.1.zip
+  $ #用fooltrader中的elasticsearch.yml覆盖es默认配置
+  $ cp ../fooltrader/config/elasticsearch.yml config/
+  $ #启动es,可根据自己的情况更改heap大小,<=32g
+  $ ES_JAVA_OPTS="-Xms8g -Xmx8g"  ./bin/elasticsearch
+  $
+  $ #下载kibana
+  $ wget https://artifacts.elastic.co/downloads/kibana/kibana-6.1.1-linux-x86_64.tar.gz
+  $ tar -xzf kibana-6.1.1-linux-x86_64.tar.gz
+  $ cd kibana-6.1.1-linux-x86_64/
+  $ #为kibana安装xpcck插件,就是刚刚下载的那个x-pack-6.1.1.zip,格式为file://+其路径
+  $ bin/kibana-plugin install file:///path/to/file/x-pack-6.1.1.zip
+  $ #用fooltrader中的kibana.yml覆盖kibana默认配置
+  $ cp ../fooltrader/config/kibana.yml config/
+  $ ./bin/kibana
+  ```
 
 # TODO
 * 常用API封装
