@@ -30,6 +30,7 @@ export PYTHONPATH=$PYTHONPATH:.
 if [ ! -f "$BASEDIR/ve/updated" -o $BASEDIR/requirements.txt -nt $BASEDIR/ve/updated ]; then
     pip install -r $BASEDIR/requirements.txt -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
     touch $BASEDIR/ve/updated
+    pip install ipython -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
     echo "Requirements installed."
 fi
 

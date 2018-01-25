@@ -22,27 +22,71 @@
 **个股分析**
 ![](./screenshots/000002_profit_price.png)
 >万科的利润一直在高速增长,白菜价压了几年,所以'野蛮人'来了,还有类似的标的吗?  
->数据,工具都准备好了,只要你能想到,就能做到,你想不到的,'机器'也能学习到.
 
 **回测**
 ![](./screenshots/trader.gif)
->多策略实时运行,实时监控.由于我对目前的回测框架还不是很满意,先不多介绍  
->后面会使用DSL和插件的方式来驱动,并提供web向导生成策略和调参,以及评估,
->最后,机器学习也会上.
+>多策略实时运行,实时监控.  
 
 # 简介
-fooltrader是一个利用大数据技术设计的量化交易系统,包括数据的抓取,清洗,结构化,计算,展示,以及一个回测和交易框架.
-相比其他系统有以下一些特点:  
-* 统一  
-股票,期货,债券,数字货币等在整个系统里面都是一等公民,有其唯一的编号,使用一致的存储和计算方法  
-* 正交  
-对"原料"数据和生成数据加以区分,从而使得数据精简并有无限的灵活性.
-比如tick是原料,各级别k线是生成数据;财务三张表是原料,PE,PB,ROE等是生成数据.
-* 适当冗余  
-对于非常常用的生成数据直接存储.  
-* 无限的扩展性  
-可以使用集群的方式进行存储和计算,应付全市场分析和交易的复杂性.  
+fooltrader是一个利用*大数据*技术设计的*量化交易系统*,包括数据的抓取,清洗,结构化,计算,展示,回测和交易.  
+它的目标是提供一个统一的框架来对*全市场*(股票,期货,债券,外汇,数字货币,宏观经济等)进行研究,回测,预测,交易.  
+它的适用对象包括:量化交易员,财经类专业师生,对经济数据感兴趣的人,程序员,喜欢自由而有探索精神的人
 
+# QUICK START
+假设你已经clone或者fork了代码,当前目录为fooltrader
+* 初始化环境
+```bash
+$ ./init_env.sh
+```
+如果你最后看到:  
+Requirements installed.  
+env ok  
+那么恭喜你,你可以以各种姿势去玩耍了.
+* 抓取数据
+```bash
+$ source ve/bin/activate
+$ ./ve/bin/ipython
+In [1]: from fooltrader.datamanager import datamanager
+#抓取股票元数据
+In [2]: datamanager.crawl_stock_meta()
+#抓取指数数据
+In [3]: datamanager.crawl_index_quote()
+#抓取个股K线和tick数据
+In [4]: datamanager.crawl_stock_quote(start_code=002797,end_code=002798,crawl_tick=False)
+#抓取财务数据
+In [5]: datamanager.crawl_finance_data(start_code=002797,end_code=002798)
+```
+这里把抓取数据作为一个单独的模块,而不是像tushare那样api和爬虫耦合在一起,主要是为了:
+> 爬虫只干爬虫的事:专注抓取的速度,更好的数据分类,数据补全,防屏蔽等  
+> api设计只依赖[*数据协议*](./docs/contract.md),从而具有更好的速度和灵活性
+
+你也可以直接下载打包好的历史数据[*data.zip*](./docs/contract.md).  
+抓取每天的增量数据只需要:
+```bash
+$ ./sched_finance.sh
+```
+```bash
+$ ./sched_quote.sh
+```
+该脚本会定时去抓取"缺少"的数据,在历史数据完整性检查通过后,其实就是只是抓取当天的数据,这样我们就有了一个自动化自我维护的完整数据源.  
+定时任务可配置:
+```python
+#每天17:00运行
+@sched.scheduled_job('cron', hour=17, minute=00)
+def scheduled_job1():
+    crawl_stock_quote('000001', '002999')
+    crawl_index_quote()
+
+
+@sched.scheduled_job('cron', hour=17, minute=20)
+def scheduled_job2():
+    crawl_stock_quote('300000', '300999')
+
+
+@sched.scheduled_job('cron', hour=17, minute=40)
+def scheduled_job3():
+    crawl_stock_quote('600000', '666666')
+```
 # 支持的功能
 * 爬虫代理框架  
 

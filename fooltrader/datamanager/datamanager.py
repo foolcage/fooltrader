@@ -43,12 +43,12 @@ def process_crawl(spider, setting):
 def crawl_stock_meta():
     # 更新股票列表
     # TODO:看是否有必要判断有新股上市，目前每天抓一次列表，问题不大
-    if False:
+    if True:
         logger.info('download stock list start')
         process_crawl(SecurityListSpider, {})
         logger.info('download stock list finish')
-    # process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
-    # process_crawl(SinaCategorySpider, {'category_type': 'sinaConcept'})
+    process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
+    process_crawl(SinaCategorySpider, {'category_type': 'sinaConcept'})
     process_crawl(SinaCategorySpider, {'category_type': 'sinaArea'})
 
 
@@ -127,7 +127,7 @@ def crawl_index_quote():
 
         # 获取市场概况数据[上海,深圳,中小板,创业板]
         if security_item['id'] in ['index_sh_000001', 'index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
-        # if security_item['id'] in ['index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
+            # if security_item['id'] in ['index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
             df = get_kdata(security_item=security_item)
             df = df[df['turnoverRate'].isna() | df['tCap'].isna() | df['mCap'].isna() | df[
                 'pe'].isna()]
@@ -141,7 +141,7 @@ def crawl_index_quote():
                                                        "the_dates": dates})
 
 
-def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
+def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, crawl_tick=True):
     # 抓取股票k线
     for _, security_item in get_security_list(start=start_code, end=end_code).iterrows():
         # 抓取日K线
@@ -172,16 +172,17 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
                 logger.info("{} {} kdata from sina is ok".format(security_item['code'], fuquan))
 
         # 抓取tick
-        tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
-        diff_dates = tick_dates - set(get_available_tick_dates(security_item))
+        if crawl_tick:
+            tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
+            diff_dates = tick_dates - set(get_available_tick_dates(security_item))
 
-        if diff_dates:
-            logger.info("{} get tick start".format(security_item['code']))
-            process_crawl(StockTickSpider, {"security_item": security_item,
-                                            "trading_dates": diff_dates})
-            logger.info("{} get tick end".format(security_item['code']))
-        else:
-            logger.info("{} tick is ok".format(security_item['code']))
+            if diff_dates:
+                logger.info("{} get tick start".format(security_item['code']))
+                process_crawl(StockTickSpider, {"security_item": security_item,
+                                                "trading_dates": diff_dates})
+                logger.info("{} get tick end".format(security_item['code']))
+            else:
+                logger.info("{} tick is ok".format(security_item['code']))
 
 
 if __name__ == '__main__':
