@@ -202,6 +202,7 @@ def get_balance_sheet_items(security_item, start_date=None):
         # 负债和所有者权益(或股东权益)总计
         totalLiabilitiesAndOwnersEquity = lines[84].split()[1:-1]
 
+        result_json = []
         for idx, _ in enumerate(reportDate):
             if start_date:
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
@@ -209,7 +210,7 @@ def get_balance_sheet_items(security_item, start_date=None):
 
             reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
-            yield {
+            result_json.append({
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportDate": reportDate[idx],
                 "reportEventDate": reportEventDate,
@@ -389,7 +390,8 @@ def get_balance_sheet_items(security_item, start_date=None):
 
                 # 负债和所有者权益(或股东权益)总计
                 "totalLiabilitiesAndOwnersEquity": to_float(totalLiabilitiesAndOwnersEquity[idx])
-            }
+            })
+        return result_json
 
 
 def get_income_statement_items(security_item, start_date=None):
@@ -461,13 +463,14 @@ def get_income_statement_items(security_item, start_date=None):
         attributableToOwnersOfParentCompany = lines[29].split()[1:-1]
         # 归属于少数股东的综合收益总额
         attributableToMinorityShareholders = lines[30].split()[1:-1]
+    result_json = []
     for idx, _ in enumerate(reportDate):
         if start_date:
             if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
                 continue
 
         reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
-        yield {
+        result_json.append({
             "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
             "reportDate": reportDate[idx],
             "reportEventDate": reportEventDate,
@@ -530,7 +533,8 @@ def get_income_statement_items(security_item, start_date=None):
             "attributableToOwnersOfParentCompany": to_float(attributableToOwnersOfParentCompany[idx]),
             # 归属于少数股东的综合收益总额
             "attributableToMinorityShareholders": to_float(attributableToMinorityShareholders[idx])
-        }
+        })
+        return result_json
 
 
 def get_cash_flow_statement_items(security_item, start_date=None):
@@ -691,6 +695,7 @@ def get_cash_flow_statement_items(security_item, start_date=None):
         cashEquivalentsAtTheBeginningOfPeriod = lines[75].split()[1:-1]
         # 现金及现金等价物的净增加额
         netIncreaseInCashAndCashEquivalents = lines[76].split()[1:-1]
+    result_json = []
     for idx, _ in enumerate(reportDate):
         if start_date:
             if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
@@ -698,7 +703,7 @@ def get_cash_flow_statement_items(security_item, start_date=None):
 
         reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
-        yield {
+        result_json.append({
             "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
             "reportDate": reportDate[idx],
             "reportEventDate": reportEventDate,
@@ -860,7 +865,8 @@ def get_cash_flow_statement_items(security_item, start_date=None):
             "cashEquivalentsAtTheBeginningOfPeriod": to_float(cashEquivalentsAtTheBeginningOfPeriod[idx]),
             # 现金及现金等价物的净增加额
             "netIncreaseInCashAndCashEquivalents": to_float(netIncreaseInCashAndCashEquivalents[idx])
-        }
+        })
+        return result_json
 
 
 if __name__ == '__main__':

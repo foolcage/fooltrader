@@ -92,5 +92,5 @@ ENV/
 
 full/
 data/
-data*.zip
+*.zip
 ve/
