@@ -60,7 +60,7 @@ In [5]: datamanager.crawl_finance_data(start_code=002797,end_code=002798)
 > 爬虫只干爬虫的事:专注抓取的速度,更好的数据分类,数据补全,防屏蔽等  
 > api设计只依赖[*数据协议*](./docs/contract.md),从而具有更好的速度和灵活性
 
-你也可以直接下载打包好的历史数据[*data.zip*](./docs/contract.md).  
+你也可以直接下载打包好的历史数据[*data.zip*](晚上上传到百度云盘).  
 抓取每天的增量数据只需要:
 ```bash
 $ ./sched_finance.sh
@@ -69,7 +69,7 @@ $ ./sched_finance.sh
 $ ./sched_quote.sh
 ```
 该脚本会定时去抓取"缺少"的数据,在历史数据完整性检查通过后,其实就是只是抓取当天的数据,这样我们就有了一个自动化自我维护的完整数据源.  
-定时任务可配置:
+可在sched_quote.py文件中进行对定时任务进行配置:  
 ```python
 #每天17:00运行
 @sched.scheduled_job('cron', hour=17, minute=00)
@@ -87,6 +87,21 @@ def scheduled_job2():
 def scheduled_job3():
     crawl_stock_quote('600000', '666666')
 ```
+
+最后强调一下,数据抓下来了,怎么使用?请参考[*数据协议*](./docs/contract.md)  
+
+* 数据存储到elastic-search
+(文档待完善)
+
+* 使用kibana进行分析
+(文档待完善)
+
+* 回测
+(文档待完善)
+
+* 交易
+(文档待完善)
+
 # 支持的功能
 * 爬虫代理框架  
 
