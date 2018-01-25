@@ -10,7 +10,7 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
-    get_security_dir, get_kdata_path
+    get_security_dir, get_kdata_path, get_trading_dates_path_163
 from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime, detect_encoding
 
 logger = logging.getLogger(__name__)
@@ -118,6 +118,12 @@ def remove_old_trading_dates():
             logger.info("remove {}".format(the_path))
             os.remove(the_path)
 
+def remove_old_163_trading_dates():
+    for index, security_item in get_security_list().iterrows():
+        the_path = get_trading_dates_path_163(security_item)
+        if os.path.exists(the_path):
+            logger.info("remove {}".format(the_path))
+            os.remove(the_path)
 
 def remove_old_tick():
     for index, security_item in get_security_list().iterrows():
@@ -293,6 +299,6 @@ def check_result():
 
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    # remove_old_trading_dates()
+    remove_old_trading_dates()
     # remove_old_kdata()
-    remove_old_tick()
+    # remove_old_tick()

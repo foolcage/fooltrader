@@ -88,6 +88,10 @@ def _to_valid_fuquan(fuquan='bfq'):
         return 'bfq'
 
 
+def get_trading_dates_path_163(item):
+    return os.path.join(get_security_dir(item), 'trading_dates_163.json')
+
+
 def get_trading_dates_path_ths(item):
     return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
 
