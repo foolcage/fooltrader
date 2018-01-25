@@ -1,5 +1,27 @@
+
+fooltrader数据协议
+=================
+
+   * [1. 基础概念](#1-基础概念)
+   * [2. 目录结构](#2-目录结构)
+      * [2.1 存储根目录](#21-存储根目录)
+      * [2.2 具体结构](#22-具体结构)
+   * [3. 文件字段解释](#3-文件字段解释)
+      * [3.1 股票元数据](#31-股票元数据)
+      * [3.2 行情数据](#32-行情数据)
+         * [a. 指数K线数据](#a-指数k线数据)
+         * [b. 个股K线数据](#b-个股k线数据)
+         * [c. tick数据](#c-tick数据)
+      * [3.3  财务数据](#33--财务数据)
+         * [a. 资产负债表](#a-资产负债表)
+         * [b. 利润表](#b-利润表)
+         * [c. 现金流量表](#c-现金流量表)
+      * [3.4. 事件数据](#34-事件数据)
+         * [a. 业绩预告](#a-业绩预告)
+         * [b.  财务报表发布](#b--财务报表发布)
+
 该文档定义了fooltrader的数据协议,包括数据字段的含义,文件的存储目录结构,文件的格式,elastic search的mapping,kafka的schema.
-# 基础概念
+# 1. 基础概念
 * 证券类型(type)  
 stock,future,bond等
 * 交易所(exchange)  
@@ -9,14 +31,14 @@ sz,sh等
 * 唯一标识标(security_id)  
 结构为type_exchange_code,比如stock_sz_000338,代表A股中的潍柴动力.
 
-# 目录结构
-* 存储根目录  
+# 2. 目录结构
+## 2.1 存储根目录  
 settings.py里面  
 ```
 #fooltrader的数据根目录
 FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
 ```
-* 具体结构
+## 2.2 具体结构
 ```
 ├── index(指数的数据)
 │   ├── sh
@@ -62,8 +84,8 @@ FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
     │           └── 2013-01-22.csv
     └── sz.csv(深圳交易所股票元数据)
 ```
-# csv文件字段
-* 股票元数据
+# 3. 文件字段解释
+## 3.1 股票元数据
 ```
 代码,名字,上市日期,所在交易所,类型,唯一标识,新浪行业,新浪区域
 code,name,listDate,exchange,type,id,sinaIndustry,sinaArea
@@ -71,8 +93,8 @@ code,name,listDate,exchange,type,id,sinaIndustry,sinaArea
 000002,万  科Ａ,1991-01-29,sz,stock,stock_sz_000002,房地产,广东
 000004,国农科技,1990-12-01,sz,stock,stock_sz_000004,生物制药,"['深圳', '广东']"
 ```
-
-* 指数K线数据
+## 3.2 行情数据
+### a. 指数K线数据
 ```
 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值
 timestamp,code,name,low,open,close,high,volume,turnover,securityId,preClose,change,changePct,turnoverRate,tCap,mCap,pe
@@ -80,7 +102,7 @@ timestamp,code,name,low,open,close,high,volume,turnover,securityId,preClose,chan
 2018-01-03,000001,上证指数,3345.2887,3347.7428,3369.1084,3379.9152,213836149,258366523235.0,index_sh_000001,3348.3259,20.7825,0.6207,0.5595,34340879249962.87,29261135995966.35,18.91
 2018-01-04,000001,上证指数,3365.2954,3371.0,3385.7102,3392.8264,206955288,243090768694.0,index_sh_000001,3369.1084,16.6018,0.4928,0.5595,34340879249962.87,29261135995966.35,18.91
 ```
-* 个股K线数据
+### b. 个股K线数据
 ```
 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值,复权因子
 timestamp,code,low,open,close,high,volume,turnover,securityId,preClose,change,changePct,turnoverRate,tCap,mCap,factor
@@ -93,7 +115,7 @@ timestamp,code,low,open,close,high,volume,turnover,securityId,preClose,change,ch
 前复权价格=价格/最新的复权因子  
 可以看出,后复权价格是不变的,而前复权却依赖时间  
 
-* tick数据  
+### c. tick数据  
 ```
 时间,价格,成交额,成交量,方向(买:1,卖:-1,中性:0)
 timestamp,price,volume,turnover,direction
@@ -102,11 +124,12 @@ timestamp,price,volume,turnover,direction
 09:47:44,11.75,572,672852,1
 ```
 
-* 财务数据
+## 3.3  财务数据
 原始的xls文件有中文字段含义,不再赘述,熟悉财务的人也可以直接用excel来分析.
-fooltrader里面的字段含义如下:
+fooltrader里面的字段含义如下:  
+
+### a. 资产负债表
 ```
-#资产负债表
 class BalanceSheet(BaseDocType):
     id = Keyword()
     securityId = Keyword()
@@ -292,9 +315,9 @@ class BalanceSheet(BaseDocType):
         index = 'balance_sheet'
         doc_type = 'doc'
         all = MetaField(enabled=False)
-
-
-#利润表
+```
+### b. 利润表
+```
 class IncomeStatement(BaseDocType):
     id = Keyword()
     securityId = Keyword()
@@ -362,8 +385,9 @@ class IncomeStatement(BaseDocType):
         index = 'income_statement'
         doc_type = 'doc'
         all = MetaField(enabled=False)
-
-#现金流量表
+```
+### c. 现金流量表
+```
 class CashFlowStatement(DocType):
     id = Keyword()
     securityId = Keyword()
@@ -523,3 +547,122 @@ class CashFlowStatement(DocType):
         doc_type = 'doc'
         all = MetaField(enabled=False)
 ```
+
+api使用例子:  
+
+```
+In [1]: from fooltrader.api import finance
+
+In [2]: finance.get_balance_sheet_items({'type':'stock', 'code':'000002', 'exchange':'sz', 'id':'stock_sz_000002'},start_date='20170930')
+Out[2]:
+[{'LongTermBorrowing': 77146692450.34,
+  'NetfixedAssets': 6857390560.1,
+  'OtherNonCurrentAssets': 9347236005.32,
+  'accountsPayable': 135947346263.21,
+  'accountsReceivable': 1302107882.27,
+  'accountsReceivedInAdvance': 407882270730.4,
+  'assetsForSale': 0.0,
+  'availableForSaleFinancialAssets': 4316633317.95,
+  'billsPayable': 2794001399.41,
+  'billsReceivable': 0.0,
+  'bondPayable': 27058349371.01,
+  'bookValue': 116373274594.17,
+  'buyingBackTheSaleOfFinancialAssets': 0.0,
+  'capitalSurplus': 9059156304.89,
+  'code': '000002',
+  'constructionInProcess': 1044472976.76,
+  'deferredIncomeTaxAssets': 8520343886.24,
+  'deferredIncomeTaxLiabilities': 417861813.48,
+  'deferredIncomeWithinOneYear': 0.0,
+  'derivative': 6405693.49,
+  'developmentExpenditure': 0.0,
+  'dividendReceivable': 0.0,
+  'dividendpayable': 0.0,
+  'employeeBenefitsPayable': 2568716977.19,
+  'engineerMaterial': 0.0,
+  'expectedNonCurrentLiabilities': 168845067.08,
+  'fixedAssetsInLiquidation': 0.0,
+  'generalRiskPreparation': 0.0,
+  'goodwill': 201689835.8,
+  'handlingChargesAndCommissionsPayable': 0.0,
+  'heldForTradingFinancialAssets': 0.0,
+  'heldToMaturityInvestment': 0.0,
+  'id': 'stock_sz_000002_20170930',
+  'intangibleAssets': 1412466458.4,
+  'interestPayable': 949305139.12,
+  'interestReceivable': 0.0,
+  'inventory': 550572755680.26,
+  'investmentRealEstate': 18981285895.2,
+  'loansAndPaymentsOnBehalf': 0.0,
+  'longTermDeferredExpenses': 1499145189.69,
+  'longTermDeferredRevenue': 0.0,
+  'longTermEmployeeBenefitsPayable': 0.0,
+  'longTermEquityInvestment': 66452452394.43,
+  'longTermPayables': 0.0,
+  'longTermReceivables': 0.0,
+  'minorityBookValue': 51352017269.22,
+  'moneyFunds': 94352631304.03,
+  'nonCurrentAssets': 118633116519.89,
+  'nonCurrentAssetsDueWithinOneYear': 0.0,
+  'nonCurrentLiabilitiesMaturingWithinOneYear': 36925749237.22,
+  'nonProfitLivingAssets': 0.0,
+  'oilAndGasAssets': 0.0,
+  'otherComprehensiveIncome': 163857846.85,
+  'otherCurrentAssets': 3063290000.0,
+  'otherCurrentLiability': 0.0,
+  'otherNonCurrentLiabilities': 2423878245.6,
+  'otherPayables': 130930102810.93,
+  'otherReceivables': 137781186196.38,
+  'prepaidAccounts': 105270074361.66,
+  'productiveBiologicalAssets': 0.0,
+  'reportDate': '20170930',
+  'reportEventDate': '2017-10-27',
+  'securityId': 'stock_sz_000002',
+  'shortTermBorrowing': 17301123599.78,
+  'shortTermDebenturesPayable': 0.0,
+  'specialPayable': 0.0,
+  'surplusReserves': 32540767833.97,
+  'taxesAndSurchargesPayable': 7543471786.53,
+  'theSpecialReserve': 0.0,
+  'totalAssets': 1018381990533.1,
+  'totalBookValue': 167725291863.39,
+  'totalCurrentAssets': 899748874013.21,
+  'totalCurrentLiabilities': 743441071722.2,
+  'totalLiabilities': 850656698669.71,
+  'totalLiabilitiesAndOwnersEquity': 1018381990533.1,
+  'totalNonCurrentLiabilities': 107215626947.51,
+  'totalShareCapital': 11039152001.0,
+  'transactionFinancialLiabilities': 0.0,
+  'treasuryStock': 0.0,
+  'unamortizedExpenditures': 0.0,
+  'undistributedProfits': 63570340607.46,
+  'waitDealIntangibleAssetsLossOrIncome': 0.0,
+  'withholdingExpenses': 0.0}]
+```
+目前api读取的是文件,但提供了存储到es的方法,字段名称和含义是统一的,可以非常方便的在es和kibana中进行分析.
+
+## 3.4. 事件数据
+### a. 业绩预告
+description:描述,changeStart:变动范围最小值,preEPS:每股收益前值,type:类型(预减,预增),reportPeriod:业绩报告期,reportDate:这个公告发出的日期,change:变动
+```
+{
+  "description": "预计2015年1月1日-2015年3月31日归属于上市公司股东的净利润为盈利：60,000万元–70,000万元，比上年同期下降：约54%-61%。",
+  "changeStart": -0.61,
+  "preEPS": 0.14,
+  "type": "预减",
+  "securityId": "stock_sz_000002",
+  "reportPeriod": "2015-03-31",
+  "id": "stock_sz_000002_2015-04-03",
+  "reportDate": "2015-04-03",
+  "change": -0.54
+}
+```
+需要注意的是,为了不使用"未来函数",策略里面应该以reportDate为获取该数据的依据.
+### b.  财务报表发布
+```
+唯一标识,报告期,发布的日期,股票唯一标示,标题,报表下载地址
+id,reportDate,reportEventDate,securityId,title,url
+stock_sz_000002_2011-04-20_2011-03-31,2011-03-31,2011-04-20,stock_sz_000002,万科企业股份有限公司2011年第一季度报告正文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=000002&id=703251
+stock_sz_000002_2011-10-25_2011-09-30,2011-09-30,2011-10-25,stock_sz_000002,万科企业股份有限公司2011年第三季度报告全文（英文版）,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=000002&id=794167
+```
+需要注意的是,为了不使用"未来函数",策略里面应该以reportEventDate为获取该数据的依据.
