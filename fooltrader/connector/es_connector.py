@@ -2,6 +2,7 @@ import json
 import logging
 from ast import literal_eval
 
+import elasticsearch.helpers
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 
@@ -75,21 +76,25 @@ def stock_meta_to_es(force=False):
         if latest_record:
             start_date = latest_record['latestDate']
 
+    actions = []
     for _, item in get_security_list(mode='es', start_date=start_date).iterrows():
         if start_date and is_same_date(start_date, item['listDate']):
             continue
         try:
             stock_meta = StockMeta(meta={'id': item['id']})
             fill_doc_type(stock_meta, json.loads(item.to_json()))
-            stock_meta.save()
+            actions.append(stock_meta.to_dict(include_meta=True))
         except Exception as e:
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
+    if actions:
+        resp = elasticsearch.helpers.bulk(es, actions)
+        logger.info(resp)
 
 
 def stock_kdata_to_es(start='000001', end='666666', force=False):
     for _, security_item in get_security_list(start=start, end=end).iterrows():
         # 创建索引
-        index_name = get_es_kdata_index(security_item['id'])
+        index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, StockKData)
 
         start_date = None
@@ -98,7 +103,7 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
             logger.info("latest_record:{}".format(latest_record))
             if latest_record:
                 start_date = latest_record['timestamp']
-
+        actions = []
         for _, kdata_item in get_kdata(security_item, start_date=start_date).iterrows():
             if start_date and is_same_date(start_date, kdata_item['timestamp']):
                 continue
@@ -107,15 +112,20 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = StockKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save(index=index_name)
+                # kdata.save(index=index_name)
+                actions.append(kdata.to_dict(include_meta=True))
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
+                logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
+        if actions:
+            resp = elasticsearch.helpers.bulk(es, actions)
+            logger.info(resp)
 
 
 def index_kdata_to_es(force=False):
     for _, security_item in get_security_list(security_type='index').iterrows():
         # 创建索引
-        index_name = get_es_kdata_index(security_item['id'])
+        index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, IndexKData)
 
         start_date = None
@@ -124,7 +134,7 @@ def index_kdata_to_es(force=False):
             logger.info("latest_record:{}".format(latest_record))
             if latest_record:
                 start_date = latest_record['timestamp']
-
+        actions = []
         for _, kdata_item in get_kdata(security_item, start_date=start_date).iterrows():
             if start_date and is_same_date(start_date, kdata_item['timestamp']):
                 continue
@@ -133,9 +143,13 @@ def index_kdata_to_es(force=False):
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = IndexKData(meta={'id': id}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
-                kdata.save(index=index_name)
+                # kdata.save(index=index_name)
+                actions.append(kdata.to_dict(include_meta=True))
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
+        if actions:
+            resp = elasticsearch.helpers.bulk(es, actions)
+            logger.info(resp)
 
 
 def balance_sheet_to_es(force=False):
@@ -152,14 +166,18 @@ def balance_sheet_to_es(force=False):
                 logger.info("latest_record:{}".format(latest_record))
                 if latest_record:
                     start_date = latest_record['reportDate']
-
+            actions = []
             for json_object in get_balance_sheet_items(security_item, start_date=start_date):
                 if start_date and is_same_date(start_date, json_object['reportDate']):
                     continue
 
                 balance_sheet = BalanceSheet(meta={'id': json_object['id']})
                 fill_doc_type(balance_sheet, json_object)
-                balance_sheet.save()
+                # balance_sheet.save()
+                actions.append(balance_sheet.to_dict(include_meta=True))
+            if actions:
+                resp = elasticsearch.helpers.bulk(es, actions)
+                logger.info(resp)
         except Exception as e:
             logger.warn("wrong BalanceSheet:{},error:{}", security_item, e)
 
@@ -179,14 +197,18 @@ def income_statement_to_es(force=False):
                 logger.info("latest_record:{}".format(latest_record))
                 if latest_record:
                     start_date = latest_record['reportDate']
-
+            actions = []
             for json_object in get_income_statement_items(security_item, start_date=start_date):
                 if start_date and is_same_date(start_date, json_object['reportDate']):
                     continue
 
                 income_statement = IncomeStatement(meta={'id': json_object['id']})
                 fill_doc_type(income_statement, json_object)
-                income_statement.save()
+                # income_statement.save()
+                actions.append(income_statement.to_dict(include_meta=True))
+            if actions:
+                resp = elasticsearch.helpers.bulk(es, actions)
+                logger.info(resp)
         except Exception as e:
             logger.warn("wrong IncomeStatement:{},error:{}", security_item, e)
 
@@ -206,14 +228,18 @@ def cash_flow_statement_to_es(force=False):
                 logger.info("latest_record:{}".format(latest_record))
                 if latest_record:
                     start_date = latest_record['reportDate']
-
+            actions = []
             for json_object in get_cash_flow_statement_items(security_item, start_date=start_date):
                 if start_date and is_same_date(start_date, json_object['reportDate']):
                     continue
 
                 cash_flow_statement = CashFlowStatement(meta={'id': json_object['id']})
                 fill_doc_type(cash_flow_statement, json_object)
-                cash_flow_statement.save()
+                # cash_flow_statement.save()
+                actions.append(cash_flow_statement.to_dict(include_meta=True))
+            if actions:
+                resp = elasticsearch.helpers.bulk(es, actions)
+                logger.info(resp)
         except Exception as e:
             logger.warn("wrong CashFlowStatement:{},error:{}", security_item, e)
 
@@ -235,7 +261,7 @@ def forecast_event_to_es():
 
 if __name__ == '__main__':
     # security_meta_to_es()
-    stock_kdata_to_es(start='000338', end='000338')
+    stock_kdata_to_es(start='000002', end='000002')
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # income_statement_to_es()
