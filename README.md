@@ -79,7 +79,7 @@ In [5]: datamanager.crawl_finance_data(start_code=002797,end_code=002798)
 > 爬虫只干爬虫的事:专注抓取的速度,更好的数据分类,数据补全,防屏蔽等  
 > api设计只依赖[*数据协议*](./docs/contract.md),从而具有更好的速度和灵活性
 
-你也可以直接下载打包好的历史数据[*data.zip*](晚上上传到百度云盘).  
+你也可以直接下载打包好的历史数据[*data.zip*](https://pan.baidu.com/s/1dmZaPo).
 抓取每天的增量数据只需要:
 ```bash
 $ ./sched_finance.sh
