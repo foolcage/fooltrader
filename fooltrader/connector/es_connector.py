@@ -99,7 +99,11 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
 
         start_date = None
         if not force:
-            latest_record = es_get_latest_record(index_name)
+            query = {
+                "term": {"securityId": ""}
+            }
+            query["term"]["securityId"] = security_item["id"]
+            latest_record = es_get_latest_record(index_name, query=query)
             logger.info("latest_record:{}".format(latest_record))
             if latest_record:
                 start_date = latest_record['timestamp']
@@ -116,7 +120,6 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
                 actions.append(kdata.to_dict(include_meta=True))
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
-                logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
         if actions:
             resp = elasticsearch.helpers.bulk(es, actions)
             logger.info(resp)
@@ -130,7 +133,11 @@ def index_kdata_to_es(force=False):
 
         start_date = None
         if not force:
-            latest_record = es_get_latest_record(index_name)
+            query = {
+                "term": {"securityId": ""}
+            }
+            query["term"]["securityId"] = security_item["id"]
+            latest_record = es_get_latest_record(index_name, query=query)
             logger.info("latest_record:{}".format(latest_record))
             if latest_record:
                 start_date = latest_record['timestamp']
