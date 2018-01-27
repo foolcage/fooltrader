@@ -19,15 +19,20 @@ curl -XPOST 'localhost:9200/index_sh_000001_day_kdata/doc/_search?pretty' -H 'Co
 }
 '
 
-curl -XPOST 'localhost:9200/balance_sheet/doc/_search?pretty' -H 'Content-Type: application/json' -d'
+curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits.hits._source' -H 'Content-Type: application/json' -d'
 {
   "query": {
-    "term": { "securityId" : "stock_sz_000002" }
+    "range" : {
+                "reportDate" : {
+                    "gte" : "20170630",
+                    "lte" :  "20170630"
+                }
+            }
   },
-  "size": 1,
+  "size": 10,
   "sort": [
     {
-      "reportDate": {
+      "netProfit": {
         "order": "desc"
       }
     }

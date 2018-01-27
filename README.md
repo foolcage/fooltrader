@@ -1,7 +1,7 @@
 # fooltrader:trade as a fool
 >"要在市场上生存，就必须远离聪明，因为，你的聪明在市场面前一钱不值"------缠中说禅  
 
-# 使用截图
+# 1. 使用截图
 
 **大势dashboard**
 ![](./screenshots/analyze1.png)  
@@ -27,21 +27,21 @@
 ![](./screenshots/trader.gif)
 >多策略实时运行,实时监控.  
 
-# 简介
+# 2. 简介
 fooltrader是一个利用*大数据*技术设计的*量化交易系统*,包括数据的抓取,清洗,结构化,计算,展示,回测和交易.  
 它的目标是提供一个统一的框架来对*全市场*(股票,期货,债券,外汇,数字货币,宏观经济等)进行研究,回测,预测,交易.  
-它的适用对象包括:量化交易员,财经类专业师生,对经济数据感兴趣的人,程序员,喜欢自由而有探索精神的人
+它的适用对象包括:**量化交易员,财经类专业师生,对经济数据感兴趣的人,程序员,喜欢自由而有探索精神的人**
 
-# 架构图
+# 3. 架构图
 fooltrader是一个层次清晰的系统,你可以在不同的层次对其进行使用,也可以扩展,改造或替换里面的模块.  
 
 ![](./screenshots/achitecture.png)
 
-# 使用step by step
+# 4. 使用step by step
 使用的层次跟架构图里面的模块是一一对应的, step从上往下,你可以在任何的地方"let's stop here",然后进行扩展或者对接你自己熟悉的系统.  
 当然,还是希望你全部跑通,因为这里的每个模块的技术选型都是经过精心考虑的,并且后续会不停完善.  
 
-* 环境准备  
+### 4.1 环境准备  
 操作系统:Ubuntu 16.04.3 LTS  
 原则上,其他也可以,系统使用的组件都是跨平台的,但我只在ubuntu和mac运行过    
 内存:>16G  
@@ -50,16 +50,18 @@ clone或者fork代码
 ```bash
 $ git clone https://github.com/foolcage/fooltrader.git
 ```
-* 初始化python环境
+### 4.2 初始化python环境
 ```bash
 $ cd fooltrader
 $ ./init_env.sh
 ```
 如果你最后看到:  
+```bash
 Requirements installed.  
-env ok  
+env ok
+```
 那么恭喜你,你可以以各种姿势去玩耍了.
-* 抓取数据
+### 4.3 抓取数据
 ```bash
 $ source ve/bin/activate
 $ ./ve/bin/ipython
@@ -108,7 +110,12 @@ def scheduled_job3():
 最后强调一下,数据抓下来了,怎么使用?请参考[*数据协议*](./docs/contract.md)  
 到这里,如果你不想使用elastic-search,也不想使用python,你就是想用java,mysql,或者你superset,redash,hadoop啥的玩得很熟,没问题,根据数据协议你应该很容易的把数据放到你需要的地方进行研究.
 当然,我更希望你把代码贡献到connector里面,pr给我,既提高自己的代码水平,又方便了需要使用的人,岂不快哉?  
-* elastic-search和kibana安装(6.1.1)  
+### 4.4 elastic-search和kibana安装(6.1.1)  
+马蛋,忘记是哪个鬼佬说的了,但是我当时觉得真的好有道理  
+>仅仅只是把数据换一个存储,系统就发生了不可思议的变化.
+
+而es+kibana就是那样的神器,所以......
+
 可以参考官方文档进行安装:https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html  
 也可以用以下命令来完成:  
 ```bash
@@ -136,7 +143,7 @@ $ cp ../fooltrader/config/kibana.yml config/
 $ ./bin/kibana
 ```
 
-* 数据存储到elastic-search  
+### 4.5 数据存储到elastic-search  
 到这里,我还是默认你在fooltrader的ipython环境下.
 ```bash
 In [1]: from fooltrader.connector import es_connector
@@ -154,13 +161,81 @@ In [5]: es_connector.income_statement_to_es()
 In [5]: es_connector.cash_flow_statement_to_es()
 ```
 
-* 使用kibana进行分析
+然后,我们简单的来领略一下它的威力  
+查询2017年中报净利润top 5
+```bash
+curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits.hits._source' -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "range": {
+      "reportDate": {
+        "gte": "20170630",
+        "lte": "20170630"
+      }
+    }
+  },
+  "size": 5,
+  "sort": [
+    {
+      "netProfit": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+'
+{
+  "hits": {
+    "hits": [
+      {
+        "_source": {
+          "exchangeGains": 1.3242E10,
+          "netProfit": 1.827E9,
+          "securityId": "stock_sh_601318",
+          "investmentIncome": 2.0523E10,
+          "operatingProfit": 7.8107E10,
+          "accumulatedOtherComprehensiveIncome": 2.0E8,
+          "attributableToMinorityShareholders": 6.5548E10,
+          "sellingExpenses": 1.0777E10,
+          "investmentIncomeFromRelatedEnterpriseAndJointlyOperating": "398259000000.00",
+          "id": "stock_sh_601318_20170630",
+          "minorityInterestIncome": 6.238E10,
+          "code": "601318",
+          "otherComprehensiveIncome": 6.5506E10,
+          "nonOperatingIncome": 4.006E9,
+          "financingExpenses": 0.0,
+          "reportEventDate": "2017-08-18",
+          "netProfitAttributedToParentCompanyOwner": 5.778E10,
+          "disposalLossOnNonCurrentLiability": 9.01E8,
+          "incomeFromChangesInFairValue": -2.56E8,
+          "incomeTaxExpense": 2.2E7,
+          "OperatingTotalCosts": 3.4139E11,
+          "assetsDevaluation": 8.75E8,
+          "EPS": 1.9449E10,
+          "OperatingCosts": 9.4E7,
+          "attributableToOwnersOfParentCompany": 1.58E8,
+          "ManagingCosts": 6.402E10,
+          "totalProfits": 8.403E9,
+          "dilutedEPS": 2.4575E10,
+          "reportDate": "20170630",
+          "businessTaxesAndSurcharges": 9.442E9,
+          "operatingRevenue": 4.63765E11,
+          "nonOperatingExpenditure": 1.35892E11
+        }
+      ]
+    }
+  }
+}
+```
+实际上REST接口天然就有了,做跨平台接口非常方便
+
+### 4.6 使用kibana进行分析
 (文档待完善)
 
-* 回测
+### 4.7 回测
 (文档待完善)
 
-* 交易
+### 4.8 交易
 (文档待完善)
 
 # 支持的功能
