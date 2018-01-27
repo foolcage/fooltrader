@@ -27,7 +27,7 @@ curl -XPOST 'localhost:9200/balance_sheet/doc/_search?pretty' -H 'Content-Type: 
   "size": 1,
   "sort": [
     {
-      "timestamp": {
+      "reportDate": {
         "order": "desc"
       }
     }

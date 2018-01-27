@@ -74,7 +74,7 @@ def stock_meta_to_es(force=False):
         latest_record = es_get_latest_record('stock_meta', time_field='listDate')
         logger.info("latest_record:{}".format(latest_record))
         if latest_record:
-            start_date = latest_record['latestDate']
+            start_date = latest_record['listDate']
 
     actions = []
     for _, item in get_security_list(mode='es', start_date=start_date).iterrows():

@@ -32,10 +32,27 @@ fooltrader是一个利用*大数据*技术设计的*量化交易系统*,包括�
 它的目标是提供一个统一的框架来对*全市场*(股票,期货,债券,外汇,数字货币,宏观经济等)进行研究,回测,预测,交易.  
 它的适用对象包括:量化交易员,财经类专业师生,对经济数据感兴趣的人,程序员,喜欢自由而有探索精神的人
 
-# QUICK START
-假设你已经clone或者fork了代码,当前目录为fooltrader
-* 初始化环境
+# 架构图
+fooltrader是一个层次清晰的系统,你可以在不同的层次对其进行使用,也可以扩展,改造或替换里面的模块.  
+
+![](./screenshots/achitecture.png)
+
+# 使用step by step
+使用的层次跟架构图里面的模块是一一对应的, step从上往下,你可以在任何的地方"let's stop here",然后进行扩展或者对接你自己熟悉的系统.  
+当然,还是希望你全部跑通,因为这里的每个模块的技术选型都是经过精心考虑的,并且后续会不停完善.  
+
+* 环境准备  
+操作系统:Ubuntu 16.04.3 LTS  
+原则上,其他也可以,系统使用的组件都是跨平台的,但我只在ubuntu和mac运行过    
+内存:>16G  
+硬盘:越大越好  
+clone或者fork代码  
 ```bash
+$ git clone https://github.com/foolcage/fooltrader.git
+```
+* 初始化python环境
+```bash
+$ cd fooltrader
 $ ./init_env.sh
 ```
 如果你最后看到:  
@@ -89,9 +106,53 @@ def scheduled_job3():
 ```
 
 最后强调一下,数据抓下来了,怎么使用?请参考[*数据协议*](./docs/contract.md)  
+到这里,如果你不想使用elastic-search,也不想使用python,你就是想用java,mysql,或者你superset,redash,hadoop啥的玩得很熟,没问题,根据数据协议你应该很容易的把数据放到你需要的地方进行研究.
+当然,我更希望你把代码贡献到connector里面,pr给我,既提高自己的代码水平,又方便了需要使用的人,岂不快哉?  
+* elastic-search和kibana安装(6.1.1)  
+可以参考官方文档进行安装:https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html  
+也可以用以下命令来完成:  
+```bash
+$ #下载xpack
+$ wget https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-6.1.1.zip
+$ #下载es
+$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.1.1.zip
+$ unzip elasticsearch-6.1.1.zip
+$ cd elasticsearch-6.1.1/
+$ #为es安装xpcck插件,就是刚刚下载的那个x-pack-6.1.1.zip,格式为file://+其路径
+$ bin/elasticsearch-plugin install file:///path/to/file/x-pack-6.1.1.zip
+$ #用fooltrader中的elasticsearch.yml覆盖es默认配置
+$ cp ../fooltrader/config/elasticsearch.yml config/
+$ #启动es,可根据自己的情况更改heap大小,<=32g
+$ ES_JAVA_OPTS="-Xms8g -Xmx8g"  ./bin/elasticsearch
+$
+$ #下载kibana
+$ wget https://artifacts.elastic.co/downloads/kibana/kibana-6.1.1-linux-x86_64.tar.gz
+$ tar -xzf kibana-6.1.1-linux-x86_64.tar.gz
+$ cd kibana-6.1.1-linux-x86_64/
+$ #为kibana安装xpcck插件,就是刚刚下载的那个x-pack-6.1.1.zip,格式为file://+其路径
+$ bin/kibana-plugin install file:///path/to/file/x-pack-6.1.1.zip
+$ #用fooltrader中的kibana.yml覆盖kibana默认配置
+$ cp ../fooltrader/config/kibana.yml config/
+$ ./bin/kibana
+```
 
-* 数据存储到elastic-search
-(文档待完善)
+* 数据存储到elastic-search  
+到这里,我还是默认你在fooltrader的ipython环境下.
+```bash
+In [1]: from fooltrader.connector import es_connector
+#股票元信息->es
+In [2]: es_connector.stock_meta_to_es()
+#指数数据->es
+In [3]: es_connector.index_kdata_to_es()
+#个股k线->es
+In [4]: es_connector.stock_kdata_to_es()
+#你也可以多开几个窗口,指定范围,提高索引速度
+In [4]: es_connector.stock_kdata_to_es(start='002000',end='002999')
+#财务数据->es
+In [5]: es_connector.balance_sheet_to_es()
+In [5]: es_connector.income_statement_to_es()
+In [5]: es_connector.cash_flow_statement_to_es()
+```
 
 * 使用kibana进行分析
 (文档待完善)
@@ -129,48 +190,6 @@ def scheduled_job3():
 利润增长,股价也增长?或者提前反映?滞后反映?各种表现的比例如何?  
 各个策略之间如何通信,从而形成合力?  
 #### 没错:回测框架必须要考虑这些问题  
-
-# 环境准备
-* 系统  
-操作系统:Ubuntu 16.04.3 LTS(原则上,其他也可以,系统使用的组件都是跨平台的)  
-内存:>16G  
-硬盘:越大越好  
-
-* 组件安装  
-  * python
-  如果你是使用ubuntu的话,原则上执行以下命令,python环境就好了:  
-  ```bash
-  $ git clone https://github.com/foolcage/fooltrader.git
-  $ cd fooltrader
-  $ ./init_env.sh
-  ```
-  * elastic-search and kibana(6.1.1)  
-  可以参考官方文档进行安装:https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html  
-  也可以用以下命令来完成:  
-  ```bash
-  $ #下载xpack
-  $ wget https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-6.1.1.zip
-  $ #下载es
-  $ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.1.1.zip
-  $ unzip elasticsearch-6.1.1.zip
-  $ cd elasticsearch-6.1.1/
-  $ #为es安装xpcck插件,就是刚刚下载的那个x-pack-6.1.1.zip,格式为file://+其路径
-  $ bin/elasticsearch-plugin install file:///path/to/file/x-pack-6.1.1.zip
-  $ #用fooltrader中的elasticsearch.yml覆盖es默认配置
-  $ cp ../fooltrader/config/elasticsearch.yml config/
-  $ #启动es,可根据自己的情况更改heap大小,<=32g
-  $ ES_JAVA_OPTS="-Xms8g -Xmx8g"  ./bin/elasticsearch
-  $
-  $ #下载kibana
-  $ wget https://artifacts.elastic.co/downloads/kibana/kibana-6.1.1-linux-x86_64.tar.gz
-  $ tar -xzf kibana-6.1.1-linux-x86_64.tar.gz
-  $ cd kibana-6.1.1-linux-x86_64/
-  $ #为kibana安装xpcck插件,就是刚刚下载的那个x-pack-6.1.1.zip,格式为file://+其路径
-  $ bin/kibana-plugin install file:///path/to/file/x-pack-6.1.1.zip
-  $ #用fooltrader中的kibana.yml覆盖kibana默认配置
-  $ cp ../fooltrader/config/kibana.yml config/
-  $ ./bin/kibana
-  ```
 
 # TODO
 * 常用API封装
