@@ -38,7 +38,7 @@ fooltrader是一个层次清晰的系统,你可以在不同的层次对其进行
 ![](./screenshots/achitecture.png)
 
 # 4. 使用step by step
-使用的层次跟架构图里面的模块是一一对应的, step从上往下,你可以在任何的地方"let's stop here",然后进行扩展或者对接你自己熟悉的系统.  
+使用的层次跟架构图里面的模块是一一对应的, 你可以在任何step停下来,进行扩展或者对接你自己熟悉的系统.  
 当然,还是希望你全部跑通,因为这里的每个模块的技术选型都是经过精心考虑的,并且后续会不停完善.  
 
 ### 4.1 环境准备  
@@ -111,10 +111,7 @@ def scheduled_job3():
 到这里,如果你不想使用elastic-search,也不想使用python,你就是想用java,mysql,或者你superset,redash,hadoop啥的玩得很熟,没问题,根据数据协议你应该很容易的把数据放到你需要的地方进行研究.
 当然,我更希望你把代码贡献到connector里面,pr给我,既提高自己的代码水平,又方便了需要使用的人,岂不快哉?  
 ### 4.4 elastic-search和kibana安装(6.1.1)  
-马蛋,忘记是哪个鬼佬说的了,但是我当时觉得真的好有道理  
 >仅仅只是把数据换一个存储,系统就发生了不可思议的变化.
-
-而es+kibana就是那样的神器,所以......
 
 可以参考官方文档进行安装:https://www.elastic.co/guide/en/elastic-stack/current/installing-elastic-stack.html  
 也可以用以下命令来完成:  
@@ -227,7 +224,7 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
   }
 }
 ```
-实际上REST接口天然就有了,做跨平台接口非常方便
+实际上REST接口天然就有了,做跨平台接口非常方便,根据[*数据协议*](./docs/contract.md) 和ES DSL可以非常方便的进行查询和聚合计算.
 
 ### 4.6 使用kibana进行分析
 (文档待完善)
