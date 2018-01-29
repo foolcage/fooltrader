@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def get_balance_sheet_items(security_item, start_date=None):
     path = get_balance_sheet_path(security_item)
     if not os.path.exists(path):
-        return None
+        return []
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
 
@@ -397,7 +397,7 @@ def get_balance_sheet_items(security_item, start_date=None):
 def get_income_statement_items(security_item, start_date=None):
     path = get_income_statement_path(security_item)
     if not os.path.exists(path):
-        return None
+        return []
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
 
@@ -540,7 +540,7 @@ def get_income_statement_items(security_item, start_date=None):
 def get_cash_flow_statement_items(security_item, start_date=None):
     path = get_cash_flow_statement_path(security_item)
     if not os.path.exists(path):
-        return None
+        return []
     encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
         url='file://' + os.path.abspath(path)).get('encoding')
 
