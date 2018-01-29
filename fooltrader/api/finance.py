@@ -391,6 +391,8 @@ def get_balance_sheet_items(security_item, start_date=None):
                 # 负债和所有者权益(或股东权益)总计
                 "totalLiabilitiesAndOwnersEquity": to_float(totalLiabilitiesAndOwnersEquity[idx])
             })
+        if (result_json):
+            result_json = sorted(result_json, key=lambda x: int(x['reportDate']))
         return result_json
 
 
@@ -463,77 +465,81 @@ def get_income_statement_items(security_item, start_date=None):
         attributableToOwnersOfParentCompany = lines[29].split()[1:-1]
         # 归属于少数股东的综合收益总额
         attributableToMinorityShareholders = lines[30].split()[1:-1]
-    result_json = []
-    for idx, _ in enumerate(reportDate):
-        if start_date:
-            if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
-                continue
 
-        reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
-        result_json.append({
-            "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-            "reportDate": reportDate[idx],
-            "reportEventDate": reportEventDate,
-            "securityId": security_item["id"],
-            "code": security_item["code"],
-            # /*营业总收入*/
-            # 营业收入
-            "operatingRevenue": to_float(operatingRevenue[idx]),
-            # /*营业总成本*/
-            "OperatingTotalCosts": to_float(OperatingTotalCosts[idx]),
-            # 营业成本
-            "OperatingCosts": to_float(OperatingCosts[idx]),
-            # 营业税金及附加
-            "businessTaxesAndSurcharges": to_float(businessTaxesAndSurcharges[idx]),
-            # 销售费用
-            "sellingExpenses": to_float(sellingExpenses[idx]),
-            # 管理费用
-            "ManagingCosts": to_float(ManagingCosts[idx]),
-            # 财务费用
-            "financingExpenses": to_float(financingExpenses[idx]),
-            # 资产减值损失
-            "assetsDevaluation": to_float(assetsDevaluation[idx]),
-            # 公允价值变动收益
-            "incomeFromChangesInFairValue": to_float(incomeFromChangesInFairValue[idx]),
-            # 投资收益
-            "investmentIncome": to_float(investmentIncome[idx]),
-            # 其中:对联营企业和合营企业的投资收益
-            "investmentIncomeFromRelatedEnterpriseAndJointlyOperating":
-                investmentIncomeFromRelatedEnterpriseAndJointlyOperating[idx],
-            # 汇兑收益
-            "exchangeGains": to_float(exchangeGains[idx]),
-            # /*营业利润*/
-            "operatingProfit": to_float(operatingProfit[idx]),
-            # 加:营业外收入
-            "nonOperatingIncome": to_float(nonOperatingIncome[idx]),
-            # 减：营业外支出
-            "nonOperatingExpenditure": to_float(nonOperatingExpenditure[idx]),
-            # 其中：非流动资产处置损失
-            "disposalLossOnNonCurrentLiability": to_float(disposalLossOnNonCurrentLiability[idx]),
-            # /*利润总额*/
-            "totalProfits": to_float(totalProfits[idx]),
-            # 减：所得税费用
-            "incomeTaxExpense": to_float(incomeTaxExpense[idx]),
-            # /*净利润*/
-            "netProfit": to_float(netProfit[idx]),
-            # 归属于母公司所有者的净利润
-            "netProfitAttributedToParentCompanyOwner": to_float(netProfitAttributedToParentCompanyOwner[idx]),
-            # 少数股东损益
-            "minorityInterestIncome": to_float(minorityInterestIncome[idx]),
-            # /*每股收益*/
-            # 基本每股收益(元/股)
-            "EPS": to_float(EPS[idx]),
-            # 稀释每股收益(元/股)
-            "dilutedEPS": to_float(dilutedEPS[idx]),
-            # /*其他综合收益*/
-            "otherComprehensiveIncome": to_float(otherComprehensiveIncome[idx]),
-            # /*综合收益总额*/
-            "accumulatedOtherComprehensiveIncome": to_float(accumulatedOtherComprehensiveIncome[idx]),
-            # 归属于母公司所有者的综合收益总额
-            "attributableToOwnersOfParentCompany": to_float(attributableToOwnersOfParentCompany[idx]),
-            # 归属于少数股东的综合收益总额
-            "attributableToMinorityShareholders": to_float(attributableToMinorityShareholders[idx])
-        })
+        result_json = []
+        for idx, _ in enumerate(reportDate):
+            if start_date:
+                if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
+                    continue
+
+            reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+            result_json.append({
+                "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
+                "reportDate": reportDate[idx],
+                "reportEventDate": reportEventDate,
+                "securityId": security_item["id"],
+                "code": security_item["code"],
+                # /*营业总收入*/
+                # 营业收入
+                "operatingRevenue": to_float(operatingRevenue[idx]),
+                # /*营业总成本*/
+                "OperatingTotalCosts": to_float(OperatingTotalCosts[idx]),
+                # 营业成本
+                "OperatingCosts": to_float(OperatingCosts[idx]),
+                # 营业税金及附加
+                "businessTaxesAndSurcharges": to_float(businessTaxesAndSurcharges[idx]),
+                # 销售费用
+                "sellingExpenses": to_float(sellingExpenses[idx]),
+                # 管理费用
+                "ManagingCosts": to_float(ManagingCosts[idx]),
+                # 财务费用
+                "financingExpenses": to_float(financingExpenses[idx]),
+                # 资产减值损失
+                "assetsDevaluation": to_float(assetsDevaluation[idx]),
+                # 公允价值变动收益
+                "incomeFromChangesInFairValue": to_float(incomeFromChangesInFairValue[idx]),
+                # 投资收益
+                "investmentIncome": to_float(investmentIncome[idx]),
+                # 其中:对联营企业和合营企业的投资收益
+                "investmentIncomeFromRelatedEnterpriseAndJointlyOperating":
+                    investmentIncomeFromRelatedEnterpriseAndJointlyOperating[idx],
+                # 汇兑收益
+                "exchangeGains": to_float(exchangeGains[idx]),
+                # /*营业利润*/
+                "operatingProfit": to_float(operatingProfit[idx]),
+                # 加:营业外收入
+                "nonOperatingIncome": to_float(nonOperatingIncome[idx]),
+                # 减：营业外支出
+                "nonOperatingExpenditure": to_float(nonOperatingExpenditure[idx]),
+                # 其中：非流动资产处置损失
+                "disposalLossOnNonCurrentLiability": to_float(disposalLossOnNonCurrentLiability[idx]),
+                # /*利润总额*/
+                "totalProfits": to_float(totalProfits[idx]),
+                # 减：所得税费用
+                "incomeTaxExpense": to_float(incomeTaxExpense[idx]),
+                # /*净利润*/
+                "netProfit": to_float(netProfit[idx]),
+                # 归属于母公司所有者的净利润
+                "netProfitAttributedToParentCompanyOwner": to_float(netProfitAttributedToParentCompanyOwner[idx]),
+                # 少数股东损益
+                "minorityInterestIncome": to_float(minorityInterestIncome[idx]),
+                # /*每股收益*/
+                # 基本每股收益(元/股)
+                "EPS": to_float(EPS[idx]),
+                # 稀释每股收益(元/股)
+                "dilutedEPS": to_float(dilutedEPS[idx]),
+                # /*其他综合收益*/
+                "otherComprehensiveIncome": to_float(otherComprehensiveIncome[idx]),
+                # /*综合收益总额*/
+                "accumulatedOtherComprehensiveIncome": to_float(accumulatedOtherComprehensiveIncome[idx]),
+                # 归属于母公司所有者的综合收益总额
+                "attributableToOwnersOfParentCompany": to_float(attributableToOwnersOfParentCompany[idx]),
+                # 归属于少数股东的综合收益总额
+                "attributableToMinorityShareholders": to_float(attributableToMinorityShareholders[idx])
+            })
+
+        if result_json:
+            result_json = sorted(result_json, key=lambda x: int(x['reportDate']))
         return result_json
 
 
@@ -695,177 +701,180 @@ def get_cash_flow_statement_items(security_item, start_date=None):
         cashEquivalentsAtTheBeginningOfPeriod = lines[75].split()[1:-1]
         # 现金及现金等价物的净增加额
         netIncreaseInCashAndCashEquivalents = lines[76].split()[1:-1]
-    result_json = []
-    for idx, _ in enumerate(reportDate):
-        if start_date:
-            if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
-                continue
+        result_json = []
+        for idx, _ in enumerate(reportDate):
+            if start_date:
+                if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
+                    continue
 
-        reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+            reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
-        result_json.append({
-            "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-            "reportDate": reportDate[idx],
-            "reportEventDate": reportEventDate,
-            "securityId": security_item["id"],
-            "code": security_item["code"],
-            # /*一、经营活动产生的现金流量*/
-            # 销售商品、提供劳务收到的现金
-            "cashFromSellingCommoditiesOrOfferingLabor": to_float(cashFromSellingCommoditiesOrOfferingLabor[idx]),
-            # 收到的税费返还
-            "refundOfTaxAndFeeReceived": to_float(refundOfTaxAndFeeReceived[idx]),
-            # 收到的其他与经营活动有关的现金
-            "cashReceivedRelatingToOtherOperatingActivities": to_float(
-                cashReceivedRelatingToOtherOperatingActivities[idx]),
-            # 经营活动现金流入小计
-            "subTotalOfCashInflowsFromOperatingActivities": to_float(subTotalOfCashInflowsFromOperatingActivities[idx]),
-            # 购买商品、接受劳务支付的现金
-            "cashPaidForGoodsAndServices": to_float(cashPaidForGoodsAndServices[idx]),
-            # 支付给职工以及为职工支付的现金
-            "cashPaidToAndOnBehalfOfemployees": to_float(cashPaidToAndOnBehalfOfemployees[idx]),
-            # 支付的各项税费
-            "paymentsOfTaxesAndSurcharges": to_float(paymentsOfTaxesAndSurcharges[idx]),
-            # 支付的其他与经营活动有关的现金
-            "cashPaidRelatingToOtherOperatingActivities": to_float(cashPaidRelatingToOtherOperatingActivities[idx]),
-            # 经营活动现金流出小计
-            "subTotalOfCashOutflowsFromOperatingActivities": to_float(
-                subTotalOfCashOutflowsFromOperatingActivities[idx]),
-            # 经营活动产生的现金流量净额
-            "netCashFlowsFromOperatingActivities": to_float(netCashFlowsFromOperatingActivities[idx]),
-            # /*二、投资活动产生的现金流量*/
-            # 收回投资所收到的现金
-            "cashReceivedFromDisposalOfInvestments": to_float(cashReceivedFromDisposalOfInvestments[idx]),
-            # 取得投资收益所收到的现金
-            "cashReceivedFromReturnsOnIvestments": to_float(cashReceivedFromReturnsOnIvestments[idx]),
-            # 处置固定资产、无形资产和其他长期资产所收回的现金净额
-            "netCashReceivedFromDisposalAssets": to_float(netCashReceivedFromDisposalAssets[idx]),
-            # 处置子公司及其他营业单位收到的现金净额
-            "netCashReceivedFromDisposalSubsidiaries": to_float(netCashReceivedFromDisposalSubsidiaries[idx]),
-            # 收到的其他与投资活动有关的现金
-            "cashReceivedFromOtherInvesting": to_float(cashReceivedFromOtherInvesting[idx]),
-            # 投资活动现金流入小计
-            "subTotalOfCashInflowsFromInvesting": to_float(subTotalOfCashInflowsFromInvesting[idx]),
-            # 购建固定资产、无形资产和其他长期资产所支付的现金
-            "cashPaidToAcquireFixedAssets": to_float(cashPaidToAcquireFixedAssets[idx]),
-            # 投资所支付的现金
-            "cashPaidToAcquireInvestments": to_float(cashPaidToAcquireInvestments[idx]),
-            # 取得子公司及其他营业单位支付的现金净额
-            "netCashPaidToAcquireSubsidiaries": to_float(netCashPaidToAcquireSubsidiaries[idx]),
-            # 支付的其他与投资活动有关的现金
-            "cashPaidRelatingToOtherInvesting": to_float(cashPaidRelatingToOtherInvesting[idx]),
-            # 投资活动现金流出小计
-            "subTotalOfCashOutflowsFromInvesting": to_float(subTotalOfCashOutflowsFromInvesting[idx]),
-            # 投资活动产生的现金流量净额
-            "netCashFlowsFromInvesting": to_float(netCashFlowsFromInvesting[idx]),
-            # /*三、筹资活动产生的现金流量*/
-            # 吸收投资收到的现金
-            "cashReceivedFromCapitalContributions": to_float(cashReceivedFromCapitalContributions[idx]),
-            # 其中：子公司吸收少数股东投资收到的现金
-            "cashReceivedFromMinorityShareholdersOfSubsidiaries": cashReceivedFromMinorityShareholdersOfSubsidiaries[
-                idx],
-            # 取得借款收到的现金
-            "cashReceivedFromBorrowings": to_float(cashReceivedFromBorrowings[idx]),
-            # 发行债券收到的现金
-            "cashReceivedFromIssuingBonds": to_float(cashReceivedFromIssuingBonds[idx]),
-            # 收到其他与筹资活动有关的现金
-            "cashReceivedRelatingToOtherFinancingActivities": to_float(
-                cashReceivedRelatingToOtherFinancingActivities[idx]),
-            # 筹资活动现金流入小计
-            "subTotalOfCashInflowsFromFinancingActivities": to_float(subTotalOfCashInflowsFromFinancingActivities[idx]),
-            # 偿还债务支付的现金
-            "cashRepaymentsOfBorrowings": to_float(cashRepaymentsOfBorrowings[idx]),
-            # 分配股利、利润或偿付利息所支付的现金
-            "cashPaymentsForInterestExpensesAndDistributionOfDividendsOrProfits":
-                cashPaymentsForInterestExpensesAndDistributionOfDividendsOrProfits[idx],
-            # 其中：子公司支付给少数股东的股利、利润
-            "cashPaymentsForDividendsOrProfitToMinorityShareholders":
-                cashPaymentsForDividendsOrProfitToMinorityShareholders[idx],
-            # 支付其他与筹资活动有关的现金
-            "cashPaymentsRelatingToOtherFinancingActivities": to_float(
-                cashPaymentsRelatingToOtherFinancingActivities[idx]),
-            # 筹资活动现金流出小计
-            "subTotalOfCashOutflowsFromFinancingActivities": to_float(
-                subTotalOfCashOutflowsFromFinancingActivities[idx]),
-            # 筹资活动产生的现金流量净额
-            "netCashFlowsFromFinancingActivities": to_float(netCashFlowsFromFinancingActivities[idx]),
-            # /*四、汇率变动对现金及现金等价物的影响*/
-            "effectOfForeignExchangeRate": to_float(effectOfForeignExchangeRate[idx]),
-            # /*五、现金及现金等价物净增加额*/
-            "netIncreaseInCash": to_float(netIncreaseInCash[idx]),
-            # 加:期初现金及现金等价物余额
-            "cashAtBeginningOfyear": to_float(cashAtBeginningOfyear[idx]),
-            # /*六、期末现金及现金等价物余额*/
-            "cashAtEndOfyear": to_float(cashAtEndOfyear[idx]),
-            # /*附注*/
-            # 净利润
-            "netProfit": to_float(netProfit[idx]),
-            # 少数股东权益
-            "minorityBookValue": to_float(minorityBookValue[idx]),
-            # 未确认的投资损失
-            "unrealisedInvestmentLosses": to_float(unrealisedInvestmentLosses[idx]),
-            # 资产减值准备
-            "allowanceForAssetDevaluation": to_float(allowanceForAssetDevaluation[idx]),
-            # 固定资产折旧、油气资产折耗、生产性物资折旧
-            "depreciationOfFixedAssets": to_float(depreciationOfFixedAssets[idx]),
-            # 无形资产摊销
-            "amorizationOfIntangibleAssets": to_float(amorizationOfIntangibleAssets[idx]),
-            # 长期待摊费用摊销
-            "longTermDeferredExpenses": to_float(longTermDeferredExpenses[idx]),
-            # 待摊费用的减少
-            "decreaseOfDeferredExpenses": to_float(decreaseOfDeferredExpenses[idx]),
-            # 预提费用的增加
-            "IncreaseOfwithholdingExpenses": to_float(IncreaseOfwithholdingExpenses[idx]),
-            # 处置固定资产、无形资产和其他长期资产的损失
-            "lossOnDisposalOfFixedAssets": to_float(lossOnDisposalOfFixedAssets[idx]),
-            # 固定资产报废损失
-            "lossOnFixedAssetsDamaged": to_float(lossOnFixedAssetsDamaged[idx]),
-            # 公允价值变动损失
-            "lossOnFairValueChange": to_float(lossOnFairValueChange[idx]),
-            # 递延收益增加（减：减少）
-            "changeOnDeferredRevenue": to_float(changeOnDeferredRevenue[idx]),
-            # 预计负债
-            "estimatedLiabilities": to_float(estimatedLiabilities[idx]),
-            # 财务费用
-            "financingExpenses": to_float(financingExpenses[idx]),
-            # 投资损失
-            "investmentLoss": to_float(investmentLoss[idx]),
-            # 递延所得税资产减少
-            "decreaseOnDeferredIncomeTaxAssets": to_float(decreaseOnDeferredIncomeTaxAssets[idx]),
-            # 递延所得税负债增加
-            "increaseOnDeferredIncomeTaxLiabilities": to_float(increaseOnDeferredIncomeTaxLiabilities[idx]),
-            # 存货的减少
-            "decreaseInInventories": to_float(decreaseInInventories[idx]),
-            # 经营性应收项目的减少
-            "decreaseInReceivablesUnderOperatingActivities": to_float(
-                decreaseInReceivablesUnderOperatingActivities[idx]),
-            # 经营性应付项目的增加
-            "increaseInReceivablesUnderOperatingActivities": to_float(
-                increaseInReceivablesUnderOperatingActivities[idx]),
-            # 已完工尚未结算款的减少(减:增加)
-            "decreaseOnAmountDue": to_float(decreaseOnAmountDue[idx]),
-            # 已结算尚未完工款的增加(减:减少)
-            "increaseOnSettlementNotYetCompleted": to_float(increaseOnSettlementNotYetCompleted[idx]),
-            # 其他
-            "other": to_float(other[idx]),
-            # 经营活动产生现金流量净额
-            "netCashFlowFromOperatingActivities": to_float(netCashFlowFromOperatingActivities[idx]),
-            # 债务转为资本
-            "debtsTransferToCapital": to_float(debtsTransferToCapital[idx]),
-            # 一年内到期的可转换公司债券
-            "oneYearDueConvertibleBonds": to_float(oneYearDueConvertibleBonds[idx]),
-            # 融资租入固定资产
-            "financingRentToFixedAsset": to_float(financingRentToFixedAsset[idx]),
-            # 现金的期末余额
-            "cashAtTheEndOfPeriod": to_float(cashAtTheEndOfPeriod[idx]),
-            # 现金的期初余额
-            "cashAtTheBeginningOfPeriod": to_float(cashAtTheBeginningOfPeriod[idx]),
-            # 现金等价物的期末余额
-            "cashEquivalentsAtTheEndOfPeriod": to_float(cashEquivalentsAtTheEndOfPeriod[idx]),
-            # 现金等价物的期初余额
-            "cashEquivalentsAtTheBeginningOfPeriod": to_float(cashEquivalentsAtTheBeginningOfPeriod[idx]),
-            # 现金及现金等价物的净增加额
-            "netIncreaseInCashAndCashEquivalents": to_float(netIncreaseInCashAndCashEquivalents[idx])
-        })
+            result_json.append({
+                "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
+                "reportDate": reportDate[idx],
+                "reportEventDate": reportEventDate,
+                "securityId": security_item["id"],
+                "code": security_item["code"],
+                # /*一、经营活动产生的现金流量*/
+                # 销售商品、提供劳务收到的现金
+                "cashFromSellingCommoditiesOrOfferingLabor": to_float(cashFromSellingCommoditiesOrOfferingLabor[idx]),
+                # 收到的税费返还
+                "refundOfTaxAndFeeReceived": to_float(refundOfTaxAndFeeReceived[idx]),
+                # 收到的其他与经营活动有关的现金
+                "cashReceivedRelatingToOtherOperatingActivities": to_float(
+                    cashReceivedRelatingToOtherOperatingActivities[idx]),
+                # 经营活动现金流入小计
+                "subTotalOfCashInflowsFromOperatingActivities": to_float(subTotalOfCashInflowsFromOperatingActivities[idx]),
+                # 购买商品、接受劳务支付的现金
+                "cashPaidForGoodsAndServices": to_float(cashPaidForGoodsAndServices[idx]),
+                # 支付给职工以及为职工支付的现金
+                "cashPaidToAndOnBehalfOfemployees": to_float(cashPaidToAndOnBehalfOfemployees[idx]),
+                # 支付的各项税费
+                "paymentsOfTaxesAndSurcharges": to_float(paymentsOfTaxesAndSurcharges[idx]),
+                # 支付的其他与经营活动有关的现金
+                "cashPaidRelatingToOtherOperatingActivities": to_float(cashPaidRelatingToOtherOperatingActivities[idx]),
+                # 经营活动现金流出小计
+                "subTotalOfCashOutflowsFromOperatingActivities": to_float(
+                    subTotalOfCashOutflowsFromOperatingActivities[idx]),
+                # 经营活动产生的现金流量净额
+                "netCashFlowsFromOperatingActivities": to_float(netCashFlowsFromOperatingActivities[idx]),
+                # /*二、投资活动产生的现金流量*/
+                # 收回投资所收到的现金
+                "cashReceivedFromDisposalOfInvestments": to_float(cashReceivedFromDisposalOfInvestments[idx]),
+                # 取得投资收益所收到的现金
+                "cashReceivedFromReturnsOnIvestments": to_float(cashReceivedFromReturnsOnIvestments[idx]),
+                # 处置固定资产、无形资产和其他长期资产所收回的现金净额
+                "netCashReceivedFromDisposalAssets": to_float(netCashReceivedFromDisposalAssets[idx]),
+                # 处置子公司及其他营业单位收到的现金净额
+                "netCashReceivedFromDisposalSubsidiaries": to_float(netCashReceivedFromDisposalSubsidiaries[idx]),
+                # 收到的其他与投资活动有关的现金
+                "cashReceivedFromOtherInvesting": to_float(cashReceivedFromOtherInvesting[idx]),
+                # 投资活动现金流入小计
+                "subTotalOfCashInflowsFromInvesting": to_float(subTotalOfCashInflowsFromInvesting[idx]),
+                # 购建固定资产、无形资产和其他长期资产所支付的现金
+                "cashPaidToAcquireFixedAssets": to_float(cashPaidToAcquireFixedAssets[idx]),
+                # 投资所支付的现金
+                "cashPaidToAcquireInvestments": to_float(cashPaidToAcquireInvestments[idx]),
+                # 取得子公司及其他营业单位支付的现金净额
+                "netCashPaidToAcquireSubsidiaries": to_float(netCashPaidToAcquireSubsidiaries[idx]),
+                # 支付的其他与投资活动有关的现金
+                "cashPaidRelatingToOtherInvesting": to_float(cashPaidRelatingToOtherInvesting[idx]),
+                # 投资活动现金流出小计
+                "subTotalOfCashOutflowsFromInvesting": to_float(subTotalOfCashOutflowsFromInvesting[idx]),
+                # 投资活动产生的现金流量净额
+                "netCashFlowsFromInvesting": to_float(netCashFlowsFromInvesting[idx]),
+                # /*三、筹资活动产生的现金流量*/
+                # 吸收投资收到的现金
+                "cashReceivedFromCapitalContributions": to_float(cashReceivedFromCapitalContributions[idx]),
+                # 其中：子公司吸收少数股东投资收到的现金
+                "cashReceivedFromMinorityShareholdersOfSubsidiaries": cashReceivedFromMinorityShareholdersOfSubsidiaries[
+                    idx],
+                # 取得借款收到的现金
+                "cashReceivedFromBorrowings": to_float(cashReceivedFromBorrowings[idx]),
+                # 发行债券收到的现金
+                "cashReceivedFromIssuingBonds": to_float(cashReceivedFromIssuingBonds[idx]),
+                # 收到其他与筹资活动有关的现金
+                "cashReceivedRelatingToOtherFinancingActivities": to_float(
+                    cashReceivedRelatingToOtherFinancingActivities[idx]),
+                # 筹资活动现金流入小计
+                "subTotalOfCashInflowsFromFinancingActivities": to_float(subTotalOfCashInflowsFromFinancingActivities[idx]),
+                # 偿还债务支付的现金
+                "cashRepaymentsOfBorrowings": to_float(cashRepaymentsOfBorrowings[idx]),
+                # 分配股利、利润或偿付利息所支付的现金
+                "cashPaymentsForInterestExpensesAndDistributionOfDividendsOrProfits":
+                    cashPaymentsForInterestExpensesAndDistributionOfDividendsOrProfits[idx],
+                # 其中：子公司支付给少数股东的股利、利润
+                "cashPaymentsForDividendsOrProfitToMinorityShareholders":
+                    cashPaymentsForDividendsOrProfitToMinorityShareholders[idx],
+                # 支付其他与筹资活动有关的现金
+                "cashPaymentsRelatingToOtherFinancingActivities": to_float(
+                    cashPaymentsRelatingToOtherFinancingActivities[idx]),
+                # 筹资活动现金流出小计
+                "subTotalOfCashOutflowsFromFinancingActivities": to_float(
+                    subTotalOfCashOutflowsFromFinancingActivities[idx]),
+                # 筹资活动产生的现金流量净额
+                "netCashFlowsFromFinancingActivities": to_float(netCashFlowsFromFinancingActivities[idx]),
+                # /*四、汇率变动对现金及现金等价物的影响*/
+                "effectOfForeignExchangeRate": to_float(effectOfForeignExchangeRate[idx]),
+                # /*五、现金及现金等价物净增加额*/
+                "netIncreaseInCash": to_float(netIncreaseInCash[idx]),
+                # 加:期初现金及现金等价物余额
+                "cashAtBeginningOfyear": to_float(cashAtBeginningOfyear[idx]),
+                # /*六、期末现金及现金等价物余额*/
+                "cashAtEndOfyear": to_float(cashAtEndOfyear[idx]),
+                # /*附注*/
+                # 净利润
+                "netProfit": to_float(netProfit[idx]),
+                # 少数股东权益
+                "minorityBookValue": to_float(minorityBookValue[idx]),
+                # 未确认的投资损失
+                "unrealisedInvestmentLosses": to_float(unrealisedInvestmentLosses[idx]),
+                # 资产减值准备
+                "allowanceForAssetDevaluation": to_float(allowanceForAssetDevaluation[idx]),
+                # 固定资产折旧、油气资产折耗、生产性物资折旧
+                "depreciationOfFixedAssets": to_float(depreciationOfFixedAssets[idx]),
+                # 无形资产摊销
+                "amorizationOfIntangibleAssets": to_float(amorizationOfIntangibleAssets[idx]),
+                # 长期待摊费用摊销
+                "longTermDeferredExpenses": to_float(longTermDeferredExpenses[idx]),
+                # 待摊费用的减少
+                "decreaseOfDeferredExpenses": to_float(decreaseOfDeferredExpenses[idx]),
+                # 预提费用的增加
+                "IncreaseOfwithholdingExpenses": to_float(IncreaseOfwithholdingExpenses[idx]),
+                # 处置固定资产、无形资产和其他长期资产的损失
+                "lossOnDisposalOfFixedAssets": to_float(lossOnDisposalOfFixedAssets[idx]),
+                # 固定资产报废损失
+                "lossOnFixedAssetsDamaged": to_float(lossOnFixedAssetsDamaged[idx]),
+                # 公允价值变动损失
+                "lossOnFairValueChange": to_float(lossOnFairValueChange[idx]),
+                # 递延收益增加（减：减少）
+                "changeOnDeferredRevenue": to_float(changeOnDeferredRevenue[idx]),
+                # 预计负债
+                "estimatedLiabilities": to_float(estimatedLiabilities[idx]),
+                # 财务费用
+                "financingExpenses": to_float(financingExpenses[idx]),
+                # 投资损失
+                "investmentLoss": to_float(investmentLoss[idx]),
+                # 递延所得税资产减少
+                "decreaseOnDeferredIncomeTaxAssets": to_float(decreaseOnDeferredIncomeTaxAssets[idx]),
+                # 递延所得税负债增加
+                "increaseOnDeferredIncomeTaxLiabilities": to_float(increaseOnDeferredIncomeTaxLiabilities[idx]),
+                # 存货的减少
+                "decreaseInInventories": to_float(decreaseInInventories[idx]),
+                # 经营性应收项目的减少
+                "decreaseInReceivablesUnderOperatingActivities": to_float(
+                    decreaseInReceivablesUnderOperatingActivities[idx]),
+                # 经营性应付项目的增加
+                "increaseInReceivablesUnderOperatingActivities": to_float(
+                    increaseInReceivablesUnderOperatingActivities[idx]),
+                # 已完工尚未结算款的减少(减:增加)
+                "decreaseOnAmountDue": to_float(decreaseOnAmountDue[idx]),
+                # 已结算尚未完工款的增加(减:减少)
+                "increaseOnSettlementNotYetCompleted": to_float(increaseOnSettlementNotYetCompleted[idx]),
+                # 其他
+                "other": to_float(other[idx]),
+                # 经营活动产生现金流量净额
+                "netCashFlowFromOperatingActivities": to_float(netCashFlowFromOperatingActivities[idx]),
+                # 债务转为资本
+                "debtsTransferToCapital": to_float(debtsTransferToCapital[idx]),
+                # 一年内到期的可转换公司债券
+                "oneYearDueConvertibleBonds": to_float(oneYearDueConvertibleBonds[idx]),
+                # 融资租入固定资产
+                "financingRentToFixedAsset": to_float(financingRentToFixedAsset[idx]),
+                # 现金的期末余额
+                "cashAtTheEndOfPeriod": to_float(cashAtTheEndOfPeriod[idx]),
+                # 现金的期初余额
+                "cashAtTheBeginningOfPeriod": to_float(cashAtTheBeginningOfPeriod[idx]),
+                # 现金等价物的期末余额
+                "cashEquivalentsAtTheEndOfPeriod": to_float(cashEquivalentsAtTheEndOfPeriod[idx]),
+                # 现金等价物的期初余额
+                "cashEquivalentsAtTheBeginningOfPeriod": to_float(cashEquivalentsAtTheBeginningOfPeriod[idx]),
+                # 现金及现金等价物的净增加额
+                "netIncreaseInCashAndCashEquivalents": to_float(netIncreaseInCashAndCashEquivalents[idx])
+            })
+        if (result_json):
+            result_json = sorted(result_json, key=lambda x: int(x['reportDate']))
+
         return result_json
 
 
