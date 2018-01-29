@@ -90,13 +90,14 @@ AUTOTHROTTLE_DEBUG = False
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-# FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
-FILES_STORE = 'data'
+# 把这个改为你的data目录的绝对路劲,方便在任何地方使用python
+FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
+# FILES_STORE = 'data'
 SH_STOCK_FILE = 'sh.txt'
 SZ_STOCK_FILE = 'sz.xlsx'
 
-STOCK_START_CODE = '000001'
-STOCK_END_CODE = '666666'
+STOCK_START_CODE = '000338'
+STOCK_END_CODE = '000338'
 
 AVAILABLE_TICK_DATE = '2004-10-8'
 START_TICK_DATE = '2013-1-1'

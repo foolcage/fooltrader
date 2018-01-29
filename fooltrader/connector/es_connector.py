@@ -268,9 +268,9 @@ def forecast_event_to_es():
 
 if __name__ == '__main__':
     # security_meta_to_es()
-    stock_kdata_to_es(start='000002', end='000002')
+    # stock_kdata_to_es(start='000002', end='000002')
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
-    # income_statement_to_es()
+    income_statement_to_es(force=True)
     # cash_flow_statement_to_es()
     # forecast_event_to_es()
