@@ -197,3 +197,20 @@ def get_report_date(the_date=datetime.datetime.today().date()):
         return "{}{}".format(the_date.year, '0331')
     else:
         return "{}{}".format(the_date.year - 1, '1231')
+
+if __name__ == '__main__':
+    aa = chrome_copy_header_to_dict(
+'''
+Host: www.nasdaq.com
+Connection: keep-alive
+Content-Length: 13
+Accept: */*
+Origin: http://www.nasdaq.com
+X-Requested-With: XMLHttpRequest
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36
+Content-Type: application/json
+Referer: http://www.nasdaq.com/symbol/baba/historical
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.8,en;q=0.6
+''')
+    print(aa)

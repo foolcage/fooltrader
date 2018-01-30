@@ -10,7 +10,8 @@ from fooltrader import settings
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, \
     get_kdata_dir
-from fooltrader.spiders.nasdap.america_list_spider import AmericaListSpider
+
+from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 
 configure_logging()
@@ -22,7 +23,8 @@ runner = CrawlerRunner(get_project_settings())
 
 @defer.inlineCallbacks
 def crawl():
-    yield runner.crawl(AmericaListSpider)
+    # yield runner.crawl(AmericaListSpider)
+    yield runner.crawl(AmericaStockKdataSpider)
     # yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockKdataSpider163)
     # yield runner.crawl(StockTradingDateSpider)
