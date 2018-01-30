@@ -11,6 +11,9 @@ KDATA_COLUMN_163 = ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume
 KDATA_INDEX_COLUMN_163 = ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
                           'preClose', 'change', 'changePct']
 
+# 上证交易所,深圳交易所,纳斯达克,纽交所,美国证券交易所
+EXCHANGE_LIST_COL = ['sh', 'sz', 'nasdaq', 'nyse', 'amex']
+
 # 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值,平均PE
 KDATA_COLUMN_INDEX = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
                       'preClose', 'change', 'changePct', 'turnoverRate', 'tCap', 'mCap', 'pe']
@@ -22,4 +25,6 @@ KDATA_COLUMN_FUTURE = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'hig
                        'preClose', 'change', 'changePct', 'openInterest', 'settlement', 'preSettlement', 'change1',
                        'changePct1']
 
-STOCK_META_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaArea']
+# 代码,名字,上市日期,交易所,类型,id,新浪行业,新浪概念,区域,板块(美股才有),细分行业(美股才有)
+STOCK_META_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaConcept', 'sinaArea',
+                  'sector', 'industry']

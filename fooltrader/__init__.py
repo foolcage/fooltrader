@@ -5,6 +5,7 @@ import pandas as pd
 
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list
+from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir
 
 
@@ -54,7 +55,7 @@ def init_env():
     if not os.path.exists(settings.FILES_STORE):
         os.makedirs(settings.FILES_STORE)
     # 初始化股票文件夹
-    for _, item in get_security_list().iterrows():
+    for _, item in get_security_list(exchanges=EXCHANGE_LIST_COL).iterrows():
         mkdir_for_security(item)
 
     # 初始化指数文件夹

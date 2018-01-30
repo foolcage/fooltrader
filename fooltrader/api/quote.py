@@ -11,21 +11,20 @@ from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path
 from fooltrader.datasource import tdx
-from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import get_file_name
 
 logger = logging.getLogger(__name__)
 
 
 def convert_to_list_if_need(input):
-    if "[" in input:
+    if input and "[" in input:
         return literal_eval(input)
     else:
         return input
 
 
 # meta
-def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK_START_CODE, end=STOCK_END_CODE,
+def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None, end=None,
                       mode='simple', start_date=None):
     if security_type == 'stock':
         df = pd.DataFrame()
@@ -46,8 +45,10 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=STOCK
         df = pd.DataFrame(CHINA_STOCK_INDEX)
 
     if df.size > 0:
-        df = df[df["code"] <= end]
-        df = df[df["code"] >= start]
+        if start:
+            df = df[df["code"] <= end]
+        if end:
+            df = df[df["code"] >= start]
         if start_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_date)]
