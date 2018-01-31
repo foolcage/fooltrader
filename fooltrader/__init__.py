@@ -5,6 +5,7 @@ import pandas as pd
 
 from fooltrader import settings
 from fooltrader.api.quote import get_security_list
+from fooltrader.consts import USA_STOCK_INDEX
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir
 
@@ -60,6 +61,10 @@ def init_env():
 
     # 初始化指数文件夹
     for _, item in get_security_list(security_type='index').iterrows():
+        kdata_dir = get_kdata_dir(item)
+        if not os.path.exists(kdata_dir):
+            os.makedirs(kdata_dir)
+    for item in USA_STOCK_INDEX:
         kdata_dir = get_kdata_dir(item)
         if not os.path.exists(kdata_dir):
             os.makedirs(kdata_dir)

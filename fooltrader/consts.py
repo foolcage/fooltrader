@@ -105,6 +105,15 @@ Accept-Language: zh-CN,zh;q=0.8,en;q=0.6
 Cookie: yfx_c_g_u_id_10000042=_ck17122009304714819234313401740; VISITED_COMPANY_CODE=%5B%22000016%22%5D; VISITED_INDEX_CODE=%5B%22000016%22%5D; yfx_f_l_v_t_10000042=f_t_1513733447386__r_t_1515716891222__v_t_1515721033042__r_c_3; VISITED_MENU=%5B%228464%22%2C%229666%22%2C%229668%22%2C%229669%22%2C%228454%22%2C%228460%22%2C%229665%22%2C%228459%22%2C%229692%22%2C%228451%22%2C%228466%22%5D
 ''')
 
+USA_STOCK_INDEX = [
+    {'id': 'index_nasdaq_sp500',
+     'code': 'SP500',
+     'name': 'SP500',
+     'listDate': '1871-01-01',
+     'exchange': 'nasdaq',
+     'type': 'index'}
+]
+
 CHINA_STOCK_INDEX = [{'id': 'index_sh_000001',
                       'code': '000001',
                       'name': '上证指数',
@@ -152,5 +161,11 @@ CHINA_STOCK_INDEX = [{'id': 'index_sh_000001',
                       'name': '创业板指',
                       'listDate': '2010-06-01',
                       'exchange': 'sz',
+                      'type': 'index'},
+                     {'id': 'index_nasdaq_sp500',
+                      'code': 'SP500',
+                      'name': 'SP500',
+                      'listDate': '1871-01-01',
+                      'exchange': 'nasdaq',
                       'type': 'index'}
                      ]
