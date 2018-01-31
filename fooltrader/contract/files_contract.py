@@ -69,6 +69,11 @@ def get_finance_dir(item):
     return os.path.join(get_security_dir(item), "finance")
 
 
+# 美股财务数据目前只存一个文件
+def get_finance_path(item):
+    return os.path.join(get_finance_dir(item), "finance.csv")
+
+
 def get_balance_sheet_path(item):
     return os.path.join(get_finance_dir(item), "balance_sheet.xls")
 
