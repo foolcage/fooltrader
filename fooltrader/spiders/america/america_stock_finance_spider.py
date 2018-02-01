@@ -19,7 +19,10 @@ class AmericaStockFinanceSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        for _, item in get_security_list(exchanges=['nasdaq']).iterrows():
+        security_item = self.settings.get("security_item")
+
+        if security_item is not None:
+            item = security_item
             data_url = self.get_finance_url(item['code'])
             data_path = get_finance_path(item)
 
@@ -27,6 +30,15 @@ class AmericaStockFinanceSpider(scrapy.Spider):
                           meta={'path': data_path,
                                 'item': item},
                           callback=self.download_finance_csv)
+        else:
+            for _, item in get_security_list(exchanges=['nasdaq']).iterrows():
+                data_url = self.get_finance_url(item['code'])
+                data_path = get_finance_path(item)
+
+                yield Request(url=data_url,
+                              meta={'path': data_path,
+                                    'item': item},
+                              callback=self.download_finance_csv)
 
     def download_finance_csv(self, response):
         content_type_header = response.headers.get('content-type', None)

@@ -161,11 +161,5 @@ CHINA_STOCK_INDEX = [{'id': 'index_sh_000001',
                       'name': '创业板指',
                       'listDate': '2010-06-01',
                       'exchange': 'sz',
-                      'type': 'index'},
-                     {'id': 'index_nasdaq_sp500',
-                      'code': 'SP500',
-                      'name': 'SP500',
-                      'listDate': '1871-01-01',
-                      'exchange': 'nasdaq',
                       'type': 'index'}
                      ]

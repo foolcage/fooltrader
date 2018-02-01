@@ -10,6 +10,7 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
     KDATA_COLUMN_INDEX, KDATA_COLUMN_STOCK
 from fooltrader.contract.files_contract import get_kdata_path
+from fooltrader.settings import US_STOCK_CODES
 
 
 class AmericaStockKdataSpider(scrapy.Spider):
@@ -46,6 +47,8 @@ class AmericaStockKdataSpider(scrapy.Spider):
 
         today = pd.Timestamp.today()
 
+        the_years = None
+
         if start_date and end_date:
             if (today - start_date).days <= 5:
                 pass
@@ -56,7 +59,7 @@ class AmericaStockKdataSpider(scrapy.Spider):
             for request in self.yield_request(item, the_years):
                 yield request
         else:
-            for _, item in get_security_list(exchanges=['nasdaq', 'nyse']).iterrows():
+            for _, item in get_security_list(exchanges=['nasdaq'], codes=US_STOCK_CODES).iterrows():
                 for request in self.yield_request(item):
                     yield request
 

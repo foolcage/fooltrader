@@ -5,12 +5,11 @@ from ast import literal_eval
 
 import pandas as pd
 
-from fooltrader import settings
-from fooltrader.consts import CHINA_STOCK_INDEX
+from fooltrader.consts import CHINA_STOCK_INDEX, USA_STOCK_INDEX
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path
-from fooltrader.datasource import tdx
+from fooltrader.settings import US_STOCK_CODES
 from fooltrader.utils.utils import get_file_name
 
 logger = logging.getLogger(__name__)
@@ -25,24 +24,32 @@ def convert_to_list_if_need(input):
 
 # meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None, end=None,
-                      mode='simple', start_date=None):
+                      mode='simple', start_date=None, codes=None):
     if security_type == 'stock':
         df = pd.DataFrame()
+        df_usa = pd.DataFrame()
         for exchange in exchanges:
             the_path = files_contract.get_security_list_path(security_type, exchange)
             if os.path.exists(the_path):
-                if mode == 'simple':
-                    df1 = pd.read_csv(the_path,
-                                      converters={'code': str})
-                else:
-                    df1 = pd.read_csv(the_path,
-                                      converters={'code': str,
-                                                  'sinaIndustry': convert_to_list_if_need,
-                                                  'sinaConcept': convert_to_list_if_need,
-                                                  'sinaArea': convert_to_list_if_need})
-                df = df.append(df1, ignore_index=True)
+                if exchange == 'sh' or exchange == 'sz':
+                    if mode == 'simple':
+                        df1 = pd.read_csv(the_path,
+                                          converters={'code': str})
+                    else:
+                        df1 = pd.read_csv(the_path,
+                                          converters={'code': str,
+                                                      'sinaIndustry': convert_to_list_if_need,
+                                                      'sinaConcept': convert_to_list_if_need,
+                                                      'sinaArea': convert_to_list_if_need})
+                    df = df.append(df1, ignore_index=True)
+                elif exchange == 'nasdaq':
+                    df_usa = pd.read_csv(the_path, dtype=str)
+
     elif security_type == 'index':
         df = pd.DataFrame(CHINA_STOCK_INDEX)
+        df_usa = pd.DataFrame()
+        if 'nasdaq' in exchanges:
+            df_usa = pd.DataFrame(USA_STOCK_INDEX)
 
     if df.size > 0:
         if start:
@@ -52,8 +59,16 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         if start_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_date)]
+
         df = df.set_index(df['code'], drop=False)
 
+    if df_usa.size > 0:
+        df_usa = df_usa.set_index(df_usa['code'], drop=False)
+
+        if codes:
+            df_usa = df_usa.loc[codes]
+
+    df = df.append(df_usa, ignore_index=True)
     return df
 
 
@@ -259,36 +274,37 @@ def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
 
 
 if __name__ == '__main__':
-    item = {"code": "000001", "type": "stock", "exchange": "sz"}
-    assert kdata_exist(item, 1991, 2) == True
-    assert kdata_exist(item, 1991, 3) == True
-    assert kdata_exist(item, 1991, 4) == True
-    assert kdata_exist(item, 1991, 2) == True
-    assert kdata_exist(item, 1990, 1) == False
-    assert kdata_exist(item, 2017, 1) == False
-
-    df1 = get_kdata(item,
-                    datetime.datetime.strptime('1991-04-01', settings.TIME_FORMAT_DAY),
-                    datetime.datetime.strptime('1991-12-31', settings.TIME_FORMAT_DAY))
-    df1 = df1.set_index(df1['timestamp'])
-    df1 = df1.sort_index()
-    print(df1)
-
-    df2 = tdx.get_tdx_kdata(item, '1991-04-01', '1991-12-31')
-    df2 = df2.set_index(df2['timestamp'], drop=False)
-    df2 = df2.sort_index()
-    print(df2)
-
-    for _, data in df1.iterrows():
-        if data['timestamp'] in df2.index:
-            data2 = df2.loc[data['timestamp']]
-            assert data2["low"] == data["low"]
-            assert data2["open"] == data["open"]
-            assert data2["high"] == data["high"]
-            assert data2["close"] == data["close"]
-            assert data2["volume"] == data["volume"]
-            try:
-                assert data2["turnover"] == data["turnover"]
-            except Exception as e:
-                print(data2["turnover"])
-                print(data["turnover"])
+    print(get_security_list(security_type='stock', exchanges=['nasdaq'],codes=US_STOCK_CODES))
+    # item = {"code": "000001", "type": "stock", "exchange": "sz"}
+    # assert kdata_exist(item, 1991, 2) == True
+    # assert kdata_exist(item, 1991, 3) == True
+    # assert kdata_exist(item, 1991, 4) == True
+    # assert kdata_exist(item, 1991, 2) == True
+    # assert kdata_exist(item, 1990, 1) == False
+    # assert kdata_exist(item, 2017, 1) == False
+    #
+    # df1 = get_kdata(item,
+    #                 datetime.datetime.strptime('1991-04-01', settings.TIME_FORMAT_DAY),
+    #                 datetime.datetime.strptime('1991-12-31', settings.TIME_FORMAT_DAY))
+    # df1 = df1.set_index(df1['timestamp'])
+    # df1 = df1.sort_index()
+    # print(df1)
+    #
+    # df2 = tdx.get_tdx_kdata(item, '1991-04-01', '1991-12-31')
+    # df2 = df2.set_index(df2['timestamp'], drop=False)
+    # df2 = df2.sort_index()
+    # print(df2)
+    #
+    # for _, data in df1.iterrows():
+    #     if data['timestamp'] in df2.index:
+    #         data2 = df2.loc[data['timestamp']]
+    #         assert data2["low"] == data["low"]
+    #         assert data2["open"] == data["open"]
+    #         assert data2["high"] == data["high"]
+    #         assert data2["close"] == data["close"]
+    #         assert data2["volume"] == data["volume"]
+    #         try:
+    #             assert data2["turnover"] == data["turnover"]
+    #         except Exception as e:
+    #             print(data2["turnover"])
+    #             print(data["turnover"])

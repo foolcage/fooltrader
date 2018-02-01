@@ -5,7 +5,7 @@ from scrapy import Selector
 from scrapy import signals
 
 from fooltrader.contract.files_contract import get_kdata_path
-from fooltrader.utils.utils import index_df_with_time
+from fooltrader.utils.utils import index_df_with_time, to_time_str, to_float
 
 
 class Sp500Spider(scrapy.Spider):
@@ -42,8 +42,8 @@ class Sp500Spider(scrapy.Spider):
                 tds = Selector(text=tr).xpath('//td//text()').extract()
                 tds = [x.strip() for x in tds if x.strip()]
 
-                price_jsons.append({"timestamp": tds[0],
-                                    "close": tds[1]})
+                price_jsons.append({"timestamp": to_time_str(tds[0]),
+                                    "close": to_float(tds[1])})
 
             if price_jsons:
                 self.df_close = self.df_close.append(price_jsons, ignore_index=True)
@@ -61,8 +61,8 @@ class Sp500Spider(scrapy.Spider):
                 tds = Selector(text=tr).xpath('//td//text()').extract()
                 tds = [x.strip() for x in tds if x.strip()]
 
-                price_jsons.append({"timestamp": tds[0],
-                                    "pe": tds[1]})
+                price_jsons.append({"timestamp": to_time_str(tds[0]),
+                                    "pe": to_float(tds[1])})
 
             if price_jsons:
                 self.df_pe = self.df_pe.append(price_jsons, ignore_index=True)
@@ -78,5 +78,8 @@ class Sp500Spider(scrapy.Spider):
 
     def spider_closed(self, spider, reason):
         self.df_pe['close'] = self.df_close['close']
-        self.df_pe.to_csv(get_kdata_path(self.security_item, source='sina'), index=False)
+        self.df_pe['code'] = self.security_item['code']
+        self.df_pe['securityId'] = self.security_item['id']
+        self.df_pe['name'] = self.security_item['name']
+        self.df_pe.to_csv(get_kdata_path(self.security_item), index=False)
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)

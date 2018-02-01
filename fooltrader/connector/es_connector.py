@@ -14,7 +14,7 @@ from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
 from fooltrader.domain.meta import StockMeta
 from fooltrader.domain.technical import StockKData, IndexKData
-from fooltrader.settings import ES_HOSTS
+from fooltrader.settings import ES_HOSTS, US_STOCK_CODES
 from fooltrader.utils.utils import fill_doc_type, is_same_date
 
 logger = logging.getLogger(__name__)
@@ -91,8 +91,9 @@ def stock_meta_to_es(force=False):
         logger.info(resp)
 
 
-def stock_kdata_to_es(start='000001', end='666666', force=False):
-    for _, security_item in get_security_list(start=start, end=end).iterrows():
+def stock_kdata_to_es(start='000001', end='666666', codes=US_STOCK_CODES, force=False):
+    for _, security_item in get_security_list(start=start, end=end, exchanges=['sh', 'sz', 'nasdaq'],
+                                              codes=codes).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, StockKData)
@@ -126,7 +127,7 @@ def stock_kdata_to_es(start='000001', end='666666', force=False):
 
 
 def index_kdata_to_es(force=False):
-    for _, security_item in get_security_list(security_type='index').iterrows():
+    for _, security_item in get_security_list(security_type='index', exchanges=['sh', 'sz', 'nasdaq']).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, IndexKData)
@@ -271,6 +272,6 @@ if __name__ == '__main__':
     # stock_kdata_to_es(start='000002', end='000002')
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
-    income_statement_to_es(force=True)
+    index_kdata_to_es(force=False)
     # cash_flow_statement_to_es()
     # forecast_event_to_es()

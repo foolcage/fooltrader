@@ -8,12 +8,12 @@ from fooltrader.api.event import get_report_event_date
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
 from fooltrader.items import SecurityItem
-from fooltrader.utils.utils import detect_encoding, to_float
+from fooltrader.utils.utils import detect_encoding, to_float, to_time_str, is_same_date
 
 logger = logging.getLogger(__name__)
 
 
-def get_balance_sheet_items(security_item, start_date=None):
+def get_balance_sheet_items(security_item, start_date=None, report_period=None, report_event_date=None):
     path = get_balance_sheet_path(security_item)
     if not os.path.exists(path):
         return []
@@ -210,9 +210,16 @@ def get_balance_sheet_items(security_item, start_date=None):
 
             reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
-            result_json.append({
+            if report_period and not is_same_date(report_period, reportDate[idx]):
+                continue
+
+            # use report_event_date to filter the reportEventDate before it for not getting future data
+            if report_event_date and pd.Timestamp(report_event_date) < pd.Timestamp(reportEventDate):
+                continue
+
+            the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-                "reportDate": reportDate[idx],
+                "reportDate": to_time_str(reportDate[idx]),
                 "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
@@ -390,13 +397,19 @@ def get_balance_sheet_items(security_item, start_date=None):
 
                 # 负债和所有者权益(或股东权益)总计
                 "totalLiabilitiesAndOwnersEquity": to_float(totalLiabilitiesAndOwnersEquity[idx])
-            })
+            }
+
+            if report_period and is_same_date(report_period, reportDate[idx]):
+                return the_json
+
+            result_json.append(the_json)
+
         if (result_json):
-            result_json = sorted(result_json, key=lambda x: int(x['reportDate']))
+            result_json = sorted(result_json, key=lambda x: pd.Timestamp(x['reportDate']))
         return result_json
 
 
-def get_income_statement_items(security_item, start_date=None):
+def get_income_statement_items(security_item, start_date=None, report_period=None, report_event_date=None):
     path = get_income_statement_path(security_item)
     if not os.path.exists(path):
         return []
@@ -472,10 +485,18 @@ def get_income_statement_items(security_item, start_date=None):
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
                     continue
 
+            if report_period and not is_same_date(report_period, reportDate[idx]):
+                continue
+
             reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
-            result_json.append({
+
+            # use report_event_date to filter the reportEventDate before it for not getting future data
+            if report_event_date and pd.Timestamp(report_event_date) < pd.Timestamp(reportEventDate):
+                continue
+
+            the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-                "reportDate": reportDate[idx],
+                "reportDate": to_time_str(reportDate[idx]),
                 "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
@@ -536,14 +557,19 @@ def get_income_statement_items(security_item, start_date=None):
                 "attributableToOwnersOfParentCompany": to_float(attributableToOwnersOfParentCompany[idx]),
                 # 归属于少数股东的综合收益总额
                 "attributableToMinorityShareholders": to_float(attributableToMinorityShareholders[idx])
-            })
+            }
+
+            if report_period and is_same_date(report_period, reportDate[idx]):
+                return the_json
+
+            result_json.append(the_json)
 
         if result_json:
-            result_json = sorted(result_json, key=lambda x: int(x['reportDate']))
+            result_json = sorted(result_json, key=lambda x: pd.Timestamp(x['reportDate']))
         return result_json
 
 
-def get_cash_flow_statement_items(security_item, start_date=None):
+def get_cash_flow_statement_items(security_item, start_date=None, report_period=None, report_event_date=None):
     path = get_cash_flow_statement_path(security_item)
     if not os.path.exists(path):
         return []
@@ -707,11 +733,18 @@ def get_cash_flow_statement_items(security_item, start_date=None):
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
                     continue
 
+            if report_period and not is_same_date(report_period, reportDate[idx]):
+                continue
+
             reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
-            result_json.append({
+            # use report_event_date to filter the reportEventDate before it for not getting future data
+            if report_event_date and pd.Timestamp(report_event_date) < pd.Timestamp(reportEventDate):
+                continue
+
+            the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-                "reportDate": reportDate[idx],
+                "reportDate": to_time_str(reportDate[idx]),
                 "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
@@ -724,7 +757,8 @@ def get_cash_flow_statement_items(security_item, start_date=None):
                 "cashReceivedRelatingToOtherOperatingActivities": to_float(
                     cashReceivedRelatingToOtherOperatingActivities[idx]),
                 # 经营活动现金流入小计
-                "subTotalOfCashInflowsFromOperatingActivities": to_float(subTotalOfCashInflowsFromOperatingActivities[idx]),
+                "subTotalOfCashInflowsFromOperatingActivities": to_float(
+                    subTotalOfCashInflowsFromOperatingActivities[idx]),
                 # 购买商品、接受劳务支付的现金
                 "cashPaidForGoodsAndServices": to_float(cashPaidForGoodsAndServices[idx]),
                 # 支付给职工以及为职工支付的现金
@@ -767,8 +801,9 @@ def get_cash_flow_statement_items(security_item, start_date=None):
                 # 吸收投资收到的现金
                 "cashReceivedFromCapitalContributions": to_float(cashReceivedFromCapitalContributions[idx]),
                 # 其中：子公司吸收少数股东投资收到的现金
-                "cashReceivedFromMinorityShareholdersOfSubsidiaries": cashReceivedFromMinorityShareholdersOfSubsidiaries[
-                    idx],
+                "cashReceivedFromMinorityShareholdersOfSubsidiaries":
+                    cashReceivedFromMinorityShareholdersOfSubsidiaries[
+                        idx],
                 # 取得借款收到的现金
                 "cashReceivedFromBorrowings": to_float(cashReceivedFromBorrowings[idx]),
                 # 发行债券收到的现金
@@ -777,7 +812,8 @@ def get_cash_flow_statement_items(security_item, start_date=None):
                 "cashReceivedRelatingToOtherFinancingActivities": to_float(
                     cashReceivedRelatingToOtherFinancingActivities[idx]),
                 # 筹资活动现金流入小计
-                "subTotalOfCashInflowsFromFinancingActivities": to_float(subTotalOfCashInflowsFromFinancingActivities[idx]),
+                "subTotalOfCashInflowsFromFinancingActivities": to_float(
+                    subTotalOfCashInflowsFromFinancingActivities[idx]),
                 # 偿还债务支付的现金
                 "cashRepaymentsOfBorrowings": to_float(cashRepaymentsOfBorrowings[idx]),
                 # 分配股利、利润或偿付利息所支付的现金
@@ -871,14 +907,23 @@ def get_cash_flow_statement_items(security_item, start_date=None):
                 "cashEquivalentsAtTheBeginningOfPeriod": to_float(cashEquivalentsAtTheBeginningOfPeriod[idx]),
                 # 现金及现金等价物的净增加额
                 "netIncreaseInCashAndCashEquivalents": to_float(netIncreaseInCashAndCashEquivalents[idx])
-            })
-        if (result_json):
-            result_json = sorted(result_json, key=lambda x: int(x['reportDate']))
+            }
+
+            if report_period and is_same_date(report_period, reportDate[idx]):
+                return the_json
+
+            result_json.append(the_json)
+
+        if result_json:
+            result_json = sorted(result_json, key=lambda x: pd.Timestamp(x['reportDate']))
 
         return result_json
 
 
 if __name__ == '__main__':
-    for item in get_cash_flow_statement_items(
-            SecurityItem(type='stock', code='300570', exchange='sz', id='stock_sz_000004')):
-        print(item)
+    print(get_cash_flow_statement_items(
+        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    print(get_balance_sheet_items(
+        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    print(get_income_statement_items(
+        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))

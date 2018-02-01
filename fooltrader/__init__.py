@@ -60,11 +60,7 @@ def init_env():
         mkdir_for_security(item)
 
     # 初始化指数文件夹
-    for _, item in get_security_list(security_type='index').iterrows():
-        kdata_dir = get_kdata_dir(item)
-        if not os.path.exists(kdata_dir):
-            os.makedirs(kdata_dir)
-    for item in USA_STOCK_INDEX:
+    for _, item in get_security_list(security_type='index', exchanges=['sh', 'sz', 'nasdaq']).iterrows():
         kdata_dir = get_kdata_dir(item)
         if not os.path.exists(kdata_dir):
             os.makedirs(kdata_dir)
