@@ -26,9 +26,9 @@ runner = CrawlerRunner(get_project_settings())
 @defer.inlineCallbacks
 def crawl():
     # yield runner.crawl(AmericaListSpider)
-    yield runner.crawl(AmericaStockKdataSpider)
+    # yield runner.crawl(AmericaStockKdataSpider)
     yield runner.crawl(AmericaStockFinanceSpider)
-    yield runner.crawl(Sp500Spider)
+    # yield runner.crawl(Sp500Spider)
     # yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockKdataSpider163)
     # yield runner.crawl(StockTradingDateSpider)

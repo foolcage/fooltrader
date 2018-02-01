@@ -6,7 +6,7 @@ import pandas as pd
 from fooltrader import settings
 from fooltrader.api.event import get_report_event_date
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
-    get_cash_flow_statement_path
+    get_cash_flow_statement_path, get_finance_path
 from fooltrader.items import SecurityItem
 from fooltrader.utils.utils import detect_encoding, to_float, to_time_str, is_same_date
 
@@ -920,10 +920,29 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
         return result_json
 
 
+def get_finance_summary_items(security_item, start_date=None, report_period=None):
+    path = get_finance_path(security_item)
+    if not os.path.exists(path):
+        return pd.DataFrame()
+
+    df = pd.read_csv(path)
+
+    if start_date:
+        df = df[df["reportDate"] >= start_date]
+        return df
+
+    if report_period:
+        return df[df["reportDate"] == report_period]
+    return df
+
+
 if __name__ == '__main__':
-    print(get_cash_flow_statement_items(
-        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
-    print(get_balance_sheet_items(
-        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
-    print(get_income_statement_items(
-        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    # print(get_cash_flow_statement_items(
+    #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    # print(get_balance_sheet_items(
+    #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    # print(get_income_statement_items(
+    #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+
+    print(get_finance_summary_items(SecurityItem(type='stock', code='MSFT', exchange='nasdaq', id='stock_nasdaq_MSFT'),
+                                    report_period='2016-12-31'))

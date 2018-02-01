@@ -7,11 +7,12 @@ from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 
 from fooltrader.api.event import get_forecast_items
-from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items
+from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
+    get_finance_summary_items
 from fooltrader.api.quote import get_security_list, get_kdata
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_event_index
 from fooltrader.domain.event import ForecastEvent
-from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement
+from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
 from fooltrader.domain.meta import StockMeta
 from fooltrader.domain.technical import StockKData, IndexKData
 from fooltrader.settings import ES_HOSTS, US_STOCK_CODES
@@ -252,6 +253,36 @@ def cash_flow_statement_to_es(force=False):
             logger.warn("wrong CashFlowStatement:{},error:{}", security_item, e)
 
 
+def usa_stock_finance_to_es(force=False):
+    es_index_mapping('finance_summary', FinanceSummary)
+
+    for _, security_item in get_security_list(exchanges=['nasdaq'], codes=US_STOCK_CODES).iterrows():
+        try:
+            start_date = None
+            if not force:
+                query = {
+                    "term": {"securityId": ""}
+                }
+                query["term"]["securityId"] = security_item["id"]
+                latest_record = es_get_latest_record(index='finance_summary', time_field='reportDate', query=query)
+                logger.info("latest_record:{}".format(latest_record))
+                if latest_record:
+                    start_date = latest_record['reportDate']
+            actions = []
+            for _, json_object in get_finance_summary_items(security_item, start_date=start_date).iterrows():
+                if start_date and is_same_date(start_date, json_object['reportDate']):
+                    continue
+
+                finance_summary = FinanceSummary(meta={'id': json_object['id']})
+                fill_doc_type(finance_summary, json_object.to_dict())
+                actions.append(finance_summary.to_dict(include_meta=True))
+            if actions:
+                resp = elasticsearch.helpers.bulk(es, actions)
+                logger.info(resp)
+        except Exception as e:
+            logger.warn("wrong FinanceSummary:{},error:{}", security_item, e)
+
+
 def forecast_event_to_es():
     for _, security_item in get_security_list().iterrows():
         # 创建索引
@@ -272,6 +303,7 @@ if __name__ == '__main__':
     # stock_kdata_to_es(start='000002', end='000002')
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
-    index_kdata_to_es(force=False)
+    # index_kdata_to_es(force=False)
     # cash_flow_statement_to_es()
     # forecast_event_to_es()
+    usa_stock_finance_to_es(force=True)

@@ -1,6 +1,5 @@
 from elasticsearch_dsl import DocType, Keyword, Date
 from elasticsearch_dsl import Float
-from elasticsearch_dsl import MetaField
 
 from fooltrader.domain import BaseDocType
 
@@ -189,7 +188,6 @@ class BalanceSheet(BaseDocType):
     class Meta:
         index = 'balance_sheet'
         doc_type = 'doc'
-        all = MetaField(enabled=False)
 
 
 class IncomeStatement(BaseDocType):
@@ -258,7 +256,6 @@ class IncomeStatement(BaseDocType):
     class Meta:
         index = 'income_statement'
         doc_type = 'doc'
-        all = MetaField(enabled=False)
 
 
 class CashFlowStatement(DocType):
@@ -418,4 +415,97 @@ class CashFlowStatement(DocType):
     class Meta:
         index = 'cash_flow_statement'
         doc_type = 'doc'
-        all = MetaField(enabled=False)
+
+
+class FinanceSummary(DocType):
+    class Meta:
+        index = 'finance_summary'
+        doc_type = 'doc'
+
+    id = Keyword()
+    securityId = Keyword()
+    code = Keyword()
+    reportDate = Date()
+
+    shares = Float()
+    sharesAdjusted = Float()
+    factor = Float()
+    totalAssets = Float()
+    totalCurrentAssets = Float()
+    totalLiabilities = Float()
+    totalCurrentLiabilities = Float()
+    bookValue = Float()
+    minorityBookValue = Float()
+    preferredEquity = Float()
+    goodwill = Float()
+    longTermBorrowing = Float()
+    operatingRevenue = Float()
+    netProfit = Float()
+    netProfitAttributedToParentCompanyOwner = Float()
+    EPS = Float()
+    dilutedEPS = Float()
+    DPS = Float()
+    netCashFlowsFromOperatingActivities = Float()
+    netCashFlowsFromInvesting = Float()
+    netCashFlowsFromFinancingActivities = Float()
+    cashChange = Float()
+    cashAtTheEndOfPeriod = Float()
+    capitalExpenditures = Float()
+    price = Float()
+    priceHigh = Float()
+    priceLow = Float()
+    ROE = Float()
+    ROA = Float()
+    BVPS = Float()
+    PB = Float()
+    PE = Float()
+    cumulativeDividendsPerShare = Float()
+    dividendPayoutRatio = Float()
+    longTermDebtToEquityRatio = Float()
+    equityToAssetsRatio = Float()
+    netMargin = Float()
+    assetTurnover = Float()
+    freeCashFlowPerShare = Float()
+    currentRatio = Float()
+
+    {"Quarter end": "timestamp",
+     "Shares": "shares",
+     "Shares split adjusted": "sharesAdjusted",
+     "Split factor": "factor",
+     "Assets": "totalAssets",
+     "Current Assets": "totalCurrentAssets",
+     "Liabilities": "totalLiabilities",
+     "Current Liabilities": "totalCurrentLiabilities",
+     "Shareholders equity": "bookValue",
+     "Non-controlling interest": "minorityBookValue",
+     "Preferred equity": "preferredEquity",
+     "Goodwill & intangibles": "goodwill",
+     "Long-term debt": "longTermBorrowing",
+     "Revenue": "operatingRevenue",
+     "Earnings": "netProfit",
+     "Earnings available for common stockholders": "netProfitAttributedToParentCompanyOwner",
+     "EPS basic": "EPS",
+     "EPS diluted": "dilutedEPS",
+     "Dividend per share": "DPS",
+     "Cash from operating activities": "netCashFlowsFromOperatingActivities",
+     "Cash from investing activities": "netCashFlowsFromInvesting",
+     "Cash from financing activities": "netCashFlowsFromFinancingActivities",
+     "Cash change during period": "cashChange",
+     "Cash at end of period": "cashAtTheEndOfPeriod",
+     "Capital expenditures": "capitalExpenditures",
+     "Price": "price",
+     "Price high": "priceHigh",
+     "Price low": "priceLow",
+     "ROE": "ROE",
+     "ROA": "ROA",
+     "Book value of equity per share": "BVPS",
+     "P/B ratio": "PB",
+     "P/E ratio": "PE",
+     "Cumulative dividends per share": "cumulativeDividendsPerShare",
+     "Dividend payout ratio": "dividendPayoutRatio",
+     "Long-term debt to equity ratio": "longTermDebtToEquityRatio",
+     "Equity to assets ratio": "equityToAssetsRatio",
+     "Net margin": "netMargin",
+     "Asset turnover": "assetTurnover",
+     "Free cash flow per share": "freeCashFlowPerShare",
+     "Current ratio": "currentRatio"}
