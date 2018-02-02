@@ -15,7 +15,9 @@ from fooltrader.api.quote import get_security_list, get_latest_download_trading_
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, US_STOCK_CODES
+from fooltrader.spiders.america.america_list_spider import AmericaListSpider
 from fooltrader.spiders.america.america_stock_finance_spider import AmericaStockFinanceSpider
+from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock.sina_category_spider import SinaCategorySpider
 from fooltrader.spiders.stock.stock_summary_spider import StockSummarySpider
@@ -43,13 +45,13 @@ def process_crawl(spider, setting):
 
 def crawl_usa_stock_data():
     # crawl the stock list
-    # process_crawl(AmericaListSpider, {})
+    process_crawl(AmericaListSpider, {})
     # crawl the kdata
     for _, security_item in get_security_list(security_type='stock', exchanges=['nasdaq'],
                                               codes=US_STOCK_CODES).iterrows():
-        # process_crawl(AmericaStockKdataSpider, {"security_item": security_item})
+        process_crawl(AmericaStockKdataSpider, {"security_item": security_item})
         # crawl the finance data
-        process_crawl(AmericaStockFinanceSpider, {"security_item": security_item})
+        # process_crawl(AmericaStockFinanceSpider, {"security_item": security_item})
         # crawl index data
         # process_crawl(Sp500Spider, {})
 

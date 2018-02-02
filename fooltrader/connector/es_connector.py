@@ -6,6 +6,7 @@ import elasticsearch.helpers
 from elasticsearch_dsl import Index
 from elasticsearch_dsl.connections import connections
 
+from fooltrader import EXCHANGE_LIST_COL
 from fooltrader.api.event import get_forecast_items
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
     get_finance_summary_items
@@ -78,7 +79,7 @@ def stock_meta_to_es(force=False):
             start_date = latest_record['listDate']
 
     actions = []
-    for _, item in get_security_list(mode='es', start_date=start_date).iterrows():
+    for _, item in get_security_list(mode='es', start_date=start_date, exchanges=EXCHANGE_LIST_COL).iterrows():
         if start_date and is_same_date(start_date, item['listDate']):
             continue
         try:
@@ -116,7 +117,7 @@ def stock_kdata_to_es(start='000001', end='666666', codes=US_STOCK_CODES, force=
 
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
-                kdata = StockKData(meta={'id': id}, id=id)
+                kdata = StockKData(meta={'id': id, 'index': index_name}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
                 # kdata.save(index=index_name)
                 actions.append(kdata.to_dict(include_meta=True))
@@ -150,7 +151,7 @@ def index_kdata_to_es(force=False):
 
             try:
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
-                kdata = IndexKData(meta={'id': id}, id=id)
+                kdata = IndexKData(meta={'id': id, 'index': index_name}, id=id)
                 fill_doc_type(kdata, json.loads(kdata_item.to_json()))
                 # kdata.save(index=index_name)
                 actions.append(kdata.to_dict(include_meta=True))
@@ -300,10 +301,11 @@ def forecast_event_to_es():
 
 if __name__ == '__main__':
     # security_meta_to_es()
-    # stock_kdata_to_es(start='000002', end='000002')
+    stock_meta_to_es(force=True)
+    stock_kdata_to_es(start='999999', end='999999', force=True)
     # stock_kdata_to_es(force=True)
     # balance_sheet_to_es()
     # index_kdata_to_es(force=False)
     # cash_flow_statement_to_es()
     # forecast_event_to_es()
-    usa_stock_finance_to_es(force=True)
+    # usa_stock_finance_to_es(force=True)

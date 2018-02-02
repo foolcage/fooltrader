@@ -205,7 +205,10 @@ def to_timestamp(the_time):
 
 
 def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
-    return to_timestamp(the_time).strftime(time_fmt)
+    try:
+        return to_timestamp(the_time).strftime(time_fmt)
+    except Exception as e:
+        return the_time
 
 
 if __name__ == '__main__':

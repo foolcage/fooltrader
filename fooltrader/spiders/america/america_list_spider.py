@@ -8,6 +8,7 @@ from scrapy import signals
 
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import STOCK_META_COL
+from fooltrader.utils.utils import to_time_str
 
 
 class AmericaListSpider(scrapy.Spider):
@@ -43,6 +44,7 @@ class AmericaListSpider(scrapy.Spider):
             df = df.loc[:, ['Symbol', 'Name', 'IPOyear', 'Sector', 'industry']]
             df = df.dropna(subset=['Symbol', 'Name'])
             df.columns = ['code', 'name', 'listDate', 'sector', 'industry']
+            df.listDate = df.listDate.apply(lambda x: to_time_str(x))
             df['exchange'] = exchange
             df['type'] = 'stock'
             df['id'] = df[['type', 'exchange', 'code']].apply(lambda x: '_'.join(x.astype(str)), axis=1)

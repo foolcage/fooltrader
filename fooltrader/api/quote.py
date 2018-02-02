@@ -151,7 +151,8 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
         if not end_date:
             end_date = datetime.datetime.today()
 
-        df = df.loc[start_date:end_date]
+        if start_date and end_date:
+            df = df.loc[start_date:end_date]
         return df
     return pd.DataFrame()
 
@@ -274,7 +275,7 @@ def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
 
 
 if __name__ == '__main__':
-    print(get_security_list(security_type='stock', exchanges=['nasdaq'],codes=US_STOCK_CODES))
+    print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
     # item = {"code": "000001", "type": "stock", "exchange": "sz"}
     # assert kdata_exist(item, 1991, 2) == True
     # assert kdata_exist(item, 1991, 3) == True

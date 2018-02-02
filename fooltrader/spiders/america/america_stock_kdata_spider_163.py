@@ -11,6 +11,7 @@ from fooltrader.contract.data_contract import KDATA_COLUMN_163, KDATA_INDEX_COLU
     KDATA_COLUMN_INDEX, KDATA_COLUMN_STOCK
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.settings import US_STOCK_CODES
+from fooltrader.utils.utils import to_time_str
 
 
 class AmericaStockKdataSpider(scrapy.Spider):
@@ -31,7 +32,8 @@ class AmericaStockKdataSpider(scrapy.Spider):
 
         if not the_years:
             if not pd.isna(item['listDate']):
-                the_years = range(int(item['listDate']), pd.Timestamp.today().year + 1)
+                # 163 could just provide the date after year 2002
+                the_years = range(max(int(item['listDate']), 2002), pd.Timestamp.today().year + 1)
             else:
                 the_years = range(2005, pd.Timestamp.today().year + 1)
 
@@ -92,7 +94,7 @@ class AmericaStockKdataSpider(scrapy.Spider):
                 the_json = {'code': item['code'],
                             'securityId': item['id'],
                             'name': item['name'],
-                            'timestamp': the_data[0],
+                            'timestamp': to_time_str(the_data[0]),
                             'open': the_data[1],
                             'high': the_data[2],
                             'close': the_data[3],

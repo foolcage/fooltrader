@@ -937,12 +937,12 @@ def get_finance_summary_items(security_item, start_date=None, report_period=None
 
 
 if __name__ == '__main__':
-    # print(get_cash_flow_statement_items(
-    #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    print(get_cash_flow_statement_items(
+        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
     # print(get_balance_sheet_items(
     #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
     # print(get_income_statement_items(
     #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
 
-    print(get_finance_summary_items(SecurityItem(type='stock', code='MSFT', exchange='nasdaq', id='stock_nasdaq_MSFT'),
-                                    report_period='2016-12-31'))
+    # print(get_finance_summary_items(SecurityItem(type='stock', code='MSFT', exchange='nasdaq', id='stock_nasdaq_MSFT'),
+    #                                 report_period='2016-12-31'))
