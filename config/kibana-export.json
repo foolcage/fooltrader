@@ -1,0 +1,137 @@
+[
+  {
+    "_id": "b4ec0490-07e2-11e8-8ce3-9f4aaec316ad",
+    "_type": "dashboard",
+    "_source": {
+      "title": "fundament-analysis",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"gridData\":{\"h\":3,\"i\":\"1\",\"w\":6,\"x\":0,\"y\":0},\"id\":\"a27027f0-07e3-11e8-8ce3-9f4aaec316ad\",\"panelIndex\":\"1\",\"type\":\"visualization\",\"version\":\"6.1.1\"},{\"gridData\":{\"w\":6,\"h\":3,\"x\":6,\"y\":0,\"i\":\"2\"},\"version\":\"6.1.1\",\"panelIndex\":\"2\",\"type\":\"visualization\",\"id\":\"20e6a8a0-07e6-11e8-8ce3-9f4aaec316ad\"}]",
+      "optionsJSON": "{\"darkTheme\":false,\"hidePanelTitles\":false,\"useMargins\":true}",
+      "uiStateJSON": "{}",
+      "version": 1,
+      "timeRestore": true,
+      "timeTo": "Fri Feb 02 2018 14:38:56 GMT+0800",
+      "timeFrom": "Fri Feb 01 2002 00:00:00 GMT+0800",
+      "refreshInterval": {
+        "display": "Off",
+        "pause": false,
+        "value": 0
+      },
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"language\":\"lucene\",\"query\":\"code:000338\"},\"filter\":[],\"highlightAll\":true,\"version\":true}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  },
+  {
+    "_id": "388a51c0-07ee-11e8-8ce3-9f4aaec316ad",
+    "_type": "dashboard",
+    "_source": {
+      "title": "usa-fundamental-analysis",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"gridData\":{\"w\":6,\"h\":3,\"x\":0,\"y\":0,\"i\":\"1\"},\"version\":\"6.1.1\",\"panelIndex\":\"1\",\"type\":\"visualization\",\"id\":\"087052f0-07ee-11e8-8ce3-9f4aaec316ad\"}]",
+      "optionsJSON": "{\"darkTheme\":false,\"useMargins\":true,\"hidePanelTitles\":false}",
+      "uiStateJSON": "{}",
+      "version": 1,
+      "timeRestore": false,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"lucene\"},\"filter\":[],\"highlightAll\":true,\"version\":true}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  },
+  {
+    "_id": "09b36c30-07ec-11e8-8ce3-9f4aaec316ad",
+    "_type": "dashboard",
+    "_source": {
+      "title": "pe",
+      "hits": 0,
+      "description": "",
+      "panelsJSON": "[{\"gridData\":{\"h\":3,\"i\":\"1\",\"w\":6,\"x\":0,\"y\":0},\"id\":\"bc6dc6a0-07eb-11e8-8ce3-9f4aaec316ad\",\"panelIndex\":\"1\",\"type\":\"visualization\",\"version\":\"6.1.1\"}]",
+      "optionsJSON": "{\"darkTheme\":false,\"hidePanelTitles\":false,\"useMargins\":true}",
+      "uiStateJSON": "{}",
+      "version": 1,
+      "timeRestore": false,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[],\"highlightAll\":true,\"version\":true}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  },
+  {
+    "_id": "20e6a8a0-07e6-11e8-8ce3-9f4aaec316ad",
+    "_type": "visualization",
+    "_source": {
+      "title": "operatingRevenue-price",
+      "visState": "{\"title\":\"operatingRevenue-price\",\"type\":\"timelion\",\"params\":{\"expression\":\".es(index='income_statement', timefield='reportDate', metric=sum:operatingRevenue).bars(width=2).title(\\\"operatingRevenue/price compare\\\").label('operatingRevenue'),\\n.es(index='stock_china_day_kdata',timefield='timestamp', metric='avg:close').multiply(.es(index='stock_china_day_kdata',timefield='timestamp', metric='avg:factor')).lines(width=1.2).label('price').yaxis(2)\",\"interval\":\"1w\"},\"aggs\":[]}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  },
+  {
+    "_id": "a27027f0-07e3-11e8-8ce3-9f4aaec316ad",
+    "_type": "visualization",
+    "_source": {
+      "title": "netProfit-price",
+      "visState": "{\"title\":\"netProfit-price\",\"type\":\"timelion\",\"params\":{\"expression\":\".es(index='income_statement', timefield='reportDate', metric=sum:netProfit).bars(width=2).title(\\\"netProfit/price compare\\\").label('netProfit'),\\n.es(index='stock_china_day_kdata',timefield='timestamp', metric='avg:close').multiply(.es(index='stock_china_day_kdata',timefield='timestamp', metric='avg:factor')).lines(width=1.2).label('price').yaxis(2)\",\"interval\":\"1w\"},\"aggs\":[]}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  },
+  {
+    "_id": "087052f0-07ee-11e8-8ce3-9f4aaec316ad",
+    "_type": "visualization",
+    "_source": {
+      "title": "usa-profit-price",
+      "visState": "{\"type\":\"timelion\",\"title\":\"usa-profit-price\",\"params\":{\"expression\":\".es(index='finance_summary', timefield='reportDate', metric=sum:netProfit).bars(width=2).title(\\\"netProfit/price compare\\\").label('netProfit'),\\n.es(index='stock_usa_day_kdata',timefield='timestamp', metric='avg:close').lines(width=1.2).label('price').yaxis(2)\",\"interval\":\"1M\"}}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  },
+  {
+    "_id": "bc6dc6a0-07eb-11e8-8ce3-9f4aaec316ad",
+    "_type": "visualization",
+    "_source": {
+      "title": "china-usa-pe-compare",
+      "visState": "{\"title\":\"china-usa-pe-compare\",\"type\":\"timelion\",\"params\":{\"expression\":\".es(index='index*day_kdata', q='securityId:index_sh_000001',timefield='timestamp', metric='avg:pe').lines(width=1.2).title(\\\"pe compare\\\").label('shanghai'),\\n.es(index='index*day_kdata', q='securityId:index_sz_399006',timefield='timestamp', metric='avg:pe').lines(width=1.2).title(\\\"pe compare\\\").label('创业板'),\\n.es(index='index*day_kdata', q='securityId:index_sz_399005',timefield='timestamp', metric='avg:pe').lines(width=1.2).label('中小板'),\\n.es(index='index*day_kdata', q='securityId:index_sz_399106',timefield='timestamp', metric='avg:pe').lines(width=1.2).label('shenzhen'),\\n.es(index='index*day_kdata', q='securityId:index_nasdaq_sp500',timefield='timestamp', metric='avg:pe').lines(fill=4,width=1.2).color(#b4c1b4).label('sp500'),\",\"interval\":\"1M\"},\"aggs\":[]}",
+      "uiStateJSON": "{}",
+      "description": "",
+      "version": 1,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{}"
+      }
+    },
+    "_meta": {
+      "savedObjectVersion": 2
+    }
+  }
+]
