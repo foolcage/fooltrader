@@ -3,6 +3,7 @@ import logging
 import os
 from ast import literal_eval
 
+import numpy as np
 import pandas as pd
 
 from fooltrader.consts import CHINA_STOCK_INDEX, USA_STOCK_INDEX
@@ -10,7 +11,7 @@ from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path
 from fooltrader.settings import US_STOCK_CODES
-from fooltrader.utils.utils import get_file_name
+from fooltrader.utils.utils import get_file_name, to_time_str
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +136,10 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
 
     if os.path.isfile(the_path):
         if not dtype:
-            dtype = {"code": str}
+            dtype = {"code": str, 'timestamp': str}
         df = pd.read_csv(the_path, dtype=dtype)
+
+        df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
         df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
@@ -147,12 +150,16 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
                 return pd.DataFrame()
 
         if not start_date:
-            start_date = security_item['listDate']
+            if type(security_item['listDate']) != str and np.isnan(security_item['listDate']):
+                start_date = '2002-01-01'
+            else:
+                start_date = security_item['listDate']
         if not end_date:
             end_date = datetime.datetime.today()
 
         if start_date and end_date:
             df = df.loc[start_date:end_date]
+
         return df
     return pd.DataFrame()
 

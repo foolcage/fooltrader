@@ -2,3 +2,7 @@
 .es(index='index*day_kdata', q='securityId:index_sz_399106',timefield='timestamp', metric='avg:tCap').lines(width=1.2).label('深证市值'),
 .es(index='index*day_kdata', q='securityId:index_sz_399106',timefield='timestamp', metric='avg:tCap').add(.es(index='index*day_kdata', q='securityId:index_sh_000001',timefield='timestamp', metric='avg:tCap')).lines(width=1.2).label(A股市值).color(red),
 .wbi(country=cn, indicator=NY.GDP.MKTP.CD).lines(fill=4,width=1.2).color(#b4c1b4).multiply(6.5).label('中国GDP')
+
+
+.es(index='income_statement', timefield='reportDate', metric=sum:netProfit).bars(width=2).title("netProfit/price compare").label('netProfit'),
+.es(index='stock_china_day_kdata',timefield='timestamp', metric='avg:close').multiply(.es(index='stock_china_day_kdata',timefield='timestamp', metric='avg:factor')).lines(width=1.2).label('price').yaxis(2)

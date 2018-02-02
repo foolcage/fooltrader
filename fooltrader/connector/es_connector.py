@@ -304,10 +304,9 @@ def forecast_event_to_es():
 if __name__ == '__main__':
     # security_meta_to_es()
     # stock_meta_to_es(force=True)
-    # stock_kdata_to_es(start='999999', end='999999', force=True)
-    # stock_kdata_to_es(force=True)
+    stock_kdata_to_es(start='999999', end='999999', force=True)
     # balance_sheet_to_es()
-    index_kdata_to_es(force=False)
+    # index_kdata_to_es(force=False)
     # cash_flow_statement_to_es()
     # forecast_event_to_es()
     # usa_stock_finance_to_es(force=True)
