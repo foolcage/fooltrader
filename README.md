@@ -2,35 +2,74 @@
 >"要在市场上生存，就必须远离聪明，因为，你的聪明在市场面前一钱不值"------缠中说禅  
 
 # 1. 使用截图
+## 1.1 **A股基本面分析**  
+![](./screenshots/profit_price.gif)
+>输入你感兴趣的个股,查看其净利润跟股价的关系,也许你就不会认为"基本表面"没用了?  
+比如:万科的利润一直在高速增长,白菜价压了几年,所以'野蛮人'来了,还有类似的标的吗?  
+而把全市场的个股进行计算,并自动通知你,其实也不是什么难事.
 
-**大势dashboard**
+## 1.2 **美股基本面分析**  
+![](./screenshots/usa-profit-price.gif)
+>看一下美股的表现如何呢?  
+
+## 1.3 **回测**  
+
+策略的编写,可以采用事件驱动或者时间漫步的方式,查看[*设计文档*](./docs/trader.md)  
+
+```python
+class EventTrader(Trader):
+    def on_init(self):
+        self.trader_id = 'aa'
+        self.only_event_mode = True
+        self.universe = ['stock_sz_000338']
+        self.df_map = {}
+
+    def on_day_bar(self, bar_item):
+        current_security = bar_item['securityId']
+        current_df = self.df_map.get(current_security, pd.DataFrame())
+        if current_df.empty:
+            self.df_map[current_security] = current_df
+
+        current_df = current_df.append(bar_item, ignore_index=True)
+        self.df_map[current_security] = current_df
+
+        if len(current_df.index) == 10:
+            ma5 = np.mean(current_df.loc[5:, 'close'])
+            ma10 = np.mean(current_df.loc[:, 'close'])
+            # 5日线在10日线上,并且没有持仓,就买入
+            if ma5 > ma10 and not self.account_service.get_position(current_security):
+                self.buy(security_id=current_security, current_price=bar_item['close'])
+            # 5日线在10日线下,并且有持仓,就卖出
+            elif ma5 < ma10 and self.account_service.get_position(current_security):
+                self.sell(security_id=current_security, current_price=bar_item['close'])
+            current_df = current_df.loc[1:, ]
+            self.df_map[current_security] = current_df
+```
+
+运行策略可以实时查看效果,并做进一步的评估
+![](./screenshots/trader.gif)
+
+## 1.4 **大势dashboard**
 ![](./screenshots/analyze1.png)  
 
-**gdp市值比较**
+## 1.5 **gdp市值比较**
 ![](./screenshots/gdp_cap.png)  
 >只要总市值接近GDP,基本就是顶部,而长期远离GDP也是不可能的.
 
-**创业板PE分析**
+## 1.6 **创业板PE分析**
 ![](./screenshots/cyb_pe.png)
 >17.94%的时间处于20-40,50.7%时间处于40-70,26.67%的时间处于70-100,4.69%的时间处于100以上.
 所以:在40左右就觉得"估值"高,看空创业板的,注定无法享受15年的创业板大牛市
 
-**各市场PE对比**
-![](./screenshots/pe_cmp.png)
->创业板>中小板>深证>上证?也许需要一点想象力,风格也是可以转换的?
-
-**个股分析**
-![](./screenshots/000002_profit_price.png)
->万科的利润一直在高速增长,白菜价压了几年,所以'野蛮人'来了,还有类似的标的吗?  
-
-**回测**
-![](./screenshots/trader.gif)
->多策略实时运行,实时监控.  
+## 1.7 **各市场PE对比**  
+![](./screenshots/china-usa-pe.png)
+>创业板>中小板>深证>标普>上证?也许需要一点想象力,风格也是可以转换的?
+嗯,标普的平均PE曾经也超过120,比我们的大创业板的疯狂还是差一点,然后,现在我们上证的PE其实是比标普低的,所以?
 
 # 2. 简介
 fooltrader是一个利用*大数据*技术设计的*量化交易系统*,包括数据的抓取,清洗,结构化,计算,展示,回测和交易.  
 它的目标是提供一个统一的框架来对*全市场*(股票,期货,债券,外汇,数字货币,宏观经济等)进行研究,回测,预测,交易.  
-它的适用对象包括:**量化交易员,财经类专业师生,对经济数据感兴趣的人,程序员,喜欢自由而有探索精神的人**
+它的适用对象包括:***量化交易员,财经类专业师生,对经济数据感兴趣的人,程序员,喜欢自由而有探索精神的人***
 
 # 3. 架构图
 fooltrader是一个层次清晰的系统,你可以在不同的层次对其进行使用,也可以扩展,改造或替换里面的模块.  
@@ -264,13 +303,12 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
 #### 没错:回测框架必须要考虑这些问题  
 
 # TODO
-* 常用API封装
+* 交易DSL设计
+* WEB管理界面,向导式生成策略
+* 实时行情及kafka实时计算
 * 集成vnpy的交易接口
 * 期货数据抓取
 * 港股数据抓取
-* 美股数据抓取
-* 交易DSL设计
-* WEB管理界面
 
 # 联系方式
 QQ群:300911873
