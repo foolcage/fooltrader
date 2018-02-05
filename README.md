@@ -1,3 +1,4 @@
+**Read this in other languages: [English](README-en.md).**  
 # fooltrader:trade as a fool
 >"要在市场上生存，就必须远离聪明，因为，你的聪明在市场面前一钱不值"------缠中说禅  
 
@@ -74,7 +75,7 @@ fooltrader是一个利用*大数据*技术设计的*量化交易系统*,包括�
 # 3. 架构图
 fooltrader是一个层次清晰的系统,你可以在不同的层次对其进行使用,也可以扩展,改造或替换里面的模块.  
 
-![](./screenshots/achitecture.png)
+![](./screenshots/architecture.png)
 
 # 4. 使用step by step
 使用的层次跟架构图里面的模块是一一对应的, 你可以在任何step停下来,进行扩展或者对接你自己熟悉的系统.  
@@ -310,5 +311,6 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
 * 期货数据抓取
 * 港股数据抓取
 
-# 联系方式
-QQ群:300911873
+# 联系方式  
+QQ群:300911873  
+如果你喜欢该项目,请加星支持一下,并在申请入群时告知github user name.  
