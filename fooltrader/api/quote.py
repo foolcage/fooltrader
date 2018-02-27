@@ -26,6 +26,34 @@ def convert_to_list_if_need(input):
 # meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None, end=None,
                       mode='simple', start_date=None, codes=None):
+    """
+    get security list.
+
+    Parameters
+    ----------
+    security_type : str
+        {‘stock’, 'future'},default: stock
+    exchanges : list
+        ['sh', 'sz','nasdaq','nyse','amex'],default: ['sh','sz']
+    start:str
+        the start code,default:None
+        only works when exchanges is ['sh','sz']
+    end:str
+        the end code,default:None
+        only works when exchanges is ['sh','sz']
+    mode:str
+        whether parse more security info,{'simple','es'},default:'simple'
+    start_date:Timestamp str or Timestamp
+        the filter for start list date,default:None
+    codes:list
+        the exact codes to query,default:None
+
+    Returns
+    -------
+    DataFrame
+        the security list
+
+    """
     if security_type == 'stock':
         df = pd.DataFrame()
         df_usa = pd.DataFrame()
