@@ -7,7 +7,7 @@ class TimeTrader(Trader):
     def on_init(self):
         self.trader_id = 'cc'
         self.security_code = '000002'
-        self.macd = technical.macd(security_id=self.security_code, start=self.start_date, end=self.end_date,
+        self.macd = technical.macd(security_item=self.security_code, start_date=self.start_date, end_date=self.end_date,
                                    fuquan='hfq', source='sina')
 
     def on_time_elapsed(self):

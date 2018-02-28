@@ -102,6 +102,22 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
 
 
 def get_security_item(code=None, id=None):
+    """
+    get the security item.
+
+    Parameters
+    ----------
+    code : str
+        the security code,default: None
+    id : str
+        the security id,default: None
+
+    Returns
+    -------
+    DataFrame
+        the security item
+
+    """
     df = get_security_list()
     if id:
         df = df.set_index(df['id'])
@@ -113,9 +129,28 @@ def get_security_item(code=None, id=None):
 
 # tick
 def get_ticks(security_item, the_date=None, start=None, end=None):
+    """
+    get the ticks.
+
+    Parameters
+    ----------
+    security_item : SecurityItem
+        the security item
+    the_date : TimeStamp str or TimeStamp
+        get the tick for the exact date
+    start : TimeStamp str or TimeStamp
+        start date
+    end: TimeStamp str or TimeStamp
+        end date
+
+    Returns
+    -------
+    DataFrame
+
+    """
     if the_date:
         tick_path = files_contract.get_tick_path(security_item, the_date)
-        return parse_tick(tick_path)
+        return _parse_tick(tick_path)
     else:
         tick_dir = files_contract.get_tick_dir(security_item)
         if start or end:
@@ -131,10 +166,10 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
                           os.listdir(tick_dir)]
 
         for tick_path in sorted(tick_paths):
-            yield parse_tick(tick_path, security_item)
+            yield _parse_tick(tick_path, security_item)
 
 
-def parse_tick(tick_path, security_item):
+def _parse_tick(tick_path, security_item):
     if os.path.isfile(tick_path):
         df = pd.read_csv(tick_path)
         df['timestamp'] = get_file_name(tick_path) + " " + df['timestamp']
@@ -154,13 +189,44 @@ def get_available_tick_dates(security_item):
 # kdata
 def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source='163',
               level='day'):
+    """
+    get kdata.
+
+    Parameters
+    ----------
+    security_item : SecurityItem or str
+        the security item,id or code
+    the_date : TimeStamp str or TimeStamp
+        get the kdata for the exact date
+    start_date : TimeStamp str or TimeStamp
+        start date
+    end_date : TimeStamp str or TimeStamp
+        end date
+    fuquan : str
+        {"qfq","hfq","bfq"},default:"bfq"
+    dtype : type
+        the data type for the csv column,default: None
+    source : str
+        the data source,{'163','sina'},default: '163'
+    level : str or int
+        the kdata level,{1,5,15,30,60,'day','week','month'},default : 'day'
+
+    Returns
+    -------
+    DataFrame
+
+    """
     if type(security_item) == str:
         if 'stock' in security_item:
             security_item = get_security_item(id=security_item)
         else:
             security_item = get_security_item(code=security_item)
 
-    the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
+    # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
+    if source == '163':
+        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan='bfq')
+    else:
+        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
 
     if os.path.isfile(the_path):
         if not dtype:
@@ -188,6 +254,20 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
         if start_date and end_date:
             df = df.loc[start_date:end_date]
 
+        #
+        if source == '163':
+            current_factor = df.tail(1).factor.iat[0]
+            # 后复权是不变的
+            df.close *= df.factor
+            df.open *= df.factor
+            df.high *= df.factor
+            df.low *= df.factor
+            if fuquan == 'qfq':
+                # 前复权需要根据最新的factor往回算
+                df.close /= current_factor
+                df.open /= current_factor
+                df.high /= current_factor
+                df.low /= current_factor
         return df
     return pd.DataFrame()
 
