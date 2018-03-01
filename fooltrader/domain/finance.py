@@ -200,9 +200,9 @@ class IncomeStatement(BaseDocType):
     # 营业收入
     operatingRevenue = Float()
     # /*营业总成本*/
-    OperatingTotalCosts = Float()
+    operatingTotalCosts = Float()
     # 营业成本
-    OperatingCosts = Float()
+    operatingCosts = Float()
     # 营业税金及附加
     businessTaxesAndSurcharges = Float()
     # 销售费用

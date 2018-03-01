@@ -426,9 +426,9 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
         # 营业收入
         operatingRevenue = lines[2].split()[1:-1]
         # /*营业总成本*/
-        OperatingTotalCosts = lines[4].split()[1:-1]
+        operatingTotalCosts = lines[4].split()[1:-1]
         # 营业成本
-        OperatingCosts = lines[5].split()[1:-1]
+        operatingCosts = lines[5].split()[1:-1]
         # 营业税金及附加
         businessTaxesAndSurcharges = lines[6].split()[1:-1]
         # 销售费用
@@ -504,9 +504,9 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
                 # 营业收入
                 "operatingRevenue": to_float(operatingRevenue[idx]),
                 # /*营业总成本*/
-                "OperatingTotalCosts": to_float(OperatingTotalCosts[idx]),
+                "operatingTotalCosts": to_float(operatingTotalCosts[idx]),
                 # 营业成本
-                "OperatingCosts": to_float(OperatingCosts[idx]),
+                "operatingCosts": to_float(operatingCosts[idx]),
                 # 营业税金及附加
                 "businessTaxesAndSurcharges": to_float(businessTaxesAndSurcharges[idx]),
                 # 销售费用
@@ -937,8 +937,11 @@ def get_finance_summary_items(security_item, start_date=None, report_period=None
 
 
 if __name__ == '__main__':
-    print(get_cash_flow_statement_items(
-        SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
+    print(get_income_statement_items(
+        SecurityItem(type='stock', code='300027', exchange='sz', id='stock_sz_300027')))
+    #
+    # print(get_cash_flow_statement_items(
+    #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
     # print(get_balance_sheet_items(
     #     SecurityItem(type='stock', code='000338', exchange='sz', id='stock_sz_000338'), report_event_date='20170930'))
     # print(get_income_statement_items(

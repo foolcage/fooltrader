@@ -203,13 +203,13 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_code', default='000338', help='the stock start code to be crawled')
-    parser.add_argument('-e', '--end_code', default='000338', help='the stock end code to be crawled')
+    parser.add_argument('-s', '--start_code', default='300027', help='the stock start code to be crawled')
+    parser.add_argument('-e', '--end_code', default='300027', help='the stock end code to be crawled')
 
     args = parser.parse_args()
 
     # crawl_stock_meta()
     # crawl_index_quote()
     # crawl_stock_quote(args.start_code, args.end_code)
-    # crawl_finance_data(args.start_code, args.end_code)
-    crawl_usa_stock_data()
+    crawl_finance_data(args.start_code, args.end_code)
+    # crawl_usa_stock_data()
