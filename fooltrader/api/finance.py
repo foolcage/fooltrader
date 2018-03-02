@@ -5,15 +5,43 @@ import pandas as pd
 
 from fooltrader import settings
 from fooltrader.api.event import get_report_event_date
+from fooltrader.api.quote import to_security_item
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path, get_finance_path
+from fooltrader.domain.finance import IncomeStatement, BalanceSheet, CashFlowStatement
 from fooltrader.items import SecurityItem
-from fooltrader.utils.utils import detect_encoding, to_float, to_time_str, is_same_date
+from fooltrader.utils.utils import detect_encoding, to_float, to_time_str, is_same_date, fill_doc_type
 
 logger = logging.getLogger(__name__)
 
 
-def get_balance_sheet_items(security_item, start_date=None, report_period=None, report_event_date=None):
+def get_balance_sheet_items(security_item, start_date=None, report_period=None, report_event_date=None,
+                            return_type='json'):
+    """
+    get balance sheet items.
+
+    Parameters
+    ----------
+    security_item : SecurityItem or str
+        the security item,id or code
+    start_date : TimeStamp str or TimeStamp
+        start date
+    report_period : TimeStamp str or TimeStamp
+        the finance report period,eg.'20170331'
+    report_event_date : TimeStamp str or TimeStamp
+        the finance report published date
+    return_type : str
+        {'json','doc'},default: 'json'
+
+    Returns
+    -------
+    list of BalanceSheet
+    list of json
+
+    """
+
+    security_item = to_security_item(security_item)
+
     path = get_balance_sheet_path(security_item)
     if not os.path.exists(path):
         return []
@@ -202,7 +230,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
         # 负债和所有者权益(或股东权益)总计
         totalLiabilitiesAndOwnersEquity = lines[84].split()[1:-1]
 
-        result_json = []
+        result_list = []
         for idx, _ in enumerate(reportDate):
             if start_date:
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
@@ -399,17 +427,49 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
                 "totalLiabilitiesAndOwnersEquity": to_float(totalLiabilitiesAndOwnersEquity[idx])
             }
 
+            the_data = the_json
+
+            if return_type == 'doc':
+                the_data = BalanceSheet(meta={'id': the_json['id']})
+                fill_doc_type(the_data, the_json)
+
             if report_period and is_same_date(report_period, reportDate[idx]):
-                return the_json
+                return the_data
 
-            result_json.append(the_json)
+            result_list.append(the_data)
 
-        if (result_json):
-            result_json = sorted(result_json, key=lambda x: pd.Timestamp(x['reportDate']))
-        return result_json
+        if result_list:
+            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportDate']))
+        return result_list
 
 
-def get_income_statement_items(security_item, start_date=None, report_period=None, report_event_date=None):
+def get_income_statement_items(security_item, start_date=None, report_period=None, report_event_date=None,
+                               return_type='json'):
+    """
+    get income statement items.
+
+    Parameters
+    ----------
+    security_item : SecurityItem or str
+        the security item,id or code
+    start_date : TimeStamp str or TimeStamp
+        start date
+    report_period : TimeStamp str or TimeStamp
+        the finance report period,eg.'20170331'
+    report_event_date : TimeStamp str or TimeStamp
+        the finance report published date
+    return_type : str
+        {'json','doc'},default: 'json'
+
+    Returns
+    -------
+    list of IncomeStatement
+    list of json
+
+    """
+
+    security_item = to_security_item(security_item)
+
     path = get_income_statement_path(security_item)
     if not os.path.exists(path):
         return []
@@ -479,7 +539,7 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
         # 归属于少数股东的综合收益总额
         attributableToMinorityShareholders = lines[30].split()[1:-1]
 
-        result_json = []
+        result_list = []
         for idx, _ in enumerate(reportDate):
             if start_date:
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
@@ -559,17 +619,49 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
                 "attributableToMinorityShareholders": to_float(attributableToMinorityShareholders[idx])
             }
 
+            the_data = the_json
+
+            if return_type == 'doc':
+                the_data = IncomeStatement(meta={'id': the_json['id']})
+                fill_doc_type(the_data, the_json)
+
             if report_period and is_same_date(report_period, reportDate[idx]):
-                return the_json
+                return the_data
 
-            result_json.append(the_json)
+            result_list.append(the_data)
 
-        if result_json:
-            result_json = sorted(result_json, key=lambda x: pd.Timestamp(x['reportDate']))
-        return result_json
+        if result_list:
+            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportDate']))
+        return result_list
 
 
-def get_cash_flow_statement_items(security_item, start_date=None, report_period=None, report_event_date=None):
+def get_cash_flow_statement_items(security_item, start_date=None, report_period=None, report_event_date=None,
+                                  return_type='json'):
+    """
+    get cash flow statement items.
+
+    Parameters
+    ----------
+    security_item : SecurityItem or str
+        the security item,id or code
+    start_date : TimeStamp str or TimeStamp
+        start date
+    report_period : TimeStamp str or TimeStamp
+        the finance report period,eg.'20170331'
+    report_event_date : TimeStamp str or TimeStamp
+        the finance report published date
+    return_type : str
+        {'json','doc'},default: 'json'
+
+    Returns
+    -------
+    list of CashFlowStatement
+    list of json
+
+    """
+
+    security_item = to_security_item(security_item)
+
     path = get_cash_flow_statement_path(security_item)
     if not os.path.exists(path):
         return []
@@ -727,7 +819,7 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
         cashEquivalentsAtTheBeginningOfPeriod = lines[75].split()[1:-1]
         # 现金及现金等价物的净增加额
         netIncreaseInCashAndCashEquivalents = lines[76].split()[1:-1]
-        result_json = []
+        result_list = []
         for idx, _ in enumerate(reportDate):
             if start_date:
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
@@ -909,15 +1001,20 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
                 "netIncreaseInCashAndCashEquivalents": to_float(netIncreaseInCashAndCashEquivalents[idx])
             }
 
+            the_data = the_json
+
+            if return_type == 'doc':
+                the_data = CashFlowStatement(meta={'id': the_json['id']})
+                fill_doc_type(the_data, the_json)
+
             if report_period and is_same_date(report_period, reportDate[idx]):
-                return the_json
+                return the_data
 
-            result_json.append(the_json)
+            result_list.append(the_data)
 
-        if result_json:
-            result_json = sorted(result_json, key=lambda x: pd.Timestamp(x['reportDate']))
-
-        return result_json
+        if result_list:
+            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportDate']))
+        return result_list
 
 
 def get_finance_summary_items(security_item, start_date=None, report_period=None):
@@ -937,7 +1034,16 @@ def get_finance_summary_items(security_item, start_date=None, report_period=None
 
 
 if __name__ == '__main__':
+    print(get_income_statement_items('300027', return_type='doc'))
+    print(get_balance_sheet_items(
+        SecurityItem(type='stock', code='300027', exchange='sz', id='stock_sz_300027'), return_type='doc'))
+    print(get_cash_flow_statement_items(
+        SecurityItem(type='stock', code='300027', exchange='sz', id='stock_sz_300027'), return_type='doc'))
     print(get_income_statement_items(
+        SecurityItem(type='stock', code='300027', exchange='sz', id='stock_sz_300027')))
+    print(get_balance_sheet_items(
+        SecurityItem(type='stock', code='300027', exchange='sz', id='stock_sz_300027')))
+    print(get_cash_flow_statement_items(
         SecurityItem(type='stock', code='300027', exchange='sz', id='stock_sz_300027')))
     #
     # print(get_cash_flow_statement_items(

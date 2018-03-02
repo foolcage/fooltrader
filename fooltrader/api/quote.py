@@ -127,6 +127,15 @@ def get_security_item(code=None, id=None):
     return df.loc[code,]
 
 
+def to_security_item(security_item):
+    if type(security_item) == str:
+        if 'stock' in security_item:
+            security_item = get_security_item(id=security_item)
+        else:
+            security_item = get_security_item(code=security_item)
+    return security_item
+
+
 # tick
 def get_ticks(security_item, the_date=None, start=None, end=None):
     """
@@ -216,11 +225,8 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
     DataFrame
 
     """
-    if type(security_item) == str:
-        if 'stock' in security_item:
-            security_item = get_security_item(id=security_item)
-        else:
-            security_item = get_security_item(code=security_item)
+
+    security_item = to_security_item(security_item)
 
     # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
     if source == '163':
