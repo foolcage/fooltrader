@@ -1,5 +1,4 @@
 from fooltrader.api import quote, technical
-from fooltrader.computing import technical
 from fooltrader.trader.trader import Trader
 
 

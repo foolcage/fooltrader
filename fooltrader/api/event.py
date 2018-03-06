@@ -8,15 +8,43 @@ from fooltrader.utils.utils import index_df_with_time
 
 
 def get_forecast_items(security_item):
+    """
+    get forecast items.
+
+    Parameters
+    ----------
+    security_item : SecurityItem or str
+        the security item,id or code
+
+    Returns
+    -------
+    list of json
+
+    """
     forecast_path = get_forecast_event_path(security_item)
     if os.path.exists(forecast_path):
         with open(forecast_path) as data_file:
             forecast_json = json.load(data_file)
-            for json_item in reversed(forecast_json):
-                yield json_item
+            return reversed(forecast_json)
 
 
 def get_finance_report_event(security_item, index='reportEventDate'):
+    """
+    get finance report event items.
+
+    Parameters
+    ----------
+    security_item : SecurityItem or str
+        the security item,id or code
+
+    index : {'reportEventDate','reportDate'} default is 'reportEventDate'
+        the index for the return df
+
+    Returns
+    -------
+    DataFrame
+
+    """
     path = get_event_path(security_item, event='finance_report')
 
     if os.path.exists(path):
