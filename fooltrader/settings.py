@@ -8,6 +8,7 @@
 #     http://doc.scrapy.org/en/latest/topics/settings.html
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
+import os
 
 BOT_NAME = 'fooltrader'
 
@@ -91,8 +92,10 @@ AUTOTHROTTLE_DEBUG = False
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # 把这个改为你的data目录的绝对路劲,方便在任何地方使用python
-FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
-# FILES_STORE = 'data'
+FOOLTRADER_STORE_PATH = os.environ.get('FOOLTRADER_STORE_PATH')
+if not FOOLTRADER_STORE_PATH:
+    FOOLTRADER_STORE_PATH = '/home/xuanqi/workspace/github/fooltrader/data'
+# FOOLTRADER_STORE_PATH = 'data'
 SH_STOCK_FILE = 'sh.txt'
 SZ_STOCK_FILE = 'sz.xlsx'
 

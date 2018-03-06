@@ -8,7 +8,7 @@ from fooltrader import settings
 # 获取存档的代理列表
 
 def get_proxy_dir():
-    return os.path.join(settings.FILES_STORE, "proxy")
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, "proxy")
 
 
 def get_http_proxy_path():

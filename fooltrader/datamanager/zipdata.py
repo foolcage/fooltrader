@@ -2,10 +2,10 @@ import datetime
 import os
 import zipfile
 
-from fooltrader.settings import FILES_STORE
+from fooltrader.settings import FOOLTRADER_STORE_PATH
 
 
-def zip_dir(src_dir=FILES_STORE, dst_dir=None, zip_file_name=None, include_tick=False):
+def zip_dir(src_dir=FOOLTRADER_STORE_PATH, dst_dir=None, zip_file_name=None, include_tick=False):
     if not zip_file_name:
         zip_file_name = "data-{}.zip".format(datetime.datetime.today())
 
@@ -40,4 +40,4 @@ def unzip(zip_file, dst_dir):
 
 if __name__ == '__main__':
     zip_dir(include_tick=True, zip_file_name="data.zip")
-    unzip(os.path.abspath(os.path.join(FILES_STORE, os.pardir, "data.zip")), FILES_STORE)
+    unzip(os.path.abspath(os.path.join(FOOLTRADER_STORE_PATH, os.pardir, "data.zip")), FOOLTRADER_STORE_PATH)

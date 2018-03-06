@@ -53,8 +53,8 @@ def mkdir_for_security(item):
 
 
 def init_env():
-    if not os.path.exists(settings.FILES_STORE):
-        os.makedirs(settings.FILES_STORE)
+    if not os.path.exists(settings.FOOLTRADER_STORE_PATH):
+        os.makedirs(settings.FOOLTRADER_STORE_PATH)
     # 初始化股票文件夹
     for _, item in get_security_list(exchanges=EXCHANGE_LIST_COL).iterrows():
         mkdir_for_security(item)

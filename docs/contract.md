@@ -33,10 +33,11 @@ sz,sh等
 
 # 2. 目录结构
 ## 2.1 存储根目录  
-settings.py里面  
+设置环境变量FOOLTRADER_STORE_PATH="the/path/to/store/data"
+或者在settings.py里面
 ```
 #fooltrader的数据根目录
-FILES_STORE = '/home/xuanqi/workspace/github/fooltrader/data'
+FOOLTRADER_STORE_PATH = '/home/xuanqi/workspace/github/fooltrader/data'
 ```
 ## 2.2 具体结构
 ```

@@ -12,16 +12,16 @@ def get_category_path(security_type='stock', classified='industry', source='sina
 
 
 def get_category_dir(security_type='stock'):
-    return os.path.join(settings.FILES_STORE, security_type, 'category')
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, 'category')
 
 
 # 标的相关
 def get_security_list_path(security_type, exchange):
-    return os.path.join(settings.FILES_STORE, security_type, '{}.csv'.format(exchange))
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, '{}.csv'.format(exchange))
 
 
 def get_security_dir(item):
-    return os.path.join(settings.FILES_STORE, item['type'], item['exchange'], item['code'])
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
 
 
 # k线相关
@@ -44,7 +44,7 @@ def get_kdata_path(item, source='163', fuquan='bfq', year=None, quarter=None):
 
 # tick相关
 def get_tick_dir(item):
-    return os.path.join(settings.FILES_STORE, item['type'], item['exchange'], item['code'], 'tick')
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'], 'tick')
 
 
 def get_tick_path(item, date):
