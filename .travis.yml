@@ -2,3 +2,11 @@ language: python
 python:
     - "3.6"
 script: pytest
+
+deploy:
+  provider: pypi
+  user: "foolcage"
+  password:
+    secure:  "S0+4uNuEiFMF+dnq1VPyQTTzynmyrAN7e5LH/tkenF+8ogAwVBlR0sQoxpWrnVcUbMc9jKQqyfiGsR3ae3hR9GQMNkYcWsspmwPMPT3RugUr4MlgtYQfHzN6boG6qumJW5XaxdliWHiy+6b+Py+lnca9mcTHIP7JJfcRSbC+cifX78qFncOHqRedR+4awNVTneJ42RxiN7/wRMuCkWPgLSoPHLSYr9zcv+TcszmUpSk2pMQuFu66QlXqLc/51EQ+D9hG2fzM8mFjq1PjDtQENxQ4fJVvy2xFVYdXJiTSiT6OK4eupz77gD1iMvZJph8x/Z0FWfVmGLKkO6GSanKmk4PVk7OMxFARqZuMXPjcJoqiEguTBeV2zfaBKWjovm/thWvQ8I63/ioquY41Iswk4179Do+nHC1OtiQaSurv5TmAqSv4yBA1IRed36ZUTfDGyDJuDA0gySHXFJmyyBe41jq2D4HWinESWdxymVojwFdNBuPRAHP+K3wnu8ITcCqAeD4lnRiMWCxSN7d9xsVsuuGASQfsaQV4dwaQFGZ0bCCifX9uCv0t0UrbrLZZr27tXPIxxtyDgPbvQxHln4SDLrON8sDdnbrPGSzDcxE6jd0Qf++wtSSChn11TXHDPb7/oPKoajuLuWi+vnvqYlnziwJVsehLY+P8Tm70l9BCeKY="
+  on:
+      tags: true
