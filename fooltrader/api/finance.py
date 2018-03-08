@@ -3,14 +3,13 @@ import os
 
 import pandas as pd
 
-from fooltrader import settings
 from fooltrader.api.event import get_report_event_date
 from fooltrader.api.quote import to_security_item
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path, get_finance_path
 from fooltrader.domain.finance import IncomeStatement, BalanceSheet, CashFlowStatement
 from fooltrader.items import SecurityItem
-from fooltrader.utils.utils import detect_encoding, to_float, to_time_str, is_same_date, fill_doc_type
+from fooltrader.utils.utils import to_float, to_time_str, is_same_date, fill_doc_type
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +44,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
     path = get_balance_sheet_path(security_item)
     if not os.path.exists(path):
         return []
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
+    encoding = 'GB2312'
 
     with open(path, encoding=encoding) as fr:
         lines = fr.readlines()
@@ -473,8 +471,7 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
     path = get_income_statement_path(security_item)
     if not os.path.exists(path):
         return []
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
+    encoding = 'GB2312'
 
     with open(path, encoding=encoding) as fr:
         lines = fr.readlines()
@@ -665,8 +662,7 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
     path = get_cash_flow_statement_path(security_item)
     if not os.path.exists(path):
         return []
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
+    encoding = 'GB2312'
 
     with open(path, encoding=encoding) as fr:
         lines = fr.readlines()

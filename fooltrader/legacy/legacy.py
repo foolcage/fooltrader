@@ -5,13 +5,12 @@ import shutil
 
 import pandas as pd
 
-from fooltrader import settings
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
     get_security_dir, get_kdata_path, get_trading_dates_path_163
-from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime, detect_encoding
+from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -118,12 +117,14 @@ def remove_old_trading_dates():
             logger.info("remove {}".format(the_path))
             os.remove(the_path)
 
+
 def remove_old_163_trading_dates():
     for index, security_item in get_security_list().iterrows():
         the_path = get_trading_dates_path_163(security_item)
         if os.path.exists(the_path):
             logger.info("remove {}".format(the_path))
             os.remove(the_path)
+
 
 def remove_old_tick():
     for index, security_item in get_security_list().iterrows():
@@ -135,15 +136,16 @@ def remove_old_tick():
                 logger.info("remove {}".format(f))
                 os.remove(f)
 
+
 def is_available_tick(path):
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
+    encoding = 'GB2312'
     try:
         with open(path, encoding=encoding) as fr:
             line = fr.readline()
             return u'成交时间', u'成交价', u'价格变动', u'成交量(手)', u'成交额(元)', u'性质' == line.split()
     except Exception:
         return False
+
 
 def remove_old_kdata():
     for index, security_item in get_security_list().iterrows():
@@ -268,11 +270,11 @@ def check_convert_result():
 
 
 def assert_df(df1, df2):
-    df1 = df1.set_index(df1['timestamp'],drop=False)
+    df1 = df1.set_index(df1['timestamp'], drop=False)
     df1.index = pd.to_datetime(df1.index)
     df1 = df1.sort_index()
 
-    df2 = df2.set_index(df2['timestamp'],drop=False)
+    df2 = df2.set_index(df2['timestamp'], drop=False)
     df2 = df2.sort_index()
     df2.index = pd.to_datetime(df2.index)
 

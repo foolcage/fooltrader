@@ -4,7 +4,6 @@ import os
 
 import pandas as pd
 
-from fooltrader import settings
 from fooltrader.contract.data_contract import TICK_COLUNM
 from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import TIME_FORMAT_DAY
@@ -50,8 +49,7 @@ def kdata_to_tick(kdata_json):
 
 
 def get_tick_item(path, the_date, security_item):
-    encoding = settings.DOWNLOAD_TXT_ENCODING if settings.DOWNLOAD_TXT_ENCODING else detect_encoding(
-        url='file://' + os.path.abspath(path)).get('encoding')
+    encoding = 'GB2312'
     with open(path, encoding=encoding) as fr:
         lines = fr.readlines()
         for line in reversed(lines[1:]):
@@ -78,21 +76,6 @@ def get_tick_item(path, the_date, security_item):
                    "direction": direction,
                    "volume": volume,
                    "turnover": turnover}
-
-
-def detect_encoding(url):
-    import urllib.request
-    from chardet.universaldetector import UniversalDetector
-
-    usock = urllib.request.urlopen(url)
-    detector = UniversalDetector()
-    for line in usock.readlines():
-        detector.feed(line)
-        if detector.done: break
-    detector.close()
-    usock.close()
-    return detector.result.get('encoding')
-
 
 def get_datetime(str):
     return datetime.datetime.strptime(str, TIME_FORMAT_DAY)
