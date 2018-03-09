@@ -104,6 +104,9 @@ env ok
 ```
 那么恭喜你,你可以以各种姿势去玩耍了.
 ### 4.3 抓取数据
+建议先下载打包好的历史数据[*data.zip*](https://pan.baidu.com/s/1dmZaPo).  
+看一下[*数据协议*](./docs/contract.md),设置好FOOLTRADER_STORE_PATH,解压下载的文件到该目录.  
+该项目的一个目的之一是方便大家共享数据,不需要每个人都去抓历史数据而导致被屏蔽.  
 ```bash
 $ source ve/bin/activate
 $ ./ve/bin/ipython
@@ -121,7 +124,7 @@ In [5]: datamanager.crawl_finance_data(start_code=002797,end_code=002798)
 > 爬虫只干爬虫的事:专注抓取的速度,更好的数据分类,数据补全,防屏蔽等  
 > api设计只依赖[*数据协议*](./docs/contract.md),从而具有更好的速度和灵活性
 
-你也可以直接下载打包好的历史数据[*data.zip*](https://pan.baidu.com/s/1dmZaPo).
+
 抓取每天的增量数据只需要:
 ```bash
 $ ./sched_finance.sh
