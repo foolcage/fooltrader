@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from elasticsearch_dsl import Keyword, Date, Float
 from elasticsearch_dsl import MetaField
 from elasticsearch_dsl.connections import connections

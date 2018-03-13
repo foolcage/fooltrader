@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 SECURITY_COLUMN = ['code', 'name', 'listDate', 'exchange', 'type', 'id']
 
 KDATA_COLUMN = ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId']

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from fooltrader.api.finance import get_income_statement_items, get_balance_sheet_items
 
 

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import socket
 import subprocess
 from contextlib import closing

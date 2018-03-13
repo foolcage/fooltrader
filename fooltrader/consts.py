@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from fooltrader.utils.utils import chrome_copy_header_to_dict
 
 SSE_KDATA_HEADER = chrome_copy_header_to_dict('''

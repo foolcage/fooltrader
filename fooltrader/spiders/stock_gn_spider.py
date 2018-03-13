@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import scrapy
 from scrapy import Request
 from scrapy.selector.unified import Selector

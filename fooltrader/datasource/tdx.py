@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from pytdx.hq import TdxHq_API
 
 from fooltrader.api import quote

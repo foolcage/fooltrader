@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 def get_kafka_tick_topic(security_id):
     return '{}_tick'.format(security_id)
 

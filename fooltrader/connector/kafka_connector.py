@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import datetime
 import logging
 from subprocess import Popen, PIPE, CalledProcessError

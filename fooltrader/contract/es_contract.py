@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 def get_es_kdata_index(security_type='stock', exchange='sh', level='day'):
     if exchange in ['sh', 'sz']:
         return '{}_{}_{}_kdata'.format(security_type, 'china', level)

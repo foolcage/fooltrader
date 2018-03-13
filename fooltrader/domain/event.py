@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from elasticsearch_dsl import DocType, Keyword, Date, Text, Float
 from elasticsearch_dsl import MetaField
 

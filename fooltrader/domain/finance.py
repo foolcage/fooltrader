@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from elasticsearch_dsl import DocType, Keyword, Date
 from elasticsearch_dsl import Float
 

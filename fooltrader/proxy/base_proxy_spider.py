@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import logging
 
 from fooltrader.proxy import save_http_proxy, save_socks_proxy, save_https_proxy

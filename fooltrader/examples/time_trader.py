@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from fooltrader.api import quote, technical
 from fooltrader.trader.trader import Trader
 
