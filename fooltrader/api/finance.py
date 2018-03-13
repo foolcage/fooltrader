@@ -42,8 +42,9 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
     security_item = to_security_item(security_item)
 
     path = get_balance_sheet_path(security_item)
-    if not os.path.exists(path):
-        return []
+
+    _download_finance_data_if_need(path, security_item['code'])
+
     encoding = 'GB2312'
 
     with open(path, encoding=encoding) as fr:
@@ -469,8 +470,9 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
     security_item = to_security_item(security_item)
 
     path = get_income_statement_path(security_item)
-    if not os.path.exists(path):
-        return []
+
+    _download_finance_data_if_need(path, security_item['code'])
+
     encoding = 'GB2312'
 
     with open(path, encoding=encoding) as fr:
@@ -660,8 +662,9 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
     security_item = to_security_item(security_item)
 
     path = get_cash_flow_statement_path(security_item)
-    if not os.path.exists(path):
-        return []
+
+    _download_finance_data_if_need(path, security_item['code'])
+
     encoding = 'GB2312'
 
     with open(path, encoding=encoding) as fr:
@@ -1027,6 +1030,13 @@ def get_finance_summary_items(security_item, start_date=None, report_period=None
     if report_period:
         return df[df["reportDate"] == report_period]
     return df
+
+
+def _download_finance_data_if_need(the_path, the_code):
+    if not os.path.exists(the_path):
+        import fooltrader.datamanager.datamanager as datamanager
+        logger.info("try to download the finance data at first")
+        datamanager.crawl_finance_data(start_code=the_code, end_code=the_code)
 
 
 if __name__ == '__main__':

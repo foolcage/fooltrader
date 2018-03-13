@@ -35,17 +35,17 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         {‘stock’, 'future'},default: stock
     exchanges : list
         ['sh', 'sz','nasdaq','nyse','amex'],default: ['sh','sz']
-    start:str
+    start : str
         the start code,default:None
         only works when exchanges is ['sh','sz']
-    end:str
+    end : str
         the end code,default:None
         only works when exchanges is ['sh','sz']
-    mode:str
+    mode : str
         whether parse more security info,{'simple','es'},default:'simple'
-    start_date:Timestamp str or Timestamp
+    start_date : Timestamp str or Timestamp
         the filter for start list date,default:None
-    codes:list
+    codes : list
         the exact codes to query,default:None
 
     Returns
@@ -101,7 +101,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
     return df
 
 
-def get_security_item(code=None, id=None):
+def _get_security_item(code=None, id=None, the_type='stock'):
     """
     get the security item.
 
@@ -112,13 +112,16 @@ def get_security_item(code=None, id=None):
     id : str
         the security id,default: None
 
+    the_type : str
+        the security type
+
     Returns
     -------
     DataFrame
         the security item
 
     """
-    df = get_security_list()
+    df = get_security_list(security_type=the_type)
     if id:
         df = df.set_index(df['id'])
         return df.loc[id,]
@@ -130,9 +133,11 @@ def get_security_item(code=None, id=None):
 def to_security_item(security_item):
     if type(security_item) == str:
         if 'stock' in security_item:
-            security_item = get_security_item(id=security_item)
+            security_item = _get_security_item(id=security_item, the_type='stock')
+        elif 'index' in security_item:
+            security_item = _get_security_item(id=security_item, the_type='index')
         else:
-            security_item = get_security_item(code=security_item)
+            security_item = _get_security_item(code=security_item)
     return security_item
 
 
@@ -143,8 +148,8 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
 
     Parameters
     ----------
-    security_item : SecurityItem
-        the security item
+    security_item : SecurityItem or str
+        the security item,id or code
     the_date : TimeStamp str or TimeStamp
         get the tick for the exact date
     start : TimeStamp str or TimeStamp
@@ -156,7 +161,14 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
     -------
     DataFrame
 
+    Yields
+    -------
+    DataFrame
+
     """
+
+    security_item = to_security_item(security_item)
+
     if the_date:
         tick_path = files_contract.get_tick_path(security_item, the_date)
         return _parse_tick(tick_path)
@@ -250,10 +262,13 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
                 return pd.DataFrame()
 
         if not start_date:
-            if type(security_item['listDate']) != str and np.isnan(security_item['listDate']):
-                start_date = '2002-01-01'
+            if security_item['type'] == 'stock':
+                if type(security_item['listDate']) != str and np.isnan(security_item['listDate']):
+                    start_date = '2002-01-01'
+                else:
+                    start_date = security_item['listDate']
             else:
-                start_date = security_item['listDate']
+                start_date = datetime.datetime.today() - datetime.timedelta(days=30)
         if not end_date:
             end_date = datetime.datetime.today()
 
@@ -261,19 +276,22 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
             df = df.loc[start_date:end_date]
 
         #
-        if source == '163':
-            current_factor = df.tail(1).factor.iat[0]
-            # 后复权是不变的
-            df.close *= df.factor
-            df.open *= df.factor
-            df.high *= df.factor
-            df.low *= df.factor
-            if fuquan == 'qfq':
-                # 前复权需要根据最新的factor往回算
-                df.close /= current_factor
-                df.open /= current_factor
-                df.high /= current_factor
-                df.low /= current_factor
+        if source == '163' and security_item['type'] == 'stock':
+            if fuquan == 'bfq':
+                return df
+            if 'factor' in df.columns:
+                current_factor = df.tail(1).factor.iat[0]
+                # 后复权是不变的
+                df.close *= df.factor
+                df.open *= df.factor
+                df.high *= df.factor
+                df.low *= df.factor
+                if fuquan == 'qfq':
+                    # 前复权需要根据最新的factor往回算
+                    df.close /= current_factor
+                    df.open /= current_factor
+                    df.high /= current_factor
+                    df.low /= current_factor
         return df
     return pd.DataFrame()
 
