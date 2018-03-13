@@ -159,10 +159,6 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
     end: TimeStamp str or TimeStamp
         end date
 
-    Returns
-    -------
-    DataFrame
-
     Yields
     -------
     DataFrame
@@ -173,7 +169,7 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
 
     if the_date:
         tick_path = files_contract.get_tick_path(security_item, the_date)
-        return _parse_tick(tick_path)
+        yield _parse_tick(tick_path, security_item)
     else:
         tick_dir = files_contract.get_tick_dir(security_item)
         if start or end:

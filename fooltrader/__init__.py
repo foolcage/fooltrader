@@ -5,11 +5,11 @@ import os
 
 import pandas as pd
 
-from fooltrader import settings
 from fooltrader.api.quote import get_security_list
 from fooltrader.consts import USA_STOCK_INDEX
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir
+from fooltrader.settings import FOOLTRADER_STORE_PATH
 
 
 def init_log():
@@ -55,17 +55,19 @@ def mkdir_for_security(item):
 
 
 def init_env():
-    if not os.path.exists(settings.FOOLTRADER_STORE_PATH):
-        os.makedirs(settings.FOOLTRADER_STORE_PATH)
-    # 初始化股票文件夹
-    for _, item in get_security_list(exchanges=EXCHANGE_LIST_COL).iterrows():
-        mkdir_for_security(item)
+    if not os.path.exists(FOOLTRADER_STORE_PATH):
+        print("{} is a wrong path")
+        print("please set env FOOLTRADER_STORE_PATH to working path or set it in settings.py")
+    else:
+        # 初始化股票文件夹
+        for _, item in get_security_list(exchanges=EXCHANGE_LIST_COL).iterrows():
+            mkdir_for_security(item)
 
-    # 初始化指数文件夹
-    for _, item in get_security_list(security_type='index', exchanges=['sh', 'sz', 'nasdaq']).iterrows():
-        kdata_dir = get_kdata_dir(item)
-        if not os.path.exists(kdata_dir):
-            os.makedirs(kdata_dir)
+        # 初始化指数文件夹
+        for _, item in get_security_list(security_type='index', exchanges=['sh', 'sz', 'nasdaq']).iterrows():
+            kdata_dir = get_kdata_dir(item)
+            if not os.path.exists(kdata_dir):
+                os.makedirs(kdata_dir)
 
 
 pd.set_option('expand_frame_repr', False)
