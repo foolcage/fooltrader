@@ -99,6 +99,18 @@ html_theme = 'alabaster'
 #
 # html_theme_options = {}
 
+html_theme_options = {
+    'show_powered_by': False,
+    'github_user': 'foolcage',
+    'github_repo': 'fooltrader',
+    'github_banner': True,
+    'show_related': False,
+    'note_bg': '#FFF59C'
+}
+
+# If true, links to the reST sources are added to the pages.
+html_show_sourcelink = True
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -109,13 +121,12 @@ html_static_path = ['_static']
 #
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    '**': [
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-    ]
-}
-
+# html_sidebars = {
+#     '**': [
+#         'relations.html',  # needs 'show_related': True theme option to display
+#         'searchbox.html',
+#     ]
+# }
 
 # -- Options for HTMLHelp output ------------------------------------------
 
