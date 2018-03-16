@@ -23,7 +23,7 @@ fooltrader是一个利用*大数据*技术设计的*量化分析交易系统*,�
 api输出结果具体字段含义请参考[*数据协议*](./docs/contract.md).  
 
 ### 获取利润表 ###
-```Python
+```bash
 In [1]: from fooltrader.api import finance
 In [2]: finance.get_income_statement_items('300027',report_period='2017-06-30')
 #试一试
@@ -88,7 +88,7 @@ def check_operating_profit(security_item):
             print("{} operating profit calculating pass".format(income_statement['id']))
 ```
 可以用该工具迅速检查财务报表的质量,同时也可以让你对财务报表有更深入的认识.[*更多例子*](./fooltrader/datamanager/finance_check.py)
-```
+```bash
 In [3]: from fooltrader.datamanager import finance_check
 
 In [4]: finance_check.check_operating_profit('300027')
@@ -101,7 +101,7 @@ stock_sz_300027_20170930 operating profit calculating pass
 
 ### 行情信息 ###
 K线数据
-```Python
+```bash
 In [5]: from fooltrader.api import quote
 
 In [6]: quote.get_kdata('300027',start_date='20170630',end_date='20170715')
@@ -124,7 +124,7 @@ timestamp
 2017-07-14  2017-07-14  300027  华谊兄弟  8.23  8.25   8.41  8.55  37967053  3.193673e+08  stock_sz_300027      8.28    0.13     1.5700        1.5291  2.333359e+10  2.088223e+10  15.055
 ```
 tick数据
-```Python
+```bash
 In [7]: for tick in quote.get_ticks('300027',the_date='2017-07-03'):
     ...:     print(tick)
     ...:     
@@ -145,7 +145,7 @@ timestamp
 ```
 
 ### 事件(消息)数据 ###
-```Python
+```bash
 In [8]: from fooltrader.api import event
 
 In [9]: for item in event.get_forecast_items('000338'):
@@ -161,7 +161,7 @@ In [9]: for item in event.get_forecast_items('000338'):
 ```
 
 ### 技术指标 ###  
-```python
+```bash
 In [10]: from fooltrader.api import technical
 In [11]: technical.macd('000778',start_date='20170101',end_date='20170301')
 Out[11]:
