@@ -6,6 +6,7 @@ from scrapy.exceptions import CloseSpider
 from scrapy.spidermiddlewares.httperror import HttpErrorMiddleware, HttpError
 
 from fooltrader import settings
+from fooltrader.proxy import get_checked_proxy
 
 logger = logging.getLogger(__name__)
 
@@ -43,3 +44,12 @@ class ForbiddenHandleMiddleware(object):
                 logger.info("using")
                 return request
         return response
+
+
+import random
+
+
+class RandomProxy(object):
+    def process_request(self, request, spider):
+        proxy_df = get_checked_proxy()
+        request.meta['proxy'] = proxy_df.df.at[random.choice(proxy_df.index), 'url']

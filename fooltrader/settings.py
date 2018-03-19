@@ -95,9 +95,6 @@ AUTOTHROTTLE_DEBUG = False
 FOOLTRADER_STORE_PATH = os.environ.get('FOOLTRADER_STORE_PATH')
 if not FOOLTRADER_STORE_PATH:
     FOOLTRADER_STORE_PATH = '/home/xuanqi/workspace/github/fooltrader/data'
-# FOOLTRADER_STORE_PATH = 'data'
-SH_STOCK_FILE = 'sh.txt'
-SZ_STOCK_FILE = 'sz.xlsx'
 
 STOCK_START_CODE = '000001'
 STOCK_END_CODE = '666666'
@@ -115,8 +112,9 @@ AUTO_KAFKA = False
 KAFKA_HOST = 'localhost:9092'
 KAFKA_PATH = '/home/xuanqi/software/kafka_2.11-0.11.0.1'
 ZK_KAFKA_HOST = 'localhost:2181'
-# LOG_FILE = 'log.txt'
 
+# http://www.delegate.org/delegate/
+# 用于socks转http
 DG_PATH = '/Users/xuanqi/software/delegate/DGROOT/bin/delegate'
 
 SUPPORT_SOCKS2HTTP = False
@@ -128,8 +126,6 @@ g_socks2http_proxy_items = {}
 TIME_FORMAT_SEC = '%Y-%m-%d %H:%M:%S'
 
 TIME_FORMAT_DAY = '%Y-%m-%d'
-
-STATUS_SHOW_NOT_OK_DATE = False
 
 ES_HOSTS = ['172.16.92.109:9200']
 # ES_HOSTS = ['localhost:9200']

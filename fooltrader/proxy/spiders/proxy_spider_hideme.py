@@ -14,6 +14,8 @@ from fooltrader.proxy.base_proxy_spider import BaseProxySpider
 logger = logging.getLogger(__name__)
 
 
+# 该爬虫需要把selenium的chrome driver运行起来才能跑
+# 对于那种各种js跳转的网站,用selenium是一个不错的方案
 class ProxySpiderHideMe(BaseProxySpider):
     def __init__(self):
         BaseProxySpider.__init__(self)

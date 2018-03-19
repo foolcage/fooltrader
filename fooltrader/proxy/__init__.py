@@ -13,63 +13,59 @@ def get_proxy_dir():
     return os.path.join(settings.FOOLTRADER_STORE_PATH, "proxy")
 
 
-def get_http_proxy_path():
-    return os.path.join(get_proxy_dir(), "http_proxy.csv")
+def get_proxy_path(protocol='http'):
+    return os.path.join(get_proxy_dir(), "{}_proxy.csv".format(protocol))
 
 
-def get_https_proxy_path():
-    return os.path.join(get_proxy_dir(), "https_proxy.csv")
+def get_checked_proxy_dir(part_name=None):
+    if part_name:
+        return os.path.join(get_proxy_dir(), 'checked', 'tmp')
+    else:
+        return os.path.join(get_proxy_dir(), 'checked')
 
 
-def get_socks_proxy_path():
-    return os.path.join(get_proxy_dir(), "socks_proxy.csv")
+def get_checked_proxy_path(protocol='http', part_name=None):
+    if not os.path.exists(get_checked_proxy_dir(part_name)):
+        os.makedirs(get_checked_proxy_dir(part_name))
+    if part_name:
+        return os.path.join(get_checked_proxy_dir(part_name), "{}_{}_proxy.csv".format(protocol, part_name))
+    else:
+        return os.path.join(get_checked_proxy_dir(), "{}_proxy.csv".format(protocol))
 
 
-def get_http_proxy():
-    if os.path.exists(get_http_proxy_path()):
-        return pd.read_csv(get_http_proxy_path())
+def get_sorted_proxy_dir(domain):
+    return os.path.join(get_proxy_dir(), domain)
+
+
+def get_sorted_proxy_path(domain, protocol='http', part_name=None):
+    if not os.path.exists(get_sorted_proxy_dir(domain)):
+        os.makedirs(get_sorted_proxy_dir(domain))
+    if part_name:
+        return os.path.join(get_sorted_proxy_dir(domain), "tmp", "{}_{}_proxy.csv".format(protocol, part_name))
+    else:
+        return os.path.join(get_sorted_proxy_dir(domain), "{}_proxy.csv".format(protocol))
+
+
+def get_checked_proxy(domain, protocol='http'):
+    if os.path.exists(get_sorted_proxy_path(domain, protocol=protocol)):
+        return pd.read_csv(get_proxy_path(protocol))
     else:
         return pd.DataFrame()
 
 
-def get_https_proxy():
-    if os.path.exists(get_https_proxy_path()):
-        return pd.read_csv(get_https_proxy_path())
+def get_proxy(protocol='http'):
+    if os.path.exists(get_proxy_path(protocol)):
+        return pd.read_csv(get_proxy_path(protocol))
     else:
         return pd.DataFrame()
 
 
-def get_socks_proxy():
-    if os.path.exists(get_socks_proxy_path()):
-        return pd.read_csv(get_socks_proxy_path())
-    else:
-        return pd.DataFrame()
-
-
-def save_http_proxy(proxies):
-    global http_proxy_df
-    http_proxy_df = http_proxy_df.append(proxies)
-    http_proxy_df.drop_duplicates(subset=('url'), keep='last')
-    http_proxy_df.to_csv(get_http_proxy_path(), index=False)
-
-
-def save_https_proxy(proxies):
-    global https_proxy_df
-    https_proxy_df = https_proxy_df.append(proxies)
-    https_proxy_df.drop_duplicates(subset=('url'), keep='last')
-    https_proxy_df.to_csv(get_https_proxy_path(), index=False)
-
-
-def save_socks_proxy(proxies):
-    global socks_proxy_df
-    socks_proxy_df = socks_proxy_df.append(proxies)
-    socks_proxy_df.drop_duplicates(subset=('url'), keep='last')
-    socks_proxy_df.to_csv(get_socks_proxy_path(), index=False)
+def save_proxy(proxies, protocol='http'):
+    proxy_df = get_proxy(protocol)
+    proxy_df = proxy_df.append(proxies)
+    proxy_df.drop_duplicates(subset=('url'), keep='last')
+    proxy_df.to_csv(get_proxy_path(protocol), index=False)
 
 
 if not os.path.exists(get_proxy_dir()):
     os.makedirs(get_proxy_dir())
-
-http_proxy_df = get_http_proxy()
-https_proxy_df = get_https_proxy()
-socks_proxy_df = get_socks_proxy()
