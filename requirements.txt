@@ -22,3 +22,5 @@ pandas == 0.21.0
 pytdx == 1.55
 
 apscheduler == 3.4.0
+
+requests == 2.18.4
