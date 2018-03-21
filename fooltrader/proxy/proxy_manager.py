@@ -109,7 +109,7 @@ def check_proxy(url):
                 logger.error("{} using proxy:{} error:{}".format(url, item['url'], e))
 
 
-def merge_checked():
+def merge_checked(remove_tmp=True):
     for protocol in ['http', 'https']:
         merge_path = get_checked_proxy_path(protocol)
         if os.path.exists(merge_path):
@@ -125,6 +125,9 @@ def merge_checked():
                     df = pd.read_csv(the_file)
                 else:
                     df = df.append(pd.read_csv(the_file), ignore_index=True)
+
+                if remove_tmp:
+                    os.remove(the_file)
 
         if df is not None:
             df = df.drop_duplicates(subset=('url'), keep='last')

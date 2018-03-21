@@ -17,6 +17,8 @@ from fooltrader.spiders.america.america_stock_finance_spider import AmericaStock
 from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
 from fooltrader.spiders.america.s500_spider import Sp500Spider
 from fooltrader.spiders.security_list_spider import SecurityListSpider
+from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
+from fooltrader.spiders.stock_tick_spider import StockTickSpider
 
 configure_logging()
 
@@ -29,13 +31,13 @@ runner = CrawlerRunner(get_project_settings())
 def crawl():
     # yield runner.crawl(AmericaListSpider)
     # yield runner.crawl(AmericaStockKdataSpider)
-    yield runner.crawl(AmericaStockFinanceSpider)
+    # yield runner.crawl(AmericaStockFinanceSpider)
     # yield runner.crawl(Sp500Spider)
     # yield runner.crawl(SecurityListSpider)
     # yield runner.crawl(StockKdataSpider163)
     # yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
-    # yield runner.crawl(StockKDataSpider)
+    yield runner.crawl(StockKDataSpider)
 
     # yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)

@@ -46,11 +46,11 @@ def get_sorted_proxy_path(domain, protocol='http', part_name=None):
         return os.path.join(get_sorted_proxy_dir(domain), "{}_proxy.csv".format(protocol))
 
 
-def get_checked_proxy(domain, protocol='http'):
-    if os.path.exists(get_sorted_proxy_path(domain, protocol=protocol)):
-        return pd.read_csv(get_proxy_path(protocol))
-    else:
-        return pd.DataFrame()
+def get_checked_proxy(domain=None, protocol='http'):
+    if domain and os.path.exists(get_sorted_proxy_path(domain, protocol=protocol)):
+        return pd.read_csv(get_sorted_proxy_path(domain, protocol))
+    if os.path.exists(get_checked_proxy_path(protocol)):
+        return pd.read_csv(get_checked_proxy_path(protocol))
 
 
 def get_proxy(protocol='http'):

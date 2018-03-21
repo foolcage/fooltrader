@@ -13,6 +13,8 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
     KDATA_COLUMN_INDEX
 from fooltrader.contract.files_contract import get_kdata_path
+from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
+from fooltrader.spiders.common import random_proxy
 from fooltrader.utils import utils
 
 
@@ -29,6 +31,8 @@ class StockKdataSpider163(scrapy.Spider):
     }
 
     # 指定日期的话，是用来抓增量数据的
+    # 如果需要代理请打开
+    # @random_proxy
     def yield_request(self, item, start_date=None, end_date=None):
         data_path = get_kdata_path(item, source='163')
 
@@ -59,7 +63,7 @@ class StockKdataSpider163(scrapy.Spider):
             for request in self.yield_request(item, start_date, end_date):
                 yield request
         else:
-            for _, item in get_security_list().iterrows():
+            for _, item in get_security_list(start=STOCK_START_CODE, end=STOCK_END_CODE).iterrows():
                 for request in self.yield_request(item):
                     yield request
 

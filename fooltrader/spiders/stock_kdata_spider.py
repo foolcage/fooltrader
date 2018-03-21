@@ -13,7 +13,8 @@ from fooltrader.api.quote import get_security_list, kdata_exist, merge_kdata_to_
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path
-from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
+from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA, STOCK_START_CODE, STOCK_END_CODE
+from fooltrader.spiders.common import random_proxy
 from fooltrader.utils.utils import get_quarters, get_year_quarter
 
 
@@ -32,6 +33,8 @@ class StockKDataSpider(scrapy.Spider):
     if AUTO_KAFKA:
         producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
+    # 如果需要代理请打开
+    # @random_proxy
     def yield_request(self, item, trading_dates=[], fuquan=None):
         the_quarters = []
         force_download = False
@@ -72,7 +75,7 @@ class StockKDataSpider(scrapy.Spider):
             for request in self.yield_request(item, trading_dates, fuquan):
                 yield request
         else:
-            for _, item in get_security_list().iterrows():
+            for _, item in get_security_list(start=STOCK_START_CODE, end=STOCK_END_CODE).iterrows():
                 for request in self.yield_request(item):
                     yield request
 

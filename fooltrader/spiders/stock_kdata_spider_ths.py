@@ -12,6 +12,7 @@ from fooltrader.api.quote import get_security_list
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path, get_trading_dates_path_ths
+from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 
 
 class StockKDataSpiderTHS(scrapy.Spider):
@@ -39,7 +40,7 @@ class StockKDataSpiderTHS(scrapy.Spider):
     }
 
     def start_requests(self):
-        for _, item in get_security_list().iterrows():
+        for _, item in get_security_list(start=STOCK_START_CODE, end=STOCK_END_CODE).iterrows():
             for fuquan in ['hfq', 'bfq']:
                 data_path = get_kdata_path(item, fuquan=fuquan, source='ths')
                 data_exist = os.path.isfile(data_path)

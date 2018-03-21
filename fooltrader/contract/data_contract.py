@@ -14,7 +14,8 @@ KDATA_INDEX_COLUMN_163 = ['timestamp', 'code', 'low', 'open', 'close', 'high', '
                           'preClose', 'change', 'changePct']
 
 # 上证交易所,深圳交易所,纳斯达克,纽交所,美国证券交易所
-EXCHANGE_LIST_COL = ['sh', 'sz', 'nasdaq', 'nyse', 'amex']
+# EXCHANGE_LIST_COL = ['sh', 'sz', 'nasdaq', 'nyse', 'amex']
+EXCHANGE_LIST_COL = ['sh', 'sz']
 
 # 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值,平均PE
 KDATA_COLUMN_INDEX = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
