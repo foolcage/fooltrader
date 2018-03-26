@@ -4,10 +4,12 @@ import datetime
 import os
 import zipfile
 
-from fooltrader.settings import FOOLTRADER_STORE_PATH
+from fooltrader.contract.files_contract import get_code_from_path
+from fooltrader.settings import FOOLTRADER_STORE_PATH, STOCK_END_CODE, STOCK_START_CODE
 
 
-def zip_dir(src_dir=FOOLTRADER_STORE_PATH, dst_dir=None, zip_file_name=None, include_tick=False):
+def zip_dir(src_dir=FOOLTRADER_STORE_PATH, start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, dst_dir=None,
+            zip_file_name=None, include_tick=False, just_tick=False):
     if not zip_file_name:
         zip_file_name = "data-{}.zip".format(datetime.datetime.today())
 
@@ -21,9 +23,20 @@ def zip_dir(src_dir=FOOLTRADER_STORE_PATH, dst_dir=None, zip_file_name=None, inc
     for folder, subfolders, files in os.walk(src_dir):
         for file in files:
             the_path = os.path.join(folder, file)
+            # 过滤code
+            current_code = get_code_from_path(the_path=the_path)
+            if current_code:
+                if current_code > end_code or current_code < start_code:
+                    continue
 
-            if not include_tick and 'tick' in the_path:
+            # 只打包tick
+            if just_tick:
+                if not 'tick' in the_path:
+                    continue
+            # 不打包tick
+            elif not include_tick and 'tick' in the_path:
                 continue
+
             print("zip {}".format(the_path))
             the_zip_file.write(the_path,
                                os.path.relpath(the_path, src_dir),
@@ -41,5 +54,5 @@ def unzip(zip_file, dst_dir):
 
 
 if __name__ == '__main__':
-    zip_dir(include_tick=True, zip_file_name="data.zip")
-    unzip(os.path.abspath(os.path.join(FOOLTRADER_STORE_PATH, os.pardir, "data.zip")), FOOLTRADER_STORE_PATH)
+    zip_dir(zip_file_name="data.zip", just_tick=True, start_code='000002', end_code='000002')
+    # unzip(os.path.abspath(os.path.join(FOOLTRADER_STORE_PATH, os.pardir, "data.zip")), FOOLTRADER_STORE_PATH)

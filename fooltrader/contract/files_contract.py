@@ -105,3 +105,11 @@ def get_trading_dates_path_ths(item):
 
 def get_trading_dates_path_sse(item):
     return os.path.join(get_security_dir(item), 'trading_dates_sse.json')
+
+
+def get_code_from_path(the_path, security_type='stock'):
+    the_dir = os.path.join(settings.FOOLTRADER_STORE_PATH, security_type)
+    if the_dir in the_path:
+        strs = the_path[len(the_dir):].split('/')
+        if len(strs) > 2:
+            return strs[2]
