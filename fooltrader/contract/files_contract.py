@@ -17,6 +17,14 @@ def get_category_dir(security_type='stock'):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, 'category')
 
 
+def get_exchange_dir(security_type='future', exchange='shfe'):
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange)
+
+
+def get_exchange_cache_dir(security_type='future', exchange='shfe'):
+    return os.path.join(get_exchange_dir(security_type=security_type, exchange=exchange), 'cache')
+
+
 # 标的相关
 def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, '{}.csv'.format(exchange))

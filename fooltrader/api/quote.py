@@ -40,7 +40,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
     security_type : str
         {‘stock’, 'future'},default: stock
     exchanges : list
-        ['sh', 'sz','nasdaq','nyse','amex'],default: ['sh','sz']
+        ['sh', 'sz','nasdaq','nyse','amex','shfe','dce','zce'],default: ['sh','sz']
     start : str
         the start code,default:None
         only works when exchanges is ['sh','sz']
@@ -85,12 +85,19 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         df_usa = pd.DataFrame()
         if 'nasdaq' in exchanges:
             df_usa = pd.DataFrame(USA_STOCK_INDEX)
+    elif security_type == 'future':
+        for exchange in exchanges:
+            the_path = files_contract.get_security_list_path(security_type, exchange)
+            if os.path.exists(the_path):
+                df1 = pd.read_csv(the_path,
+                                  converters={'code': str})
+            df = df.append(df1, ignore_index=True)
 
     if df.size > 0:
         if start:
-            df = df[df["code"] <= end]
+            df = df[df["code"] <= start]
         if end:
-            df = df[df["code"] >= start]
+            df = df[df["code"] >= end]
         if start_list_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_list_date)]

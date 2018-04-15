@@ -8,7 +8,8 @@ import pandas as pd
 from fooltrader.api.quote import get_security_list
 from fooltrader.consts import USA_STOCK_INDEX
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
-from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir
+from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir, \
+    get_exchange_dir, get_exchange_cache_dir
 from fooltrader.settings import FOOLTRADER_STORE_PATH
 
 
@@ -32,7 +33,7 @@ def init_log():
     root_logger.addHandler(ch)
 
 
-def mkdir_for_security(item):
+def mkdir_for_stock(item):
     finance_dir = get_finance_dir(item)
     if not os.path.exists(finance_dir):
         os.makedirs(finance_dir)
@@ -61,13 +62,18 @@ def init_env():
     else:
         # 初始化股票文件夹
         for _, item in get_security_list(exchanges=EXCHANGE_LIST_COL).iterrows():
-            mkdir_for_security(item)
+            mkdir_for_stock(item)
 
         # 初始化指数文件夹
         for _, item in get_security_list(security_type='index', exchanges=['sh', 'sz', 'nasdaq']).iterrows():
             kdata_dir = get_kdata_dir(item)
             if not os.path.exists(kdata_dir):
                 os.makedirs(kdata_dir)
+        # 初始化期货文件夹
+        for exchange in ['shfe', 'dce', 'zce']:
+            exchange_cache_dir = get_exchange_cache_dir(security_type='future', exchange=exchange)
+            if not os.path.exists(exchange_cache_dir):
+                os.makedirs(exchange_cache_dir)
 
 
 pd.set_option('expand_frame_repr', False)

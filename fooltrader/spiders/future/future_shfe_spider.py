@@ -9,9 +9,9 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163
-from fooltrader.contract.files_contract import get_kdata_path
+from fooltrader.contract.files_contract import get_kdata_path, get_exchange_cache_dir
+from fooltrader.datamanager.zipdata import unzip
 from fooltrader.utils import utils
 
 
@@ -26,7 +26,7 @@ class FutureShfeSpider(scrapy.Spider):
 
     # 指定日期的话，是用来抓增量数据的
     def yield_request(self, item, start_date=None, end_date=None):
-        data_path = get_kdata_path(item, source='163')
+        data_path = get_kdata_path(item, source='exchange')
 
         if start_date:
             start = start_date.strftime('%Y%m%d')
@@ -39,11 +39,7 @@ class FutureShfeSpider(scrapy.Spider):
             end = datetime.today().strftime('%Y%m%d')
 
         if not os.path.exists(data_path) or start_date or end_date:
-            if item['exchange'] == 'sh':
-                exchange_flag = 0
-            else:
-                exchange_flag = 1
-            url = self.get_k_data_url(exchange_flag, item['code'], start, end)
+            url = self.get_k_data_url()
             yield Request(url=url, meta={'path': data_path, 'item': item},
                           callback=self.download_day_k_data)
 
@@ -55,9 +51,52 @@ class FutureShfeSpider(scrapy.Spider):
             for request in self.yield_request(item, start_date, end_date):
                 yield request
         else:
-            for _, item in get_security_list().iterrows():
-                for request in self.yield_request(item):
-                    yield request
+            # 直接抓年度统计数据
+            for the_year in range(2009, datetime.today().year):
+                the_dir = get_exchange_cache_dir(security_type='future', exchange='shfe')
+                the_path = os.path.join(the_dir, "{}_shfe_history_data.zip".format(the_year))
+
+                if not os.path.exists(the_path):
+                    yield Request(url=self.get_k_data_url(the_year=the_year),
+                                  meta={'the_year': the_year,
+                                        'the_path': the_path},
+                                  callback=self.download_shfe_history_data)
+
+    def download_shfe_history_data(self, response):
+        content_type_header = response.headers.get('content-type', None)
+        the_year = response.meta['the_year']
+        the_path = response.meta['the_path']
+
+        if content_type_header.decode("utf-8") == 'application/zip':
+            with open(the_path, "wb") as f:
+                f.write(response.body)
+                f.flush()
+
+        else:
+            self.logger.error(
+                "get shfe year {} data failed:the_path={} url={} content type={} body={}".format(the_year,
+                                                                                                 the_path,
+                                                                                                 response.url,
+                                                                                                 content_type_header,
+                                                                                                 response.body))
+
+    def parse_history_data(self):
+        the_dir = get_exchange_cache_dir(security_type='future', exchange='shfe')
+        for the_zip_file in [os.path.join(the_dir, f) for f in
+                             os.listdir(the_dir) if f.endswith('.zip')
+                             ]:
+            dst_file = the_zip_file.replace('.zip', ".xls")
+
+            if not os.path.exists(dst_file):
+                dst_dir = the_zip_file.replace('.zip', "")
+                os.makedirs(dst_dir)
+
+                unzip(the_zip_file, dst_dir)
+                files = [os.path.join(dst_dir, f) for f in
+                         os.listdir(dst_dir) if f.endswith('.xls')
+                         ]
+                if len(files) == 1:
+                    os.rename(files[0], dst_file)
 
     def download_day_k_data(self, response):
         path = response.meta['path']
@@ -98,6 +137,7 @@ class FutureShfeSpider(scrapy.Spider):
         return spider
 
     def spider_closed(self, spider, reason):
+        self.parse_history_data()
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
 
     def get_k_data_url(self, the_date=None, the_year=2009):

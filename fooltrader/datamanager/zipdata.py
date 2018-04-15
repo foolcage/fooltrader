@@ -4,7 +4,7 @@ import datetime
 import os
 import zipfile
 
-from fooltrader.contract.files_contract import get_code_from_path
+from fooltrader.contract.files_contract import get_code_from_path, get_exchange_dir
 from fooltrader.settings import FOOLTRADER_STORE_PATH, STOCK_END_CODE, STOCK_START_CODE
 
 
@@ -54,5 +54,6 @@ def unzip(zip_file, dst_dir):
 
 
 if __name__ == '__main__':
-    zip_dir(zip_file_name="data.zip", just_tick=True, start_code='000002', end_code='000002')
+    # zip_dir(zip_file_name="data.zip", just_tick=True, start_code='000002', end_code='000002')
     # unzip(os.path.abspath(os.path.join(FOOLTRADER_STORE_PATH, os.pardir, "data.zip")), FOOLTRADER_STORE_PATH)
+    unzip("/home/xuanqi/workspace/github/fooltrader/data/future/shfe/2009_shfe_history_data.zip", get_exchange_dir(security_type='future', exchange='shfe'))
