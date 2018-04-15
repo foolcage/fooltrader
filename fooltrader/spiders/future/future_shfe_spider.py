@@ -22,9 +22,6 @@ class FutureShfeSpider(scrapy.Spider):
         # 'DOWNLOAD_DELAY': 2,
         # 'CONCURRENT_REQUESTS_PER_DOMAIN': 8,
 
-        'SPIDER_MIDDLEWARES': {
-            'fooltrader.middlewares.FoolErrorMiddleware': 1000,
-        }
     }
 
     # 指定日期的话，是用来抓增量数据的
@@ -108,5 +105,6 @@ class FutureShfeSpider(scrapy.Spider):
             return 'http://www.shfe.com.cn/historyData/MarketData_Year_{}.zip'.format(the_year)
         elif the_date:
             return 'http://www.shfe.com.cn/data/dailydata/kx/kx{}.dat'.format(the_date)
+
     def get_trading_date_url(self):
         return 'http://www.shfe.com.cn/bourseService/businessdata/calendar/20171201all.dat'

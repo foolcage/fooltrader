@@ -80,7 +80,7 @@ def stock_meta_to_es(force=False):
             start_date = latest_record['listDate']
 
     actions = []
-    for _, item in get_security_list(mode='es', start_date=start_date, exchanges=EXCHANGE_LIST_COL).iterrows():
+    for _, item in get_security_list(mode='es', start_list_date=start_date, exchanges=EXCHANGE_LIST_COL).iterrows():
         if start_date and is_same_date(start_date, item['listDate']):
             continue
         try:

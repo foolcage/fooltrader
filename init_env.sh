@@ -32,7 +32,7 @@ if ! which virtualenv > /dev/null; then
 fi
 
 if [ ! -d "$BASEDIR/ve" ]; then
-    virtualenv -p python3 $BASEDIR/ve --system-site-packages
+    virtualenv -p python3 $BASEDIR/ve
     echo "Virtualenv created."
 fi
 

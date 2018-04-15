@@ -25,9 +25,13 @@ def convert_to_list_if_need(input):
         return input
 
 
+def get_support_exchanges():
+    return ['sh', 'sz', 'shfe', 'dce', 'zce']
+
+
 # meta
 def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None, end=None,
-                      mode='simple', start_date=None, codes=None):
+                      mode='simple', start_list_date=None, codes=None):
     """
     get security list.
 
@@ -45,7 +49,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         only works when exchanges is ['sh','sz']
     mode : str
         whether parse more security info,{'simple','es'},default:'simple'
-    start_date : Timestamp str or Timestamp
+    start_list_date : Timestamp str or Timestamp
         the filter for start list date,default:None
     codes : list
         the exact codes to query,default:None
@@ -87,9 +91,9 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
             df = df[df["code"] <= end]
         if end:
             df = df[df["code"] >= start]
-        if start_date:
+        if start_list_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
-            df = df[df['listDate'] >= pd.Timestamp(start_date)]
+            df = df[df['listDate'] >= pd.Timestamp(start_list_date)]
 
         df = df.set_index(df['code'], drop=False)
 
