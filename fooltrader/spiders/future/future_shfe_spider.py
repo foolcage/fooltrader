@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import io
+import json
 import os
 from datetime import datetime
 
@@ -10,9 +10,8 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader.api.quote import parse_shfe_data
-from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163
-from fooltrader.contract.files_contract import get_kdata_path, get_exchange_cache_dir
-from fooltrader.utils import utils
+from fooltrader.contract.files_contract import get_exchange_cache_dir
+from fooltrader.utils.utils import to_time_str
 
 
 class FutureShfeSpider(scrapy.Spider):
@@ -24,32 +23,14 @@ class FutureShfeSpider(scrapy.Spider):
 
     }
 
-    # 指定日期的话，是用来抓增量数据的
-    def yield_request(self, item, start_date=None, end_date=None):
-        data_path = get_kdata_path(item, source='exchange')
-
-        if start_date:
-            start = start_date.strftime('%Y%m%d')
-        else:
-            start = item['listDate'].replace('-', '')
-
-        if end_date:
-            end = end_date.strftime('%Y%m%d')
-        else:
-            end = datetime.today().strftime('%Y%m%d')
-
-        if not os.path.exists(data_path) or start_date or end_date:
-            url = self.get_k_data_url()
-            yield Request(url=url, meta={'path': data_path, 'item': item},
-                          callback=self.download_day_k_data)
-
     def start_requests(self):
-        item = self.settings.get("security_item")
         start_date = self.settings.get("start_date")
         end_date = self.settings.get("end_date")
-        if item is not None:
-            for request in self.yield_request(item, start_date, end_date):
-                yield request
+        if start_date and end_date:
+            for the_date in pd.date_range(start_date, end_date):
+                yield Request(url=self.get_k_data_url(the_date=the_date),
+                              meta={'the_date': to_time_str(the_time=the_date, time_fmt='%Y%m%d')},
+                              callback=self.download_shfe_data_by_date)
         else:
             # 直接抓年度统计数据
             for the_year in range(2009, datetime.today().year):
@@ -80,37 +61,31 @@ class FutureShfeSpider(scrapy.Spider):
                                                                                                  content_type_header,
                                                                                                  response.body))
 
-    def download_day_k_data(self, response):
+    def download_shfe_data_by_date(self, response):
         path = response.meta['path']
-        item = response.meta['item']
+        the_date = response.meta['the_date']
 
-        try:
-            # 已经保存的csv数据
-            if os.path.exists(path):
-                df_current = pd.read_csv(path, dtype=str)
-            else:
-                df_current = pd.DataFrame()
+        tmp_str = response.body.decode('UTF8')
+        the_json = json.loads(tmp_str)
+        the_datas = the_json['o_curinstrument']
+        {'CLOSEPRICE': 11480,
+         'DELIVERYMONTH': '1809',
+         'HIGHESTPRICE': 11555,
+         'LOWESTPRICE': 11320,
+         'OPENINTEREST': 425692,
+         'OPENINTERESTCHG': 3918,
+         'OPENPRICE': 11495,
+         'ORDERNO': 0,
+         'PRESETTLEMENTPRICE': 11545,
+         'PRODUCTID': 'ru_f    ',
+         'PRODUCTNAME': '天然橡胶            ',
+         'PRODUCTSORTNO': 100,
+         'SETTLEMENTPRICE': 11465,
+         'VOLUME': 456574,
+         'ZD1_CHG': -65,
+         'ZD2_CHG': -80}
 
-            df = utils.read_csv(io.BytesIO(response.body), encoding='GB2312', na_values='None')
-            df['code'] = item['code']
-            df['securityId'] = item['id']
-            df = df.loc[:,
-                 ['日期', 'code', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额', '涨跌幅', '换手率',
-                  '总市值', '流通市值']]
-            df['factor'] = None
-            df.columns = KDATA_COLUMN_STOCK
-
-            # 合并到当前csv中
-            df_current = df_current.append(df, ignore_index=True)
-
-            df_current = df_current.dropna(subset=KDATA_COLUMN_163)
-            df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
-            df_current = df_current.set_index(df_current['timestamp'])
-            df_current.index = pd.to_datetime(df_current.index)
-            df_current = df_current.sort_index()
-            df_current.to_csv(path, index=False)
-        except Exception as e:
-            self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
+        print(the_datas)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

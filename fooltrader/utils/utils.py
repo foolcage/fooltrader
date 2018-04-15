@@ -79,6 +79,7 @@ def get_tick_item(path, the_date, security_item):
                    "volume": volume,
                    "turnover": turnover}
 
+
 def get_datetime(str):
     return datetime.datetime.strptime(str, TIME_FORMAT_DAY)
 
