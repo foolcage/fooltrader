@@ -9,9 +9,9 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
+from fooltrader.api.quote import parse_shfe_data
 from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163
 from fooltrader.contract.files_contract import get_kdata_path, get_exchange_cache_dir
-from fooltrader.datamanager.zipdata import unzip
 from fooltrader.utils import utils
 
 
@@ -80,24 +80,6 @@ class FutureShfeSpider(scrapy.Spider):
                                                                                                  content_type_header,
                                                                                                  response.body))
 
-    def parse_history_data(self):
-        the_dir = get_exchange_cache_dir(security_type='future', exchange='shfe')
-        for the_zip_file in [os.path.join(the_dir, f) for f in
-                             os.listdir(the_dir) if f.endswith('.zip')
-                             ]:
-            dst_file = the_zip_file.replace('.zip', ".xls")
-
-            if not os.path.exists(dst_file):
-                dst_dir = the_zip_file.replace('.zip', "")
-                os.makedirs(dst_dir)
-
-                unzip(the_zip_file, dst_dir)
-                files = [os.path.join(dst_dir, f) for f in
-                         os.listdir(dst_dir) if f.endswith('.xls')
-                         ]
-                if len(files) == 1:
-                    os.rename(files[0], dst_file)
-
     def download_day_k_data(self, response):
         path = response.meta['path']
         item = response.meta['item']
@@ -137,7 +119,7 @@ class FutureShfeSpider(scrapy.Spider):
         return spider
 
     def spider_closed(self, spider, reason):
-        self.parse_history_data()
+        parse_shfe_data()
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)
 
     def get_k_data_url(self, the_date=None, the_year=2009):

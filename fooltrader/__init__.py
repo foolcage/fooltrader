@@ -75,6 +75,10 @@ def init_env():
             if not os.path.exists(exchange_cache_dir):
                 os.makedirs(exchange_cache_dir)
 
+            exchange_dir = get_exchange_dir(security_type='future', exchange=exchange)
+            if not os.path.exists(exchange_dir):
+                os.makedirs(exchange_dir)
+
 
 pd.set_option('expand_frame_repr', False)
 

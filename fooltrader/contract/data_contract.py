@@ -76,3 +76,23 @@ FINANCE_SUMMARY_COL = ["id",
                        "assetTurnover",
                        "freeCashFlowPerShare",
                        "currentRatio"]
+
+CHINA_FUTURE_CODE_MAP_NAME = {'cu': '铜',
+                              'al': '铝',
+                              'zn': '锌',
+                              'pb': '铅',
+                              'ni': '镍',
+                              'sn': '锡',
+                              'au': '黄金',
+                              'ag': '白银',
+                              'rb': '螺纹钢',
+                              'wr': '线材',
+                              'hc': '热轧卷板',
+                              'fu': '燃料油',
+                              'bu': '石油沥青',
+                              'ru': '天然橡胶'}
+
+
+def get_future_name(code):
+    simple_code = code[:-4]
+    return "{}{}".format(CHINA_FUTURE_CODE_MAP_NAME[simple_code], simple_code[-4:])

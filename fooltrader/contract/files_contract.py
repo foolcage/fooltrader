@@ -22,7 +22,7 @@ def get_exchange_dir(security_type='future', exchange='shfe'):
 
 
 def get_exchange_cache_dir(security_type='future', exchange='shfe'):
-    return os.path.join(get_exchange_dir(security_type=security_type, exchange=exchange), 'cache')
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, "{}.{}.cache".format(security_type, exchange))
 
 
 # 标的相关
@@ -36,10 +36,11 @@ def get_security_dir(item):
 
 # k线相关
 def get_kdata_dir(item, fuquan='bfq'):
-    if item['type'] == 'index':
-        return os.path.join(get_security_dir(item), 'kdata')
-    elif item['type'] == 'stock':
+    # 目前只有股票需要复权信息
+    if item['type'] == 'stock':
         return os.path.join(get_security_dir(item), 'kdata', _to_valid_fuquan(fuquan))
+    else:
+        return os.path.join(get_security_dir(item), 'kdata')
 
 
 def get_kdata_path(item, source='163', fuquan='bfq', year=None, quarter=None):

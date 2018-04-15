@@ -74,12 +74,12 @@ class StockKdataSpider163(scrapy.Spider):
         try:
             # 已经保存的csv数据
             if os.path.exists(path):
-                df_current = pd.read_csv(path, dtype=str)
+                saved_df = pd.read_csv(path, dtype=str)
                 # 补全历史数据
-                if 'name' not in df_current.columns:
-                    df_current['name'] = item['name']
+                if 'name' not in saved_df.columns:
+                    saved_df['name'] = item['name']
             else:
-                df_current = pd.DataFrame()
+                saved_df = pd.DataFrame()
 
             df = utils.read_csv(io.BytesIO(response.body), encoding='GB2312', na_values='None')
             df['code'] = item['code']
@@ -104,22 +104,22 @@ class StockKdataSpider163(scrapy.Spider):
                 df.columns = KDATA_COLUMN_STOCK
 
             # 合并到当前csv中
-            df_current = df_current.append(df, ignore_index=True)
+            saved_df = saved_df.append(df, ignore_index=True)
 
             if item['type'] == 'index':
-                df_current = df_current.dropna(subset=KDATA_INDEX_COLUMN_163)
+                saved_df = saved_df.dropna(subset=KDATA_INDEX_COLUMN_163)
                 # 保证col顺序
-                df_current = df_current.loc[:, KDATA_COLUMN_INDEX]
+                saved_df = saved_df.loc[:, KDATA_COLUMN_INDEX]
             else:
-                df_current = df_current.dropna(subset=KDATA_COLUMN_163)
+                saved_df = saved_df.dropna(subset=KDATA_COLUMN_163)
                 # 保证col顺序
-                df_current = df_current.loc[:, KDATA_COLUMN_STOCK]
+                saved_df = saved_df.loc[:, KDATA_COLUMN_STOCK]
 
-            df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
-            df_current = df_current.set_index(df_current['timestamp'],drop=False)
-            df_current.index = pd.to_datetime(df_current.index)
-            df_current = df_current.sort_index()
-            df_current.to_csv(path, index=False)
+            saved_df = saved_df.drop_duplicates(subset='timestamp', keep='last')
+            saved_df = saved_df.set_index(saved_df['timestamp'],drop=False)
+            saved_df.index = pd.to_datetime(saved_df.index)
+            saved_df = saved_df.sort_index()
+            saved_df.to_csv(path, index=False)
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
 

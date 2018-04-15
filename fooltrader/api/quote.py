@@ -11,8 +11,10 @@ import pandas as pd
 from fooltrader.consts import CHINA_STOCK_INDEX, USA_STOCK_INDEX
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
-from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path
-from fooltrader.settings import US_STOCK_CODES
+from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
+from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
+    get_security_list_path
+from fooltrader.datamanager.zipdata import unzip
 from fooltrader.utils.utils import get_file_name, to_time_str
 
 logger = logging.getLogger(__name__)
@@ -64,7 +66,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         df = pd.DataFrame()
         df_usa = pd.DataFrame()
         for exchange in exchanges:
-            the_path = files_contract.get_security_list_path(security_type, exchange)
+            the_path = get_security_list_path(security_type, exchange)
             if os.path.exists(the_path):
                 if exchange == 'sh' or exchange == 'sz':
                     if mode == 'simple':
@@ -86,12 +88,14 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         if 'nasdaq' in exchanges:
             df_usa = pd.DataFrame(USA_STOCK_INDEX)
     elif security_type == 'future':
+        df = pd.DataFrame()
         for exchange in exchanges:
-            the_path = files_contract.get_security_list_path(security_type, exchange)
+            the_path = get_security_list_path(security_type, exchange)
             if os.path.exists(the_path):
                 df1 = pd.read_csv(the_path,
                                   converters={'code': str})
-            df = df.append(df1, ignore_index=True)
+                df = df.append(df1, ignore_index=True)
+        return df
 
     if df.size > 0:
         if start:
@@ -422,8 +426,85 @@ def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
                 add_factor_to_163(security_item)
 
 
+def parse_shfe_data():
+    the_dir = get_exchange_cache_dir(security_type='future', exchange='shfe')
+    for the_zip_file in [os.path.join(the_dir, f) for f in
+                         os.listdir(the_dir) if f.endswith('.zip')
+                         ]:
+        dst_file = the_zip_file.replace('.zip', ".xls")
+
+        if not os.path.exists(dst_file):
+            dst_dir = the_zip_file.replace('.zip', "")
+            os.makedirs(dst_dir)
+
+            unzip(the_zip_file, dst_dir)
+            files = [os.path.join(dst_dir, f) for f in
+                     os.listdir(dst_dir) if f.endswith('.xls')
+                     ]
+            if len(files) == 1:
+                os.rename(files[0], dst_file)
+
+    for the_file in [os.path.join(the_dir, f) for f in
+                     os.listdir(the_dir) if f.endswith('.xls')
+                     ]:
+        logger.info("parse {}".format(the_file))
+
+        df = pd.read_excel(the_file, skiprows=2, skip_footer=4, index_col='合约', converters={'日期': str})
+        df.index = pd.Series(df.index).fillna(method='ffill')
+        df = df.loc[:, ['日期', '前收盘', '前结算', '开盘价', '最高价', '最低价', '收盘价', '结算价', '涨跌1', '涨跌2', '成交量', '成交金额', '持仓量']]
+        df.columns = ['timestamp', 'preClose', 'preSettlement', 'open', 'high', 'low', 'close', 'settlement',
+                      'change', 'change1', 'volume', 'turnover', 'openInterest']
+
+        unique_index = df.index.drop_duplicates()
+
+        security_list = get_security_list(security_type='future', exchanges=['shfe'])
+
+        for the_contract in unique_index:
+            logger.info("start handling {} in {}".format(the_contract, the_file))
+            security_item = {'code': the_contract,
+                             'name': get_future_name(the_contract),
+                             'id': 'future_{}_{}'.format('shfe', the_contract),
+                             'exchange': 'shfe',
+                             'type': 'future'}
+            # 检查是否需要保存合约meta
+            if security_list is not None and 'code' in security_list.columns:
+                security_list = security_list.set_index(security_list['code'], drop=False)
+            if the_contract not in security_list.index:
+                security_list = security_list.append(security_item, ignore_index=True)
+                security_list.to_csv(get_security_list_path('future', 'shfe'), index=False)
+
+            the_df = df.loc[the_contract,]
+            the_df['code'] = the_contract
+            the_df['name'] = get_future_name(the_contract)
+            the_df['securityId'] = 'future_{}_{}'.format('shfe', the_contract)
+            the_df['changePct'] = the_df['change'] / the_df['preClose']
+            the_df['changePct1'] = the_df['change1'] / the_df['preSettlement']
+
+            kdata_path = get_kdata_path(item=security_item, source='exchange')
+            # TODO：这些逻辑应该统一处理
+            kdata_dir = get_kdata_dir(item=security_item)
+            if not os.path.exists(kdata_dir):
+                os.makedirs(kdata_dir)
+
+            if os.path.exists(kdata_path):
+                saved_df = pd.read_csv(kdata_path, dtype=str)
+            else:
+                saved_df = pd.DataFrame()
+
+            saved_df = saved_df.append(the_df, ignore_index=True)
+            saved_df = saved_df.loc[:, KDATA_COLUMN_FUTURE]
+            saved_df = saved_df.drop_duplicates(subset='timestamp', keep='last')
+            saved_df = saved_df.set_index(saved_df['timestamp'], drop=False)
+            saved_df.index = pd.to_datetime(saved_df.index)
+            saved_df = saved_df.sort_index()
+            saved_df.to_csv(kdata_path, index=False)
+
+            logger.info("end handling {} in {}".format(the_contract, the_file))
+
+
 if __name__ == '__main__':
-    print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
+    parse_shfe_data()
+    # print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
     # item = {"code": "000001", "type": "stock", "exchange": "sz"}
     # assert kdata_exist(item, 1991, 2) == True
     # assert kdata_exist(item, 1991, 3) == True
