@@ -95,4 +95,4 @@ CHINA_FUTURE_CODE_MAP_NAME = {'cu': '铜',
 
 def get_future_name(code):
     simple_code = code[:-4]
-    return "{}{}".format(CHINA_FUTURE_CODE_MAP_NAME[simple_code], simple_code[-4:])
+    return "{}{}".format(CHINA_FUTURE_CODE_MAP_NAME[simple_code], code[-4:])

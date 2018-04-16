@@ -17,6 +17,7 @@ from fooltrader.spiders.america.america_stock_finance_spider import AmericaStock
 from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
 from fooltrader.spiders.america.s500_spider import Sp500Spider
 from fooltrader.spiders.future.future_shfe_spider import FutureShfeSpider
+from fooltrader.spiders.future.shfe_trading_calendar_spider import ShfeTradingCalendarSpider
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
 from fooltrader.spiders.stock_tick_spider import StockTickSpider
@@ -38,7 +39,7 @@ def crawl():
     # yield runner.crawl(StockKdataSpider163)
     # yield runner.crawl(StockTradingDateSpider)
     # yield runner.crawl(StockKDataSpiderTHS)
-    yield runner.crawl(FutureShfeSpider)
+    yield runner.crawl(ShfeTradingCalendarSpider)
 
     # yield runner.crawl(StockTickSpider)
     # yield runner.crawl(StockFinanceSpider)

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
+from datetime import datetime
 
+import fooltrader.utils.utils
 from fooltrader import settings
 
 
-# 分类相关
 def get_category_path(security_type='stock', classified='industry', source='sina', category_item=None):
     if category_item:
         return os.path.join(get_category_dir(security_type), '{}_{}_{}.csv'.format(source, classified, category_item))
@@ -21,8 +22,24 @@ def get_exchange_dir(security_type='future', exchange='shfe'):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange)
 
 
-def get_exchange_cache_dir(security_type='future', exchange='shfe'):
-    return os.path.join(settings.FOOLTRADER_STORE_PATH, "{}.{}.cache".format(security_type, exchange))
+def get_exchange_trading_calendar_path(security_type='future', exchange='shfe'):
+    return os.path.join(get_exchange_dir(security_type, exchange), 'trading_calendar.json')
+
+
+def get_exchange_cache_dir(security_type='future', exchange='shfe', the_year=None,
+                           data_type="day_kdata"):
+    if the_year:
+        the_dir = os.path.join(settings.FOOLTRADER_STORE_PATH, ".cache", "{}.{}.cache".format(security_type, exchange))
+        return os.path.join(the_dir, "{}_{}".format(the_year, data_type))
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, ".cache", "{}.{}.cache".format(security_type, exchange))
+
+
+def get_exchange_cache_path(security_type='future', exchange='shfe', the_date=datetime.today(), data_type="day_kdata"):
+    the_dir = get_exchange_cache_dir(security_type=security_type, exchange=exchange, the_year=the_date.year,
+                                     data_type=data_type)
+    if not os.path.exists(the_dir):
+        os.makedirs(the_dir)
+    return os.path.join(the_dir, fooltrader.utils.utils.to_time_str(the_time=the_date, time_fmt='%Y%m%d'))
 
 
 # 标的相关

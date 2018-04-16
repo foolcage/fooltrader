@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+from datetime import datetime
 from multiprocessing import Process
 
 import pandas as pd
@@ -13,13 +14,14 @@ from fooltrader import settings
 from fooltrader.api import event
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items
 from fooltrader.api.quote import get_security_list, get_latest_download_trading_date, get_trading_dates, \
-    get_available_tick_dates, get_kdata
+    get_available_tick_dates, get_kdata, get_trading_calendar
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
-    get_cash_flow_statement_path
+    get_cash_flow_statement_path, get_exchange_cache_dir
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, US_STOCK_CODES
 from fooltrader.spiders.america.america_list_spider import AmericaListSpider
-from fooltrader.spiders.america.america_stock_finance_spider import AmericaStockFinanceSpider
 from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
+from fooltrader.spiders.future.future_shfe_spider import FutureShfeSpider
+from fooltrader.spiders.future.shfe_trading_calendar_spider import ShfeTradingCalendarSpider
 from fooltrader.spiders.security_list_spider import SecurityListSpider
 from fooltrader.spiders.stock.sina_category_spider import SinaCategorySpider
 from fooltrader.spiders.stock.stock_summary_spider import StockSummarySpider
@@ -203,6 +205,24 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
                 logger.info("{} tick is ok".format(security_item['code']))
 
 
+def crawl_shfe_quote():
+    # 先抓历年历史数据
+    process_crawl(FutureShfeSpider, {})
+    # 抓今年的交易日历
+    process_crawl(ShfeTradingCalendarSpider, {})
+    # 增量抓
+    cache_dir = get_exchange_cache_dir(security_type='future', exchange='shfe', the_year=datetime.today().year,
+                                       data_type="day_kdata")
+
+    saved_kdata_dates = [f for f in os.listdir(cache_dir)]
+    trading_dates = get_trading_calendar(security_type='future', exchange='shfe')
+
+    the_dates = set(trading_dates) - set(saved_kdata_dates)
+
+    process_crawl(FutureShfeSpider, {
+        "trading_dates": the_dates})
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--start_code', default='000001', help='the stock start code to be crawled')
@@ -213,5 +233,6 @@ if __name__ == '__main__':
     # crawl_stock_meta()
     # crawl_index_quote()
     # crawl_stock_quote(args.start_code, args.end_code)
-    crawl_finance_data(args.start_code, args.end_code)
+    # crawl_finance_data(args.start_code, args.end_code)
     # crawl_usa_stock_data()
+    crawl_shfe_quote()

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import json
 import logging
 import os
+import re
 from ast import literal_eval
 
 import numpy as np
@@ -13,9 +15,9 @@ from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
-    get_security_list_path
+    get_security_list_path, get_exchange_trading_calendar_path
 from fooltrader.datamanager.zipdata import unzip
-from fooltrader.utils.utils import get_file_name, to_time_str
+from fooltrader.utils.utils import get_file_name, to_time_str, drop_duplicate
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +140,10 @@ def _get_security_item(code=None, id=None, the_type='stock'):
         the security item
 
     """
-    df = get_security_list(security_type=the_type)
+    if the_type == 'future':
+        exchange = ['shfe']
+
+    df = get_security_list(security_type=the_type, exchanges=exchange)
     if id:
         df = df.set_index(df['id'])
         return df.loc[id,]
@@ -153,8 +158,14 @@ def to_security_item(security_item):
             security_item = _get_security_item(id=security_item, the_type='stock')
         elif 'index' in security_item:
             security_item = _get_security_item(id=security_item, the_type='index')
+        elif 'future' in security_item:
+            security_item = _get_security_item(id=security_item, the_type='future')
         else:
-            security_item = _get_security_item(code=security_item)
+            # 中国期货
+            if re.match("\w{2}\d{4}", security_item):
+                security_item = _get_security_item(code=security_item, the_type='future')
+            else:
+                security_item = _get_security_item(code=security_item)
     return security_item
 
 
@@ -280,7 +291,7 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
                     start_date = '2002-01-01'
                 else:
                     start_date = security_item['listDate']
-            else:
+            elif security_item['type'] == 'index':
                 start_date = datetime.datetime.today() - datetime.timedelta(days=30)
         if not end_date:
             end_date = datetime.datetime.today()
@@ -317,6 +328,16 @@ def get_latest_download_trading_date(security_item, return_next=True, source='16
         return df.index[-1] + pd.DateOffset(1)
     else:
         return df.index[-1]
+
+
+def get_trading_calendar(security_type='future', exchange='shfe'):
+    the_path = get_exchange_trading_calendar_path(security_type, exchange)
+
+    trading_dates = []
+    if os.path.exists(the_path):
+        with open(the_path) as data_file:
+            trading_dates = json.load(data_file)
+    return trading_dates
 
 
 def get_trading_dates(security_item, dtype='list', ignore_today=False, source='163', fuquan='bfq'):
@@ -426,8 +447,178 @@ def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
                 add_factor_to_163(security_item)
 
 
-def parse_shfe_data():
+def parse_shfe_day_data(force_parse=False):
+    cache_dir = get_exchange_cache_dir(security_type='future', exchange='shfe', the_year=datetime.datetime.today().year,
+                                       data_type="day_kdata")
+    the_parsed_path = os.path.join(cache_dir, 'parsed')
+    the_parsed = []
+    if os.path.exists(the_parsed_path):
+        with open(the_parsed_path) as data_file:
+            the_parsed = json.load(data_file)
+
+    if force_parse:
+        the_dates = [f for f in os.listdir(cache_dir) if
+                     f != 'parsed' and f]
+    else:
+        the_dates = [f for f in os.listdir(cache_dir) if
+                     f != 'parsed' and f not in the_parsed]
+
+    for the_date in the_dates:
+        the_path = os.path.join(cache_dir, the_date)
+        logger.info("start handling {}".format(the_path))
+
+        with open(the_path, 'r', encoding='UTF8') as f:
+            tmp_str = f.read()
+            the_json = json.loads(tmp_str)
+            the_datas = the_json['o_curinstrument']
+            # 日期,代码,名称,最低,开盘,收盘,最高,成交量(手),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),持仓量,结算价,前结算,涨跌额(按结算价),涨跌幅(按结算价)
+            KDATA_COLUMN_FUTURE = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover',
+                                   'securityId',
+                                   'preClose', 'change', 'changePct', 'openInterest', 'settlement', 'preSettlement',
+                                   'change1',
+                                   'changePct1']
+            for the_data in the_datas:
+                # {'CLOSEPRICE': 11480,
+                #  'DELIVERYMONTH': '1809',
+                #  'HIGHESTPRICE': 11555,
+                #  'LOWESTPRICE': 11320,
+                #  'OPENINTEREST': 425692,
+                #  'OPENINTERESTCHG': 3918,
+                #  'OPENPRICE': 11495,
+                #  'ORDERNO': 0,
+                #  'PRESETTLEMENTPRICE': 11545,
+                #  'PRODUCTID': 'ru_f    ',
+                #  'PRODUCTNAME': '天然橡胶            ',
+                #  'PRODUCTSORTNO': 100,
+                #  'SETTLEMENTPRICE': 11465,
+                #  'VOLUME': 456574,
+                #  'ZD1_CHG': -65,
+                #  'ZD2_CHG': -80}
+
+                if not re.match("\d{4}", the_data['DELIVERYMONTH']):
+                    continue
+
+                code = "{}{}".format(the_data['PRODUCTID'][:the_data['PRODUCTID'].index('_')],
+                                     the_data['DELIVERYMONTH'])
+                logger.info("start handling {} for {}".format(code, the_date))
+
+                name = get_future_name(code)
+                security_id = "future_shfe_{}".format(code)
+
+                security_list = get_security_list(security_type='future', exchanges=['shfe'])
+
+                logger.info("start handling {} for {}".format(code, the_date))
+                security_item = {'code': code,
+                                 'name': name,
+                                 'id': security_id,
+                                 'exchange': 'shfe',
+                                 'type': 'future'}
+                # 检查是否需要保存合约meta
+                if security_list is not None and 'code' in security_list.columns:
+                    security_list = security_list.set_index(security_list['code'], drop=False)
+                if code not in security_list.index:
+                    security_list = security_list.append(security_item, ignore_index=True)
+                    security_list.to_csv(get_security_list_path('future', 'shfe'), index=False)
+
+                kdata_path = get_kdata_path(item=security_item, source='exchange')
+                # TODO：这些逻辑应该统一处理
+                kdata_dir = get_kdata_dir(item=security_item)
+                if not os.path.exists(kdata_dir):
+                    os.makedirs(kdata_dir)
+
+                if os.path.exists(kdata_path):
+                    saved_df = pd.read_csv(kdata_path, dtype=str)
+                    saved_df = saved_df.set_index(saved_df['timestamp'], drop=False)
+                else:
+                    saved_df = pd.DataFrame()
+
+                if saved_df.empty or the_date not in saved_df.index:
+                    low_price = the_data['LOWESTPRICE']
+                    if not low_price:
+                        low_price = 0
+                    open_price = the_data['OPENPRICE']
+                    if not open_price:
+                        open_price = 0
+                    close_price = the_data['CLOSEPRICE']
+                    if not close_price:
+                        close_price = 0
+                    high_price = the_data['HIGHESTPRICE']
+                    if not high_price:
+                        high_price = 0
+                    volume = the_data['VOLUME']
+                    if not volume:
+                        volume = 0
+
+                    if type(the_data['ZD1_CHG']) == str:
+                        change = 0
+                    else:
+                        change = the_data['ZD1_CHG']
+
+                    if type(the_data['ZD2_CHG']) == str:
+                        change1 = 0
+                    else:
+                        change1 = the_data['ZD2_CHG']
+
+                    pre_close = close_price - change
+                    pre_settlement = the_data['PRESETTLEMENTPRICE']
+
+                    # 首日交易
+                    if pre_close != 0:
+                        change_pct = change / pre_close
+                    else:
+                        change_pct = 0
+                    if pre_settlement != 0:
+                        change_pct1 = change1 / pre_settlement
+                    else:
+                        change_pct1 = 0
+
+                    the_json = {
+                        "timestamp": to_time_str(the_date),
+                        "code": code,
+                        "name": name,
+                        "low": low_price,
+                        "open": open_price,
+                        "close": close_price,
+                        "high": high_price,
+                        "volume": volume,
+                        # 成交额为估算
+                        "turnover": (low_price + open_price + close_price + high_price / 4) * volume,
+                        "securityId": security_id,
+                        "preClose": pre_close,
+                        "change": change,
+                        "changePct": change_pct,
+                        "openInterest": the_data['OPENINTEREST'],
+                        "settlement": the_data['SETTLEMENTPRICE'],
+                        "preSettlement": the_data['PRESETTLEMENTPRICE'],
+                        "change1": change1,
+                        "changePct1": change_pct1
+                    }
+                    saved_df = saved_df.append(the_json, ignore_index=True)
+                    saved_df = saved_df.loc[:, KDATA_COLUMN_FUTURE]
+                    saved_df = saved_df.drop_duplicates(subset='timestamp', keep='last')
+                    saved_df = saved_df.set_index(saved_df['timestamp'], drop=False)
+                    saved_df.index = pd.to_datetime(saved_df.index)
+                    saved_df = saved_df.sort_index()
+                    saved_df.to_csv(kdata_path, index=False)
+
+                    logger.info("end handling {} for {}".format(code, the_date))
+
+                    if the_date not in the_parsed:
+                        the_parsed.append(the_date)
+        if the_parsed:
+            result_list = drop_duplicate(the_parsed)
+            result_list = sorted(result_list)
+
+            with open(the_parsed_path, 'w') as outfile:
+                json.dump(result_list, outfile)
+        logger.info("end handling {}".format(the_path))
+
+
+def parse_shfe_data(force_parse=False):
     the_dir = get_exchange_cache_dir(security_type='future', exchange='shfe')
+
+    need_parse_files = []
+
     for the_zip_file in [os.path.join(the_dir, f) for f in
                          os.listdir(the_dir) if f.endswith('.zip')
                          ]:
@@ -443,10 +634,13 @@ def parse_shfe_data():
                      ]
             if len(files) == 1:
                 os.rename(files[0], dst_file)
+            need_parse_files.append(dst_file)
 
-    for the_file in [os.path.join(the_dir, f) for f in
-                     os.listdir(the_dir) if f.endswith('.xls')
-                     ]:
+    if force_parse:
+        need_parse_files = [os.path.join(the_dir, f) for f in
+                            os.listdir(the_dir) if f.endswith('.xls')
+                            ]
+    for the_file in need_parse_files:
         logger.info("parse {}".format(the_file))
 
         df = pd.read_excel(the_file, skiprows=2, skip_footer=4, index_col='合约', converters={'日期': str})
@@ -454,6 +648,9 @@ def parse_shfe_data():
         df = df.loc[:, ['日期', '前收盘', '前结算', '开盘价', '最高价', '最低价', '收盘价', '结算价', '涨跌1', '涨跌2', '成交量', '成交金额', '持仓量']]
         df.columns = ['timestamp', 'preClose', 'preSettlement', 'open', 'high', 'low', 'close', 'settlement',
                       'change', 'change1', 'volume', 'turnover', 'openInterest']
+
+        # 日期格式统一，方便导入es
+        # df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
 
         unique_index = df.index.drop_duplicates()
 
@@ -471,6 +668,7 @@ def parse_shfe_data():
                 security_list = security_list.set_index(security_list['code'], drop=False)
             if the_contract not in security_list.index:
                 security_list = security_list.append(security_item, ignore_index=True)
+                security_list = security_list.sort_index()
                 security_list.to_csv(get_security_list_path('future', 'shfe'), index=False)
 
             the_df = df.loc[the_contract,]
@@ -503,7 +701,8 @@ def parse_shfe_data():
 
 
 if __name__ == '__main__':
-    parse_shfe_data()
+    # parse_shfe_day_data()
+    print(get_kdata('ag1801', source='exchange'))
     # print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
     # item = {"code": "000001", "type": "stock", "exchange": "sz"}
     # assert kdata_exist(item, 1991, 2) == True

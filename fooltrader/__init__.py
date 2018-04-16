@@ -2,6 +2,7 @@
 
 import logging
 import os
+from datetime import datetime
 
 import pandas as pd
 
@@ -72,6 +73,12 @@ def init_env():
         # 初始化期货文件夹
         for exchange in ['shfe', 'dce', 'zce']:
             exchange_cache_dir = get_exchange_cache_dir(security_type='future', exchange=exchange)
+            if not os.path.exists(exchange_cache_dir):
+                os.makedirs(exchange_cache_dir)
+
+            exchange_cache_dir = get_exchange_cache_dir(security_type='future', exchange='shfe',
+                                                        the_year=datetime.today().year,
+                                                        data_type="day_kdata")
             if not os.path.exists(exchange_cache_dir):
                 os.makedirs(exchange_cache_dir)
 

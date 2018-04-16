@@ -197,6 +197,14 @@ def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
         return the_time
 
 
+def next_date(the_time):
+    return to_timestamp(the_time) + datetime.timedelta(days=1)
+
+
+def drop_duplicate(the_list):
+    return list(set(the_list))
+
+
 if __name__ == '__main__':
     aa = chrome_copy_header_to_dict(
         '''
