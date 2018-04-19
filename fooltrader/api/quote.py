@@ -101,9 +101,9 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
 
     if df.size > 0:
         if start:
-            df = df[df["code"] <= start]
+            df = df[df["code"] >= start]
         if end:
-            df = df[df["code"] >= end]
+            df = df[df["code"] <= end]
         if start_list_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_list_date)]
