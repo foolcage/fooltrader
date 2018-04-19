@@ -703,9 +703,9 @@ def parse_shfe_data(force_parse=False):
 
 
 if __name__ == '__main__':
-    print(get_kdata('000001'))
+    # print(get_kdata('000001'))
     # parse_shfe_day_data()
-    # print(get_kdata('ag1801', source='exchange'))
+    print(get_kdata('ag1801', source='exchange'))
     # print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
     # item = {"code": "000001", "type": "stock", "exchange": "sz"}
     # assert kdata_exist(item, 1991, 2) == True
