@@ -48,7 +48,7 @@ class SinaCategorySpider(scrapy.Spider):
             callback=self.download_sina_category)
 
     def download_sina_category(self, response):
-        tmp_str = response.body.decode('GB2312')
+        tmp_str = response.body.decode('GBK')
         json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]
         tmp_json = json.loads(json_str)
         for ind_code in tmp_json:
