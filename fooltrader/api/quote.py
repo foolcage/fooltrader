@@ -142,6 +142,8 @@ def _get_security_item(code=None, id=None, the_type='stock'):
     """
     if the_type == 'future':
         exchange = ['shfe']
+    else:
+        exchange = ['sh', 'sz']
 
     df = get_security_list(security_type=the_type, exchanges=exchange)
     if id:
@@ -162,7 +164,7 @@ def to_security_item(security_item):
             security_item = _get_security_item(id=security_item, the_type='future')
         else:
             # 中国期货
-            if re.match("\w{2}\d{4}", security_item):
+            if re.match("^[A-Za-z]{2}\d{4}", security_item):
                 security_item = _get_security_item(code=security_item, the_type='future')
             else:
                 security_item = _get_security_item(code=security_item)
@@ -701,6 +703,7 @@ def parse_shfe_data(force_parse=False):
 
 
 if __name__ == '__main__':
+    # print(get_kdata('000001'))
     # parse_shfe_day_data()
     print(get_kdata('ag1801', source='exchange'))
     # print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
