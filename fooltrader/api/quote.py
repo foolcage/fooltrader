@@ -73,7 +73,10 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
                 if exchange == 'sh' or exchange == 'sz':
                     if mode == 'simple':
                         df1 = pd.read_csv(the_path,
-                                          converters={'code': str})
+                                          converters={'code': str,
+                                                      'sinaIndustry': convert_to_list_if_need,
+                                                      'sinaConcept': convert_to_list_if_need,
+                                                      'sinaArea': convert_to_list_if_need})
                     else:
                         df1 = pd.read_csv(the_path,
                                           converters={'code': str,
@@ -116,7 +119,8 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         if codes:
             df_usa = df_usa.loc[codes]
 
-    df = df.append(df_usa, ignore_index=True)
+        df = df.append(df_usa, ignore_index=True)
+        df = df.set_index(df['code'], drop=False)
     return df
 
 
