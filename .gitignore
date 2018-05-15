@@ -94,5 +94,4 @@ full/
 data/
 *.zip
 ve/
-data-sample/
 .pytest_cache/
