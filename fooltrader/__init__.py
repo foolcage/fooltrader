@@ -7,7 +7,6 @@ from datetime import datetime
 import pandas as pd
 
 from fooltrader.api.quote import get_security_list
-from fooltrader.consts import USA_STOCK_INDEX
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir, \
     get_exchange_dir, get_exchange_cache_dir
@@ -90,4 +89,3 @@ def init_env():
 pd.set_option('expand_frame_repr', False)
 
 init_log()
-init_env()

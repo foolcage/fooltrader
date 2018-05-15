@@ -63,13 +63,13 @@ def crawl_usa_stock_data():
 def crawl_stock_meta():
     # 更新股票列表
     # TODO:看是否有必要判断有新股上市，目前每天抓一次列表，问题不大
-    if True:
-        logger.info('download stock list start')
-        process_crawl(SecurityListSpider, {})
-        logger.info('download stock list finish')
-    process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
+    # if True:
+    #     logger.info('download stock list start')
+    #     process_crawl(SecurityListSpider, {})
+    #     logger.info('download stock list finish')
+    # process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
     process_crawl(SinaCategorySpider, {'category_type': 'sinaConcept'})
-    process_crawl(SinaCategorySpider, {'category_type': 'sinaArea'})
+    # process_crawl(SinaCategorySpider, {'category_type': 'sinaArea'})
 
 
 def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
@@ -230,9 +230,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # crawl_stock_meta()
+    crawl_stock_meta()
     # crawl_index_quote()
     # crawl_stock_quote(args.start_code, args.end_code)
     # crawl_finance_data(args.start_code, args.end_code)
     # crawl_usa_stock_data()
-    crawl_shfe_quote()
+    # crawl_shfe_quote()

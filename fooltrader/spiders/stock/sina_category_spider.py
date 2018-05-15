@@ -4,6 +4,7 @@ import json
 import threading
 
 import demjson
+import pandas as pd
 import scrapy
 from scrapy import Request
 from scrapy import signals
@@ -74,13 +75,17 @@ class SinaCategorySpider(scrapy.Spider):
                 df[self.category_type] = ""
             if ind['code'] in df.index:
                 current_ind = df.at[ind['code'], self.category_type]
-                if current_ind:
+                # read_csv如果碰到nan数据类型会为float
+                if pd.isnull(current_ind) or not current_ind:
+                    current_ind = response.meta['ind_name']
+                else:
                     if type(current_ind) == list and response.meta['ind_name'] not in current_ind:
                         current_ind.append(response.meta['ind_name'])
-                    elif type(current_ind) == str and response.meta['ind_name'] != current_ind:
+
+                    elif type(current_ind) == str and response.meta[
+                        'ind_name'] != current_ind:
                         current_ind = [current_ind, response.meta['ind_name']]
-                else:
-                    current_ind = response.meta['ind_name']
+
                 df.at[ind['code'], self.category_type] = current_ind
             self.file_lock.release()
 

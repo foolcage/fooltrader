@@ -10,7 +10,7 @@ from ast import literal_eval
 import numpy as np
 import pandas as pd
 
-from fooltrader.consts import CHINA_STOCK_INDEX, USA_STOCK_INDEX
+from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
@@ -46,11 +46,11 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
     exchanges : list
         ['sh', 'sz','nasdaq','nyse','amex','shfe','dce','zce'],default: ['sh','sz']
     start : str
-        the start code,default:None
-        only works when exchanges is ['sh','sz']
+        the start code,work with end,default:None
+        if using codes,it would be ignored
     end : str
-        the end code,default:None
-        only works when exchanges is ['sh','sz']
+        the end code,works with start,default:None
+        if using codes,it would be ignored
     mode : str
         whether parse more security info,{'simple','es'},default:'simple'
     start_list_date : Timestamp str or Timestamp
@@ -64,63 +64,51 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         the security list
 
     """
-    if security_type == 'stock':
-        df = pd.DataFrame()
-        df_usa = pd.DataFrame()
+    df = pd.DataFrame()
+    if security_type == 'stock' or security_type == 'future':
         for exchange in exchanges:
             the_path = get_security_list_path(security_type, exchange)
             if os.path.exists(the_path):
-                if exchange == 'sh' or exchange == 'sz':
-                    if mode == 'simple':
-                        df1 = pd.read_csv(the_path,
-                                          converters={'code': str})
-                    else:
-                        df1 = pd.read_csv(the_path,
-                                          converters={'code': str,
-                                                      'sinaIndustry': convert_to_list_if_need,
-                                                      'sinaConcept': convert_to_list_if_need,
-                                                      'sinaArea': convert_to_list_if_need})
-                    df = df.append(df1, ignore_index=True)
-                elif exchange == 'nasdaq':
-                    df_usa = pd.read_csv(the_path, dtype=str)
+                # 股票的元数据如果存到es,需要做一些转化
+                if mode == 'es' and security_type == 'stock':
+                    tmp_df = pd.read_csv(the_path,
+                                         converters={'code': str,
+                                                     'sinaIndustry': convert_to_list_if_need,
+                                                     'sinaConcept': convert_to_list_if_need,
+                                                     'sinaArea': convert_to_list_if_need})
+                else:
+                    tmp_df = pd.read_csv(the_path, dtype=str)
+                df = df.append(tmp_df, ignore_index=True)
 
     elif security_type == 'index':
-        df = pd.DataFrame(CHINA_STOCK_INDEX)
-        df_usa = pd.DataFrame()
-        if 'nasdaq' in exchanges:
-            df_usa = pd.DataFrame(USA_STOCK_INDEX)
-    elif security_type == 'future':
-        df = pd.DataFrame()
         for exchange in exchanges:
-            the_path = get_security_list_path(security_type, exchange)
-            if os.path.exists(the_path):
-                df1 = pd.read_csv(the_path,
-                                  converters={'code': str})
-                df = df.append(df1, ignore_index=True)
-        return df
+            if 'sh' == exchange:
+                df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
+            if 'sz' == exchange:
+                df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
+            if 'nasdaq' == exchange:
+                df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
 
     if df.size > 0:
-        if start:
-            df = df[df["code"] >= start]
-        if end:
-            df = df[df["code"] <= end]
         if start_list_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_list_date)]
 
         df = df.set_index(df['code'], drop=False)
 
-    if df_usa.size > 0:
-        df_usa = df_usa.set_index(df_usa['code'], drop=False)
-
         if codes:
-            df_usa = df_usa.loc[codes]
+            df = df.loc[codes]
+        elif start and end:
+            df = df[(df["code"] >= start) & (df["code"] <= end)]
 
-    df = df.append(df_usa, ignore_index=True)
+    # FIXME:
+    # 期货列表有重复的数据，需要检查一下
+    df = df.drop_duplicates(subset='code', keep='last')
+
     return df
 
 
-def _get_security_item(code=None, id=None, the_type='stock'):
+def _get_security_item(the_type, exchanges, code=None):
     """
     get the security item.
 
@@ -128,11 +116,12 @@ def _get_security_item(code=None, id=None, the_type='stock'):
     ----------
     code : str
         the security code,default: None
-    id : str
-        the security id,default: None
 
     the_type : str
         the security type
+
+    exchanges : str
+        the exchange
 
     Returns
     -------
@@ -140,35 +129,30 @@ def _get_security_item(code=None, id=None, the_type='stock'):
         the security item
 
     """
-    if the_type == 'future':
-        exchange = ['shfe']
-    else:
-        exchange = ['sh', 'sz']
+    df = get_security_list(security_type=the_type, exchanges=exchanges)
 
-    df = get_security_list(security_type=the_type, exchanges=exchange)
-    if id:
-        df = df.set_index(df['id'])
-        return df.loc[id,]
-    if code:
-        df = df.set_index(df['code'])
+    df = df.set_index(df['code'])
     return df.loc[code,]
 
 
 def to_security_item(security_item):
     if type(security_item) == str:
-        if 'stock' in security_item:
-            security_item = _get_security_item(id=security_item, the_type='stock')
-        elif 'index' in security_item:
-            security_item = _get_security_item(id=security_item, the_type='index')
-        elif 'future' in security_item:
-            security_item = _get_security_item(id=security_item, the_type='future')
-        else:
-            # 中国期货
-            if re.match("^[A-Za-z]{2}\d{4}", security_item):
-                security_item = _get_security_item(code=security_item, the_type='future')
-            else:
-                security_item = _get_security_item(code=security_item)
-    return security_item
+        id_match = re.match(r'(stock|index|future)_(sh|sz|nasdaq|shfe|dce|zce)_([a-zA-Z0-9]+)', security_item)
+        if id_match:
+            return _get_security_item(the_type=id_match.group(1), exchanges=[id_match.group(2)],
+                                      code=id_match.group(3))
+
+        # 中国期货
+        if re.match(r'^[A-Za-z]{2}\d{4}', security_item):
+            return _get_security_item(code=security_item, the_type='future', exchanges=['shfe'])
+
+        # 中国股票
+        if re.match(r'\d{6}', security_item):
+            return _get_security_item(code=security_item, the_type='stock', exchanges=['sh', 'sz'])
+
+        # 美国股票
+        if re.match(r'[A-Z]{2,20}', security_item):
+            return _get_security_item(code=security_item, the_type='stock', exchanges=['nasdaq'])
 
 
 # tick
