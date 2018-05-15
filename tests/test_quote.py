@@ -1,7 +1,9 @@
+from fooltrader import settings
 from fooltrader.api import quote
 
 
 def test_get_china_stock_list():
+    print(settings.FOOLTRADER_STORE_PATH)
     df = quote.get_security_list('stock', exchanges=['sh', 'sz'])
     assert '000001' in df.index
     assert '金融行业' == df.loc['000001', 'sinaIndustry']
