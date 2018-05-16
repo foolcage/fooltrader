@@ -95,3 +95,13 @@ def test_get_stock_fuquan_kdata():
 
     # 四舍五入取两位小数
     assert round(df.loc['2018-03-29', 'close'], 2) == round(df1.loc['2018-03-29', 'close'], 2)
+
+    # 根据factor计算的前复权价格
+    df = quote.get_kdata('600977', the_date='2016-08-09', fuquan='qfq')
+
+    # 从新浪获取的后复权价格
+    df1 = quote.get_kdata('600977', the_date='2016-08-09', fuquan='hfq', source='sina')
+
+    # 四舍五入取两位小数
+    assert round(df.loc['2016-08-09', 'close'], 2) == round(
+        df1.loc['2016-08-09', 'close'] / df1.loc['2016-08-09', 'factor'], 2)
