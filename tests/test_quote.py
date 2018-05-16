@@ -85,6 +85,9 @@ def test_get_stock_kdata():
     assert df.loc['2016-08-09', 'factor'] == 1
     assert df.loc['20180329', 'factor'] > 1
 
+    df = quote.get_kdata('AAPL', start_date='2016-08-09', end_date='20180329')
+    assert not df.empty
+
 
 def test_get_stock_fuquan_kdata():
     # 根据factor计算的后复权价格
@@ -105,3 +108,19 @@ def test_get_stock_fuquan_kdata():
     # 四舍五入取两位小数
     assert round(df.loc['2016-08-09', 'close'], 2) == round(
         df1.loc['2016-08-09', 'close'] / df1.loc['2016-08-09', 'factor'], 2)
+
+
+def test_get_future_kdata():
+    df = quote.get_kdata('rb1605', start_date='2015-05-15')
+    assert not df.empty
+    assert '20160516' in df.index
+
+
+def test_get_ticks():
+    ticks = quote.get_ticks('600977')
+    for tick in ticks:
+        assert 'timestamp' in tick.columns
+
+    ticks = quote.get_ticks('600977', the_date='20180115')
+    for tick in ticks:
+        assert 'timestamp' in tick.columns

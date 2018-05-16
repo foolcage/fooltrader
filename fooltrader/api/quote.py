@@ -153,6 +153,7 @@ def to_security_item(security_item):
         # 美国股票
         if re.match(r'[A-Z]{2,20}', security_item):
             return _get_security_item(code=security_item, the_type='stock', exchanges=['nasdaq'])
+    return security_item
 
 
 # tick
@@ -180,6 +181,7 @@ def get_ticks(security_item, the_date=None, start=None, end=None):
     security_item = to_security_item(security_item)
 
     if the_date:
+        the_date = to_time_str(the_date)
         tick_path = files_contract.get_tick_path(security_item, the_date)
         yield _parse_tick(tick_path, security_item)
     else:
@@ -249,6 +251,10 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
     """
 
     security_item = to_security_item(security_item)
+
+    # 目前期货数据只支持交易所
+    if security_item['type'] == 'future':
+        source = 'exchange'
 
     # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
     if source == '163':
