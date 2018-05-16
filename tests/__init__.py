@@ -1,3 +1,3 @@
 from fooltrader import settings
 
-settings.FOOLTRADER_STORE_PATH = 'data-sample'
+settings.FOOLTRADER_STORE_PATH = 'sample-data'

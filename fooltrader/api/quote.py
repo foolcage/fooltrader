@@ -265,25 +265,24 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
         df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
+
         if the_date:
             if the_date in df.index:
-                return df.loc[the_date]
-            else:
-                return pd.DataFrame()
+                df = df.loc[df['timestamp'] == the_date]
+        else:
+            if not start_date:
+                if security_item['type'] == 'stock':
+                    if type(security_item['listDate']) != str and np.isnan(security_item['listDate']):
+                        start_date = '2002-01-01'
+                    else:
+                        start_date = security_item['listDate']
+                elif security_item['type'] == 'index':
+                    start_date = datetime.datetime.today() - datetime.timedelta(days=30)
+            if not end_date:
+                end_date = datetime.datetime.today()
 
-        if not start_date:
-            if security_item['type'] == 'stock':
-                if type(security_item['listDate']) != str and np.isnan(security_item['listDate']):
-                    start_date = '2002-01-01'
-                else:
-                    start_date = security_item['listDate']
-            elif security_item['type'] == 'index':
-                start_date = datetime.datetime.today() - datetime.timedelta(days=30)
-        if not end_date:
-            end_date = datetime.datetime.today()
-
-        if start_date and end_date:
-            df = df.loc[start_date:end_date]
+            if start_date and end_date:
+                df = df.loc[start_date:end_date]
 
         #
         if source == '163' and security_item['type'] == 'stock':

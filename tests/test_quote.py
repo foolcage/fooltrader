@@ -70,3 +70,28 @@ def test_to_security_item():
     item = quote.to_security_item('ag1301')
     assert item.id == 'future_shfe_ag1301'
     assert item.code == 'ag1301'
+
+
+def test_get_stock_kdata():
+    df = quote.get_kdata('600977')
+    assert len(df.index) > 0
+
+    df = quote.get_kdata('600977', the_date='2018-03-29')
+    assert '2018-03-29' in df.index
+
+    df = quote.get_kdata('600977', start_date='2016-08-09', end_date='20180329')
+    assert '2016-08-09' in df.index
+    assert '20180329' in df.index
+    assert df.loc['2016-08-09', 'factor'] == 1
+    assert df.loc['20180329', 'factor'] > 1
+
+
+def test_get_stock_fuquan_kdata():
+    # 根据factor计算的后复权价格
+    df = quote.get_kdata('600977', the_date='2018-03-29', fuquan='hfq')
+
+    # 从新浪获取的后复权价格
+    df1 = quote.get_kdata('600977', the_date='2018-03-29', fuquan='hfq', source='sina')
+
+    # 四舍五入取两位小数
+    assert round(df.loc['2018-03-29', 'close'], 2) == round(df1.loc['2018-03-29', 'close'], 2)
