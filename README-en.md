@@ -116,9 +116,9 @@ In [2]: datamanager.crawl_stock_meta()
 #crawl index data
 In [3]: datamanager.crawl_index_quote()
 #crawl stock kdata and tick data
-In [4]: datamanager.crawl_stock_quote(start_code=002797,end_code=002798,crawl_tick=False)
+In [4]: datamanager.crawl_stock_quote(start_code='002797',end_code='002798',crawl_tick=False)
 #crawl finance data
-In [5]: datamanager.crawl_finance_data(start_code=002797,end_code=002798)
+In [5]: datamanager.crawl_finance_data(start_code='002797',end_code='002798')
 ```
 crawling data and the api is in different module:  
 >spiders focus on crawling things: speed of crawling, better data classification, data completion, handling ban, etc.
