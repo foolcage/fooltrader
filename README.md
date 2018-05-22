@@ -301,9 +301,9 @@ In [2]: datamanager.crawl_stock_meta()
 #抓取指数数据
 In [3]: datamanager.crawl_index_quote()
 #抓取个股K线和tick数据
-In [4]: datamanager.crawl_stock_quote(start_code=002797,end_code=002798,crawl_tick=False)
+In [4]: datamanager.crawl_stock_quote(start_code='002797',end_code='002798',crawl_tick=False)
 #抓取财务数据
-In [5]: datamanager.crawl_finance_data(start_code=002797,end_code=002798)
+In [5]: datamanager.crawl_finance_data(start_code='002797',end_code='002798')
 ```
 这里把抓取数据作为一个单独的模块,而不是像某些开源项目那样api和爬虫耦合在一起,主要是为了:
 > 爬虫只干爬虫的事:专注抓取的速度,更好的数据分类,数据补全,防屏蔽等  
