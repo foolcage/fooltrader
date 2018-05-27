@@ -68,17 +68,21 @@ class AmericaStockKdataSpider(scrapy.Spider):
                     yield request
 
     def download_day_k_data(self, response):
-        path = response.meta['path']
+        filename_ = response.meta['path']
         item = response.meta['item']
 
         try:
             # 已经保存的csv数据
-            if os.path.exists(path):
-                df_current = pd.read_csv(path, dtype=str)
+            if os.path.exists(filename_):
+                df_current = pd.read_csv(filename_, dtype=str)
                 # 补全历史数据
                 if 'name' not in df_current.columns:
                     df_current['name'] = item['name']
             else:
+                pathname_ = os.path.dirname(filename_)
+                if not os.path.isdir(pathname_):
+                    os.makedirs(pathname_)
+                    
                 df_current = pd.DataFrame()
 
             tmp_str = response.text
@@ -154,7 +158,7 @@ class AmericaStockKdataSpider(scrapy.Spider):
             df_current = df_current.set_index(df_current['timestamp'], drop=False)
             df_current.index = pd.to_datetime(df_current.index)
             df_current = df_current.sort_index()
-            df_current.to_csv(path, index=False)
+            df_current.to_csv(filename_, index=False)
         except Exception as e:
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
 
