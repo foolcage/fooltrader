@@ -35,7 +35,8 @@ class AmericaStockKdataSpider(scrapy.Spider):
         if not the_years:
             if not pd.isna(item['listDate']):
                 # 163 could just provide the date after year 2002
-                the_years = range(max(int(item['listDate']), 2002), pd.Timestamp.today().year + 1)
+                list_date_year_, list_date_month_, list_date_day_ = item['listDate'].split("-")
+                the_years = range(max(int(list_date_year_), 2002), pd.Timestamp.today().year + 1)
             else:
                 the_years = range(2005, pd.Timestamp.today().year + 1)
 
