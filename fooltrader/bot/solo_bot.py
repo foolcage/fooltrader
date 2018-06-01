@@ -15,7 +15,7 @@ from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 from fooltrader.trader.account import Order, AccountService
 
 
-class Bot(object):
+class SoloBot(object):
     def on_init(self):
         pass
 
@@ -87,7 +87,7 @@ class Bot(object):
             # 市价交易
             if order_price == 0:
                 order = Order()
-                order.traderId = self.bot_id
+                order.botName = self.bot_id
                 order.amount = amount
                 order.direction = direction
                 order.type = 0
@@ -185,5 +185,5 @@ if __name__ == '__main__':
 
     connections.create_connection(hosts=['localhost'], timeout=20)
 
-    trader = Bot()
+    trader = SoloBot()
     trader.run()

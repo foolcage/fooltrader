@@ -1,0 +1,64 @@
+# -*- coding: utf-8 -*-
+import logging
+from ast import literal_eval
+
+from fooltrader import es
+
+logger = logging.getLogger(__name__)
+
+
+def es_get_latest_record(index, time_field='timestamp', query=None):
+    body = '''
+{
+    "query": {
+        "match_all": {}
+    },
+    "size": 1,
+    "sort": [
+        {
+            "timestamp": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+'''
+    if time_field != 'timestamp':
+        body = body.replace('timestamp', time_field)
+
+    body = literal_eval(body)
+    if query:
+        body['query'] = query
+
+    try:
+        logger.info("search index:{},body:{}".format(index, body))
+        response = es.search(index=index, body=body)
+        if response['hits']['hits']:
+            return response['hits']['hits'][0]['_source']
+    except Exception as e:
+        logger.warning(e)
+    return None
+
+
+def es_delete(index, query=None):
+    body = '''
+{
+    "query": {
+        "match_all": {}
+    },
+    "size": 1,
+    "sort": [
+        {
+            "timestamp": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+'''
+    body = literal_eval(body)
+
+    if query:
+        body['query'] = query
+
+    es.delete_by_query(index=index, body=body)

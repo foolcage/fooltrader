@@ -4,7 +4,7 @@ import logging
 import threading
 
 import pandas as pd
-from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean
+from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short
 from elasticsearch_dsl import MetaField
 
 from fooltrader.api.quote import get_kdata
@@ -31,7 +31,7 @@ class AccountService(object):
 
         # 初始化账户
         self.account = Account()
-        self.account.traderId = trader_id
+        self.account.botName = trader_id
         self.account.cash = base_capital
         self.account.positions = []
         self.account.allValue = base_capital
@@ -135,28 +135,17 @@ class AccountService(object):
         logger.debug("{} release account lock success".format(threading.current_thread().name))
 
 
-# 一个索引对应一个账户,索引的名字就是traderId,以id为时间戳为id(精确到秒)
 class Account(DocType):
-    traderId = Keyword()
+    # 机器人名字
+    botName = Keyword()
+    # 可用现金
     cash = Float()
+    # 具体仓位
     positions = Nested()
+    # 总市值
     allValue = Float()
+    # 时间
     timestamp = Date()
-    tradingClose = Boolean()
-
-    def copy_for_save(self, trading_close):
-        account = Account()
-        account.cash = self.cash
-        account.traderId = self.traderId
-        account.allValue = self.allValue
-        account.positions = self.positions
-        account.timestamp = account.timestamp
-        account.tradingClose = trading_close
-        return account
-
-    def save(self, using=None, index=None, validate=True, **kwargs):
-        self.meta.id = "{}_{}".format(self.traderId, self.timestamp.strftime('%Y-%m-%d %H:%M:%S'))
-        return super().save(using, index, validate, **kwargs)
 
     class Meta:
         doc_type = 'doc'
@@ -166,27 +155,34 @@ class Account(DocType):
 class Position(DocType):
     # 证券id
     securityId = Keyword()
-    # 持有数量
-    amount = Long()
-    # 可交易数量
-    availableAmount = Long()
+
+    # 做多数量
+    longAmount = Long()
+    # 可平多数量
+    availableLong = Long()
+
+    # 做空数量
+    shortAmount = Long()
+    # 可平空数量
+    availableShort = Long()
+
     # 盈亏
     profit = Float()
-    # 市值
+    # 市值 或者 占用的保证金(方便起见，总是100%)
     value = Float()
-    # 成本价
-    cost = Float()
     # 交易类型(0代表T+0,1代表T+1)
     tradingT = Short()
 
     def __init__(self, meta=None, security_id=None, trading_t=1, **kwargs):
         super().__init__(meta, **kwargs)
         self.securityId = security_id
-        self.availableAmount = 0
-        self.amount = 0
+        self.longAmount = 0
+        self.availableLong = 0
+        self.shortAmount = 0
+        self.availableShort = 0
+
         self.profit = 0
         self.value = 0
-        self.cost = 0
         self.tradingT = trading_t
 
 
@@ -194,7 +190,7 @@ class Order(DocType):
     # 订单id
     id = Keyword()
     # 交易员id
-    traderId = Keyword()
+    botName = Keyword()
     # 证券id
     securityId = Keyword()
     # 买卖(多空)

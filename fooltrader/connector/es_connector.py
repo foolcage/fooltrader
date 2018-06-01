@@ -2,13 +2,11 @@
 
 import json
 import logging
-from ast import literal_eval
 
 import elasticsearch.helpers
 from elasticsearch_dsl import Index
-from elasticsearch_dsl.connections import connections
 
-from fooltrader import EXCHANGE_LIST_COL
+from fooltrader import EXCHANGE_LIST_COL, es
 from fooltrader.api.event import get_forecast_items
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
     get_finance_summary_items
@@ -17,12 +15,11 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
 from fooltrader.domain.quote import StockMeta, StockKData, IndexKData
-from fooltrader.settings import ES_HOSTS, US_STOCK_CODES
+from fooltrader.settings import US_STOCK_CODES
+from fooltrader.utils.es_utils import es_get_latest_record
 from fooltrader.utils.utils import fill_doc_type, is_same_date
 
 logger = logging.getLogger(__name__)
-
-es = connections.create_connection(hosts=ES_HOSTS)
 
 
 def es_index_mapping(index_name, doc_type, force=False):
@@ -35,39 +32,6 @@ def es_index_mapping(index_name, doc_type, force=False):
     else:
         if force:
             index.upgrade()
-
-
-def es_get_latest_record(index, time_field='timestamp', query=None):
-    body = '''
-{
-    "query": {
-        "match_all": {}
-    },
-    "size": 1,
-    "sort": [
-        {
-            "timestamp": {
-                "order": "desc"
-            }
-        }
-    ]
-}
-'''
-    if time_field != 'timestamp':
-        body = body.replace('timestamp', time_field)
-
-    body = literal_eval(body)
-    if query:
-        body['query'] = query
-
-    try:
-        logger.info("search index:{},body:{}".format(index, body))
-        response = es.search(index=index, body=body)
-        if response['hits']['hits']:
-            return response['hits']['hits'][0]['_source']
-    except Exception as e:
-        logger.warning(e)
-    return None
 
 
 def stock_meta_to_es(force=False):
