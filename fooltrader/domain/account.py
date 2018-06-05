@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short
+from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean
 from elasticsearch_dsl import MetaField
 
 
@@ -15,6 +15,9 @@ class Account(DocType):
     allValue = Float()
     # 时间
     timestamp = Date()
+
+    # 收盘计算
+    closing = Boolean()
 
     class Meta:
         doc_type = 'doc'

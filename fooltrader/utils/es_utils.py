@@ -2,6 +2,8 @@
 import logging
 from ast import literal_eval
 
+from elasticsearch_dsl import Index
+
 from fooltrader import es
 
 logger = logging.getLogger(__name__)
@@ -41,24 +43,20 @@ def es_get_latest_record(index, time_field='timestamp', query=None):
 
 
 def es_delete(index, query=None):
-    body = '''
-{
-    "query": {
-        "match_all": {}
-    },
-    "size": 1,
-    "sort": [
-        {
-            "timestamp": {
-                "order": "desc"
-            }
-        }
-    ]
-}
-'''
-    body = literal_eval(body)
-
     if query:
-        body['query'] = query
+        body = {"query": query}
+        es.delete_by_query(index=index, body=body)
+    else:
+        es.delete(index=index)
 
-    es.delete_by_query(index=index, body=body)
+
+def es_index_mapping(index_name, doc_type, force=False):
+    # 创建索引
+    index = Index(index_name)
+    index.doc_type(doc_type)
+
+    if not index.exists():
+        index.create()
+    else:
+        if force:
+            index.upgrade()
