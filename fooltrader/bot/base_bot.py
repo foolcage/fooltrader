@@ -44,7 +44,7 @@ class BaseBot(object):
         self.account.botName = self.bot_name
         self.account.cash = self.base_capital
         self.account.positions = []
-        self.account.allValue = self.base_capital
+        self.account.value = self.base_capital
         self.account.timestamp = self.start_date
         self.account.save()
 
@@ -62,6 +62,8 @@ class BaseBot(object):
         self.end_date = pd.Timestamp.today()
 
         self.bot_name = type(self).__name__.lower()
+
+        self.fuquan = 'hfq'
 
         self.on_init()
 
@@ -86,10 +88,19 @@ class BaseBot(object):
     def calculate_closing_account(self):
         account = self.get_account()
         for position in account.positions:
-            closing_price = esapi.get_kdata(security_item=position['securityId'], the_date=self.current_time)
+            kdata = esapi.get_kdata(security_item=position['securityId'], the_date=self.current_time)
+            closing_price = kdata['hfqClose']
             position.availableLong = position.longAmount
             position.availableShort = position.shortAmount
-            position.profit
+
+            # 做多导致的市值变化体现了value里
+            # 做空导致的市值变化体现在value和cash里
+            position.value = position.longAmount * closing_price + position.shortAmount * closing_price
+
+            account.cash += 2 * (position.shortAmount * (position.averageShortPrice - closing_price))
+
+            position.averageShortPrice = closing_price
+            position.averageLongPrice = closing_price
 
     # 两种情况下会被调用：
     # 1)操作导致账户更新
@@ -97,13 +108,34 @@ class BaseBot(object):
     def save_account(self):
         self.account.save()
 
-    def update_position(self, security_id, new_position):
+    def update_account(self, security_id, new_position):
         # 先去掉之前的position
         positions = [position for position in self.account.positions if position.securityId != security_id]
         # 更新为新的position
         positions.append(new_position)
         self.account.positions = positions
         self.account.save()
+
+    def update_position(self, current_position, order_amount, current_price, order_type):
+        if order_type == ORDER_TYPE_LONG:
+            # 计算平均价
+            long_amount = current_position.longAmount + order_amount
+            current_position.averageLongPrice = (current_position.averageLongPrice *
+                                                 current_position.longAmount + current_price * current_price) / long_amount
+
+            current_position.longAmount = long_amount
+
+            if current_position.tradingT == 0:
+                current_position.availableLong += order_amount
+        elif order_type == ORDER_TYPE_SHORT:
+            short_amount = current_position.shortAmount + order_amount
+            current_position.averageShortPrice = (current_position.averageShortPrice *
+                                                  current_position.shortAmount + current_price * current_price) / short_amount
+
+            current_position.shortAmount = short_amount
+
+            if current_position.tradingT == 0:
+                current_position.availableShort += order_amount
 
     # 开多,对于某些品种只能开多，比如中国股票
     def buy(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
@@ -164,9 +196,7 @@ class BaseBot(object):
                     need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
                     if self.account.cash >= need_money:
                         self.account.cash -= need_money
-                        current_position.longAmount += order_amount
-                        if current_position.tradingT == 0:
-                            current_position.availableLong += order_amount
+                        self.update_position(current_position, order_amount, current_price, order_type)
                     else:
                         raise Exception("not enough money")
                 # 开空
@@ -174,10 +204,7 @@ class BaseBot(object):
                     need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
                     if self.account.cash >= need_money:
                         self.account.cash -= need_money
-                        current_position.shortAmount += order_amount
-                        if current_position.tradingT == 0:
-                            current_position.availableShort += order_amount
-
+                        self.update_position(current_position, order_amount, current_price, order_type)
                     else:
                         raise Exception("not enough money")
                 # 平多
@@ -208,9 +235,7 @@ class BaseBot(object):
                         order_amount = want_buy // cost
                         # 使用的现金
                         self.account.cash -= (want_buy - want_buy % cost)
-                        current_position.longAmount += order_amount
-                        if current_position.tradingT == 0:
-                            current_position.availableLong += order_amount
+                        self.update_position(current_position, order_amount, current_price, order_type)
                     else:
                         raise Exception("not enough money")
                 # 开空
@@ -218,9 +243,7 @@ class BaseBot(object):
                     need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
                     if self.account.cash >= need_money:
                         self.account.cash -= need_money
-                        current_position.shortAmount += order_amount
-                        if current_position.tradingT == 0:
-                            current_position.availableShort += order_amount
+                        self.update_position(current_position, order_amount, current_price, order_type)
                     else:
                         raise Exception("not enough money")
                 # 平多
@@ -250,4 +273,4 @@ class BaseBot(object):
                     else:
                         raise Exception("not enough position")
 
-            self.update_position(security_id, current_position)
+            self.update_account(security_id, current_position)

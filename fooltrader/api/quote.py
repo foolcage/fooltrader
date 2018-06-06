@@ -267,6 +267,9 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
             dtype = {"code": str, 'timestamp': str}
         df = pd.read_csv(the_path, dtype=dtype)
 
+        if 'factor' in df.columns:
+            latest_factor = df.tail(1).factor.iat[0]
+
         df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
         df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
@@ -290,23 +293,23 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
             if start_date and end_date:
                 df = df.loc[start_date:end_date]
 
-        #
+        # 复权处理
         if source == '163' and security_item['type'] == 'stock':
-            if fuquan == 'bfq':
-                return df
             if 'factor' in df.columns:
-                current_factor = df.tail(1).factor.iat[0]
                 # 后复权是不变的
-                df.close *= df.factor
-                df.open *= df.factor
-                df.high *= df.factor
-                df.low *= df.factor
-                if fuquan == 'qfq':
-                    # 前复权需要根据最新的factor往回算
-                    df.close /= current_factor
-                    df.open /= current_factor
-                    df.high /= current_factor
-                    df.low /= current_factor
+                df['hfqClose'] = df.close * df.factor
+                df['hfqOpen'] = df.open * df.factor
+                df['hfqHigh'] = df.high * df.factor
+                df['hfqLow'] = df.low * df.factor
+
+                # 前复权需要根据最新的factor往回算,当前价格不变
+                if latest_factor:
+                    df['qfqClose'] = df.hfqClose / latest_factor
+                    df['qfqOpen'] = df.hfqOpen / latest_factor
+                    df['qfqHigh'] = df.hfqHigh / latest_factor
+                    df['qfqLow'] = df.hfqLow / latest_factor
+                else:
+                    logger.error("missing latest factor for {}".format(security_item['id']))
         return df
     return pd.DataFrame()
 

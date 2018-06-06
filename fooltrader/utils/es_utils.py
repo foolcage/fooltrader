@@ -60,3 +60,38 @@ def es_index_mapping(index_name, doc_type, force=False):
     else:
         if force:
             index.upgrade()
+
+
+def es_query_date_range(start_date, end_date, **terms):
+    if terms:
+
+        return \
+            {
+                "query": {
+                    "bool": {
+                        "must": {
+                            "term": terms
+                        },
+                        "filter": {
+                            "range": {
+                                "timestamp": {
+                                    "gte": start_date,
+                                    "lte": end_date
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+    else:
+        return \
+            {
+                "query": {
+                    "range": {
+                        "timestamp": {
+                            "gte": start_date,
+                            "lte": end_date
+                        }
+                    }
+                }
+            }

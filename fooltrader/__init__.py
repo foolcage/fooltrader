@@ -91,4 +91,9 @@ pd.set_option('expand_frame_repr', False)
 
 init_log()
 
-es = connections.create_connection(hosts=ES_HOSTS)
+logger = logging.getLogger(__name__)
+
+try:
+    es = connections.create_connection(hosts=ES_HOSTS)
+except Exception as e:
+    logger.error(e)

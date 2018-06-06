@@ -11,7 +11,9 @@ class Account(DocType):
     cash = Float()
     # 具体仓位
     positions = Nested()
-    # 总市值
+    # 市值
+    value = Float()
+    # 市值+cash
     allValue = Float()
     # 时间
     timestamp = Date()
@@ -32,14 +34,16 @@ class Position(DocType):
     longAmount = Long()
     # 可平多数量
     availableLong = Long()
+    # 平均做多价格
+    averageLongPrice = Long()
 
     # 做空数量
     shortAmount = Long()
     # 可平空数量
     availableShort = Long()
+    # 平均做空价格
+    averageShortPrice = Long()
 
-    # 盈亏
-    profit = Float()
     # 市值 或者 占用的保证金(方便起见，总是100%)
     value = Float()
     # 交易类型(0代表T+0,1代表T+1)

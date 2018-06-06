@@ -17,7 +17,7 @@ from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowSta
 from fooltrader.domain.quote import StockMeta, StockKData, IndexKData
 from fooltrader.settings import US_STOCK_CODES
 from fooltrader.utils.es_utils import es_get_latest_record
-from fooltrader.utils.utils import fill_doc_type, is_same_date
+from fooltrader.utils.utils import fill_doc_type, is_same_date, adjust_fuquan_price
 
 logger = logging.getLogger(__name__)
 
@@ -58,14 +58,14 @@ def stock_meta_to_es(force=False):
         logger.info(resp)
 
 
-def stock_kdata_to_es(start='000001', end='666666', codes=US_STOCK_CODES, force=False):
-    for _, security_item in get_security_list(start=start, end=end, exchanges=['sh', 'sz', 'nasdaq'],
-                                              codes=codes).iterrows():
+def stock_kdata_to_es(start='000001', end='666666', exchanges=['sh', 'sz'], force=False):
+    for _, security_item in get_security_list(start=start, end=end, exchanges=exchanges).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, StockKData)
 
         start_date = None
+        latest_factor = 0
         if not force:
             query = {
                 "term": {"securityId": ""}
@@ -75,6 +75,8 @@ def stock_kdata_to_es(start='000001', end='666666', codes=US_STOCK_CODES, force=
             logger.info("latest_record:{}".format(latest_record))
             if latest_record:
                 start_date = latest_record['timestamp']
+                if 'factor' in latest_record:
+                    latest_factor = latest_record['factor']
         actions = []
         for _, kdata_item in get_kdata(security_item, start_date=start_date).iterrows():
             if start_date and is_same_date(start_date, kdata_item['timestamp']):
@@ -84,7 +86,10 @@ def stock_kdata_to_es(start='000001', end='666666', codes=US_STOCK_CODES, force=
                 id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
                 kdata = StockKData(meta={'id': id}, id=id)
                 kdata.meta['index'] = index_name
-                fill_doc_type(kdata, json.loads(kdata_item.to_json()))
+                kdata_json = json.loads(kdata_item.to_json())
+                # 计算复权价格
+                adjust_fuquan_price(kdata_json, latest_factor)
+                fill_doc_type(kdata, kdata_json)
                 # kdata.save(index=index_name)
                 actions.append(kdata.to_dict(include_meta=True))
             except Exception as e:
@@ -94,6 +99,7 @@ def stock_kdata_to_es(start='000001', end='666666', codes=US_STOCK_CODES, force=
             logger.info(resp)
 
 
+# 这里的index是指数的意思,不要以为是索引
 def index_kdata_to_es(force=False):
     for _, security_item in get_security_list(security_type='index', exchanges=EXCHANGE_LIST_COL).iterrows():
         # 创建索引
