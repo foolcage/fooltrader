@@ -16,6 +16,7 @@ services:
       - es-config:/usr/share/elasticsearch/config
     ports:
       - 9200:9200
+      - 9300:9300
     networks:
       - fooltrader
     hostname: elasticsearch
