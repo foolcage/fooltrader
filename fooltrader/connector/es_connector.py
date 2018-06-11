@@ -4,7 +4,7 @@ import json
 import logging
 
 import elasticsearch.helpers
-from elasticsearch_dsl import Index
+from elasticsearch_dsl import Index, connections
 
 from fooltrader import EXCHANGE_LIST_COL, es
 from fooltrader.api.event import get_forecast_items
@@ -15,9 +15,9 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
 from fooltrader.domain.quote import StockMeta, StockKData, IndexKData
-from fooltrader.settings import US_STOCK_CODES
+from fooltrader.settings import US_STOCK_CODES, ES_HOSTS
 from fooltrader.utils.es_utils import es_get_latest_record
-from fooltrader.utils.utils import fill_doc_type, is_same_date, adjust_fuquan_price
+from fooltrader.utils.utils import fill_doc_type, is_same_date
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def stock_kdata_to_es(start='000001', end='666666', exchanges=['sh', 'sz'], forc
         es_index_mapping(index_name, StockKData)
 
         start_date = None
-        latest_factor = 0
+
         if not force:
             query = {
                 "term": {"securityId": ""}
@@ -75,15 +75,9 @@ def stock_kdata_to_es(start='000001', end='666666', exchanges=['sh', 'sz'], forc
             logger.info("latest_record:{}".format(latest_record))
             if latest_record:
                 start_date = latest_record['timestamp']
-                if 'factor' in latest_record:
-                    latest_factor = latest_record['factor']
         actions = []
 
         df_kdata = get_kdata(security_item, start_date=start_date)
-
-        df_kdata_has_factor = df_kdata[df_kdata['factor'].isna()]
-        if df_kdata_has_factor.shape[0] > 0:
-            latest_factor = df_kdata_has_factor.tail(1).factor.iat[0]
 
         for _, kdata_item in df_kdata.iterrows():
             if start_date and is_same_date(start_date, kdata_item['timestamp']):
@@ -94,8 +88,7 @@ def stock_kdata_to_es(start='000001', end='666666', exchanges=['sh', 'sz'], forc
                 kdata = StockKData(meta={'id': id}, id=id)
                 kdata.meta['index'] = index_name
                 kdata_json = json.loads(kdata_item.to_json())
-                # 计算复权价格
-                adjust_fuquan_price(kdata_json, latest_factor)
+
                 fill_doc_type(kdata, kdata_json)
                 # kdata.save(index=index_name)
                 actions.append(kdata.to_dict(include_meta=True))
@@ -282,7 +275,8 @@ def forecast_event_to_es():
 if __name__ == '__main__':
     # security_meta_to_es()
     # stock_meta_to_es(force=True)
-    stock_kdata_to_es(start='999999', end='999999', force=True)
+    connections.create_connection(hosts=ES_HOSTS)
+    stock_kdata_to_es(start='300027', end='300028', force=True)
     # balance_sheet_to_es()
     # index_kdata_to_es(force=False)
     # cash_flow_statement_to_es()
