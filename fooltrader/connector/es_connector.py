@@ -78,7 +78,14 @@ def stock_kdata_to_es(start='000001', end='666666', exchanges=['sh', 'sz'], forc
                 if 'factor' in latest_record:
                     latest_factor = latest_record['factor']
         actions = []
-        for _, kdata_item in get_kdata(security_item, start_date=start_date).iterrows():
+
+        df_kdata = get_kdata(security_item, start_date=start_date)
+
+        df_kdata_has_factor = df_kdata[df_kdata['factor'].isna()]
+        if df_kdata_has_factor.shape[0] > 0:
+            latest_factor = df_kdata_has_factor.tail(1).factor.iat[0]
+
+        for _, kdata_item in df_kdata.iterrows():
             if start_date and is_same_date(start_date, kdata_item['timestamp']):
                 continue
 
