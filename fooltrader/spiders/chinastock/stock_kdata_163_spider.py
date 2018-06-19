@@ -18,7 +18,7 @@ from fooltrader.spiders.common import random_proxy
 from fooltrader.utils import utils
 
 
-class StockKdataSpider163(scrapy.Spider):
+class StockKdata163Spider(scrapy.Spider):
     name = "stock_kdata_163"
 
     custom_settings = {
@@ -75,9 +75,6 @@ class StockKdataSpider163(scrapy.Spider):
             # 已经保存的csv数据
             if os.path.exists(path):
                 saved_df = pd.read_csv(path, dtype=str)
-                # 补全历史数据
-                if 'name' not in saved_df.columns:
-                    saved_df['name'] = item['name']
             else:
                 saved_df = pd.DataFrame()
 
@@ -125,7 +122,7 @@ class StockKdataSpider163(scrapy.Spider):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(StockKdataSpider163, cls).from_crawler(crawler, *args, **kwargs)
+        spider = super(StockKdata163Spider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
         return spider
 

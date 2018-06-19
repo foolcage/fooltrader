@@ -22,6 +22,7 @@ class Account(DocType):
     closing = Boolean()
 
     class Meta:
+        index = 'account'
         doc_type = 'doc'
         all = MetaField(enabled=False)
 

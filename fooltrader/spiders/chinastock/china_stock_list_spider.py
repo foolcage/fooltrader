@@ -5,22 +5,16 @@ import os
 
 import pandas as pd
 import scrapy
-from kafka import KafkaProducer
 from scrapy import Request
 from scrapy import signals
 
 from fooltrader.consts import DEFAULT_SH_HEADER, DEFAULT_SZ_HEADER
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import STOCK_META_COL
-from fooltrader.settings import KAFKA_HOST, AUTO_KAFKA
 
 
-# TODO:check whether has new stock and new trading date to ignore download again
-class SecurityListSpider(scrapy.Spider):
-    name = "stock_list"
-
-    if AUTO_KAFKA:
-        producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
+class ChinaStockListSpider(scrapy.Spider):
+    name = "china_stock_list"
 
     def start_requests(self):
         yield Request(
@@ -58,6 +52,7 @@ class SecurityListSpider(scrapy.Spider):
             df = df.dropna(axis=0, how='any')
             df = df.set_index('code', drop=False)
 
+            # 只添加增量
             diff = set(df.index.tolist()) - set(df_current.index.tolist())
             diff = [item for item in diff if item != 'nan']
 
@@ -69,7 +64,7 @@ class SecurityListSpider(scrapy.Spider):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(SecurityListSpider, cls).from_crawler(crawler, *args, **kwargs)
+        spider = super(ChinaStockListSpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
         return spider
 

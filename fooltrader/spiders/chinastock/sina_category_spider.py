@@ -4,7 +4,6 @@ import json
 import threading
 
 import demjson
-import pandas as pd
 import scrapy
 from scrapy import Request
 from scrapy import signals
@@ -26,14 +25,16 @@ class SinaCategorySpider(scrapy.Spider):
         }
     }
 
-    def __init__(self, name=None, **kwargs):
-        super().__init__(name, **kwargs)
+    def start_requests(self):
+        self.category_type = self.settings.get("category_type")
+
         self.sh_df = get_security_list(exchanges=['sh'])
         self.sz_df = get_security_list(exchanges=['sz'])
         self.file_lock = threading.RLock()
 
-    def start_requests(self):
-        self.category_type = self.settings.get("category_type")
+        # 清除老数据
+        self.sh_df[self.category_type] = None
+        self.sz_df[self.category_type] = None
 
         if self.category_type == 'sinaIndustry':
             url = 'http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php'
@@ -64,29 +65,26 @@ class SinaCategorySpider(scrapy.Spider):
     def download_sina_category_detail(self, response):
         if response.text == 'null' or response.text is None:
             return
-        ind_jsons = demjson.decode(response.text)
-        for ind in ind_jsons:
+        category_jsons = demjson.decode(response.text)
+        for category in category_jsons:
             self.file_lock.acquire()
-            if get_exchange(ind['code']) == 'sh':
+            if get_exchange(category['code']) == 'sh':
                 df = self.sh_df
-            elif get_exchange(ind['code']) == 'sz':
+            elif get_exchange(category['code']) == 'sz':
                 df = self.sz_df
-            if self.category_type not in df.columns:
-                df[self.category_type] = ""
-            if ind['code'] in df.index:
-                current_ind = df.at[ind['code'], self.category_type]
-                # read_csv如果碰到nan数据类型会为float
-                if pd.isnull(current_ind) or not current_ind:
-                    current_ind = response.meta['ind_name']
+
+            if category['code'] in df.index:
+                current_ind = df.at[category['code'], self.category_type]
+
+                if type(current_ind) == list and (response.meta['ind_name'] not in current_ind):
+                    current_ind.append(response.meta['ind_name'])
+
+                elif type(current_ind) == str and response.meta['ind_name'] != current_ind:
+                    current_ind = [current_ind, response.meta['ind_name']]
                 else:
-                    if type(current_ind) == list and response.meta['ind_name'] not in current_ind:
-                        current_ind.append(response.meta['ind_name'])
+                    current_ind = response.meta['ind_name']
 
-                    elif type(current_ind) == str and response.meta[
-                        'ind_name'] != current_ind:
-                        current_ind = [current_ind, response.meta['ind_name']]
-
-                df.at[ind['code'], self.category_type] = current_ind
+                df.at[category['code'], self.category_type] = current_ind
             self.file_lock.release()
 
     @classmethod
@@ -96,6 +94,8 @@ class SinaCategorySpider(scrapy.Spider):
         return spider
 
     def spider_closed(self, spider, reason):
-        self.sh_df.to_csv(get_security_list_path('stock', 'sh'), index=False)
-        self.sz_df.to_csv(get_security_list_path('stock', 'sz'), index=False)
+        if self.sh_df[self.category_type].any():
+            self.sh_df.to_csv(get_security_list_path('stock', 'sh'), index=False)
+        if self.sz_df[self.category_type].any():
+            self.sz_df.to_csv(get_security_list_path('stock', 'sz'), index=False)
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)

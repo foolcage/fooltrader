@@ -4,7 +4,6 @@ import os
 
 import pandas as pd
 import scrapy
-from kafka import KafkaProducer
 from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
@@ -18,7 +17,7 @@ from fooltrader.spiders.common import random_proxy
 from fooltrader.utils.utils import get_quarters, get_year_quarter
 
 
-class StockKDataSpider(scrapy.Spider):
+class StockKDataSinaSpider(scrapy.Spider):
     name = "stock_kdata"
 
     custom_settings = {
@@ -29,9 +28,6 @@ class StockKDataSpider(scrapy.Spider):
             'fooltrader.middlewares.FoolErrorMiddleware': 1000,
         }
     }
-
-    if AUTO_KAFKA:
-        producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
     # 如果需要代理请打开
     # @random_proxy
@@ -117,7 +113,7 @@ class StockKDataSpider(scrapy.Spider):
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(StockKDataSpider, cls).from_crawler(crawler, *args, **kwargs)
+        spider = super(StockKDataSinaSpider, cls).from_crawler(crawler, *args, **kwargs)
         crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
         return spider
 
