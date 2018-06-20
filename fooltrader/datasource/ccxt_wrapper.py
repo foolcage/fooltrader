@@ -38,21 +38,34 @@ def init_cryptocurrency_markets():
             markets = exchange.fetch_markets()
             df = pd.DataFrame()
             # 存储货币信息
-            for symbol in markets:
-                security_dir = get_security_dir(security_type='cryptocurrency', exchange=exchange_str, code=symbol)
+            for name in markets:
+                if 'symbol' in name:
+                    name = name['symbol']
+                    symbol = name.replace('/', "")
+                    security_dir = get_security_dir(security_type='cryptocurrency', exchange=exchange_str,
+                                                    code=symbol)
+                else:
+                    name = symbol
+                    symbol = name.replace('/', "")
+
+                    security_dir = get_security_dir(security_type='cryptocurrency', exchange=exchange_str,
+                                                    code=symbol)
 
                 if not os.path.exists(security_dir):
                     os.makedirs(security_dir)
-                security_info = markets[symbol]
-                if security_info:
-                    with open(get_security_meta_path(security_type='cryptocurrency', exchange=exchange_str,
-                                                     code=symbol), "w") as f:
-                        json.dump(security_info, f, ensure_ascii=False)
-                        df.append(
-                            generate_security_item(security_type='cryptocurrency', exchange=exchange_str, code=symbol,
-                                                   name=symbol, list_date=None), ignore_index=True)
-                if not df.empty:
-                    df.to_csv(get_security_list_path(security_type='cryptocurrency', exchange=exchange_str))
+
+                df.append(
+                    generate_security_item(security_type='cryptocurrency', exchange=exchange_str, code=symbol,
+                                           name=name, list_date=None), ignore_index=True)
+
+                if type(markets) == dict:
+                    security_info = markets[symbol]
+                    if security_info:
+                        with open(get_security_meta_path(security_type='cryptocurrency', exchange=exchange_str,
+                                                         code=symbol), "w") as f:
+                            json.dump(security_info, f, ensure_ascii=False)
+            if not df.empty:
+                df.to_csv(get_security_list_path(security_type='cryptocurrency', exchange=exchange_str))
 
 
         except Exception as e:
