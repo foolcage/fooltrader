@@ -74,6 +74,7 @@ def fetch_cryptocurrency_kdata(exchange='bitstamp'):
     for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange]).iterrows():
         exchange_ccxt = eval("ccxt.{}()".format(exchange))
         if exchange_ccxt.has['fetchOHLCV']:
+            exchange_ccxt.fetch_markets()
             kdatas = exchange_ccxt.fetch_ohlcv(security_item['name'], timeframe='1d')
             df = pd.DataFrame()
 
