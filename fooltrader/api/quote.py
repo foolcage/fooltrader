@@ -106,10 +106,6 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         elif start and end:
             df = df[(df["code"] >= start) & (df["code"] <= end)]
 
-    # FIXME:
-    # 期货列表有重复的数据，需要检查一下
-    df = df.drop_duplicates(subset='code', keep='last')
-
     return df
 
 
