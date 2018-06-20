@@ -39,7 +39,7 @@ def get_security_list_path(security_type, exchange):
 def get_security_dir(item=None, security_type=None, exchange=None, code=None):
     if security_type and exchange and code:
         return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange, code)
-    elif item:
+    else:
         return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
 
 
