@@ -27,8 +27,6 @@ def generate_security_item(security_type, exchange, code, name, list_date=None):
 
 def init_cryptocurrency_markets():
     for exchange_str in ccxt.exchanges:
-        if exchange_str != 'bitstamp':
-            continue
         exchange_dir = get_exchange_dir(security_type='cryptocurrency', exchange=exchange_str)
 
         # 创建交易所目录
