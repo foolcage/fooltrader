@@ -7,17 +7,6 @@ import fooltrader.utils.utils
 from fooltrader import settings
 
 
-def get_category_path(security_type='stock', classified='industry', source='sina', category_item=None):
-    if category_item:
-        return os.path.join(get_category_dir(security_type), '{}_{}_{}.csv'.format(source, classified, category_item))
-    else:
-        return os.path.join(get_category_dir(security_type), '{}_{}.csv'.format(source, classified))
-
-
-def get_category_dir(security_type='stock'):
-    return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, 'category')
-
-
 def get_exchange_dir(security_type='future', exchange='shfe'):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange)
 
@@ -47,8 +36,16 @@ def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, '{}.csv'.format(exchange))
 
 
-def get_security_dir(item):
-    return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
+def get_security_dir(item=None, security_type=None, exchange=None, code=None):
+    if security_type and exchange and code:
+        return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange, code)
+    elif item:
+        return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
+
+
+def get_security_meta_path(item=None, security_type=None, exchange=None, code=None):
+    return os.path.join(get_security_dir(item=item, security_type=security_type, exchange=exchange, code=code),
+                        "meta.json")
 
 
 # k线相关

@@ -20,16 +20,15 @@ from fooltrader.contract.files_contract import get_balance_sheet_path, get_incom
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE, US_STOCK_CODES
 from fooltrader.spiders.america.america_list_spider import AmericaListSpider
 from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
-from fooltrader.spiders.future.future_shfe_spider import FutureShfeSpider
-from fooltrader.spiders.future.shfe_trading_calendar_spider import ShfeTradingCalendarSpider
-from fooltrader.spiders.security_list_spider import SecurityListSpider
-from fooltrader.spiders.stock.sina_category_spider import SinaCategorySpider
-from fooltrader.spiders.stock.stock_summary_spider import StockSummarySpider
-from fooltrader.spiders.stock_finance_report_event_spider import StockFinanceReportEventSpider
-from fooltrader.spiders.stock_finance_spider import StockFinanceSpider
-from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
-from fooltrader.spiders.stock_kdata_spider_163 import StockKdataSpider163
-from fooltrader.spiders.stock_tick_spider import StockTickSpider
+from fooltrader.spiders.chinafuture.future_shfe_spider import FutureShfeSpider
+from fooltrader.spiders.chinafuture.shfe_trading_calendar_spider import ShfeTradingCalendarSpider
+from fooltrader.spiders.chinastock.sina_category_spider import SinaCategorySpider
+from fooltrader.spiders.chinastock.stock_finance_report_event_spider import StockFinanceReportEventSpider
+from fooltrader.spiders.chinastock.stock_finance_spider import StockFinanceSpider
+from fooltrader.spiders.chinastock.stock_kdata_163_spider import StockKdata163Spider
+from fooltrader.spiders.chinastock.stock_kdata_sina_spider import StockKDataSinaSpider
+from fooltrader.spiders.chinastock.stock_summary_spider import StockSummarySpider
+from fooltrader.spiders.chinastock.stock_tick_spider import StockTickSpider
 from fooltrader.utils.utils import get_report_date
 
 logger = logging.getLogger(__name__)
@@ -67,9 +66,9 @@ def crawl_stock_meta():
     #     logger.info('download stock list start')
     #     process_crawl(SecurityListSpider, {})
     #     logger.info('download stock list finish')
-    # process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
+    process_crawl(SinaCategorySpider, {'category_type': 'sinaIndustry'})
     process_crawl(SinaCategorySpider, {'category_type': 'sinaConcept'})
-    # process_crawl(SinaCategorySpider, {'category_type': 'sinaArea'})
+    process_crawl(SinaCategorySpider, {'category_type': 'sinaArea'})
 
 
 def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
@@ -139,7 +138,7 @@ def crawl_index_quote():
         if start_date > end_date:
             logger.info("{} kdata is ok".format(security_item['code']))
         else:
-            process_crawl(StockKdataSpider163, {"security_item": security_item,
+            process_crawl(StockKdata163Spider, {"security_item": security_item,
                                                 "start_date": start_date,
                                                 "end_date": end_date})
 
@@ -172,7 +171,7 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
         if start_date > end_date:
             logger.info("{} stock kdata is ok".format(security_item['code']))
         else:
-            process_crawl(StockKdataSpider163, {"security_item": security_item,
+            process_crawl(StockKdata163Spider, {"security_item": security_item,
                                                 "start_date": start_date,
                                                 "end_date": end_date})
 
@@ -184,7 +183,7 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
             diff_dates = base_dates - sina_dates
             if diff_dates:
                 logger.info("{} get {} kdata from sina start".format(security_item['code'], fuquan))
-                process_crawl(StockKDataSpider, {"security_item": security_item,
+                process_crawl(StockKDataSinaSpider, {"security_item": security_item,
                                                  "trading_dates": diff_dates,
                                                  "fuquan": fuquan})
                 logger.info("{} get {} kdata from sina end".format(security_item['code'], fuquan))

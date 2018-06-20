@@ -88,8 +88,13 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
                 df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
             if 'nasdaq' == exchange:
                 df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
+    else:
+        for exchange in exchanges:
+            the_path = get_security_list_path(security_type, exchange)
+            if os.path.exists(the_path):
+                df = df.append(pd.read_csv(the_path, dtype=str), ignore_index=True)
 
-    if df.size > 0:
+    if not df.empty > 0:
         if start_list_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_list_date)]

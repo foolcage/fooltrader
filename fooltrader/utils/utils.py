@@ -187,6 +187,8 @@ def get_report_date(the_date=datetime.datetime.today().date()):
 
 
 def to_timestamp(the_time):
+    if type(the_time) == int:
+        return pd.Timestamp.fromtimestamp(the_time)
     return pd.Timestamp(the_time)
 
 
