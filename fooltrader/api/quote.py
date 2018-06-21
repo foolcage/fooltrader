@@ -15,7 +15,7 @@ from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
-    get_security_list_path, get_exchange_trading_calendar_path
+    get_security_list_path, get_exchange_trading_calendar_path, adjust_source
 from fooltrader.datamanager.zipdata import unzip
 from fooltrader.utils.utils import get_file_name, to_time_str, drop_duplicate
 
@@ -221,7 +221,7 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source='163',
+def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source=None,
               level='day'):
     """
     get kdata.
@@ -241,7 +241,7 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
     dtype : type
         the data type for the csv column,default: None
     source : str
-        the data source,{'163','sina'},default: '163'
+        the data source,{'163','sina','exchange'},just used for internal merge
     level : str or int
         the kdata level,{1,5,15,30,60,'day','week','month'},default : 'day'
 
@@ -253,9 +253,7 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
 
     security_item = to_security_item(security_item)
 
-    # 目前期货数据只支持交易所
-    if security_item['type'] == 'future':
-        source = 'exchange'
+    source = adjust_source(security_item, source)
 
     # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
     if source == '163':
@@ -321,14 +319,14 @@ def get_latest_factor(security_item):
     security_item = to_security_item(security_item)
 
 
-def get_latest_download_trading_date(security_item, return_next=True, source='163'):
+def get_latest_download_trading_date(security_item, return_next=True, source=None):
     df = get_kdata(security_item, source=source)
     if len(df) == 0:
-        return pd.Timestamp(security_item['listDate'])
+        return pd.Timestamp(security_item['listDate']), df
     if return_next:
-        return df.index[-1] + pd.DateOffset(1)
+        return df.index[-1] + pd.DateOffset(1), df
     else:
-        return df.index[-1]
+        return df.index[-1], df
 
 
 def get_trading_calendar(security_type='future', exchange='shfe'):

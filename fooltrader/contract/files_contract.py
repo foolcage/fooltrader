@@ -49,6 +49,16 @@ def get_security_meta_path(item=None, security_type=None, exchange=None, code=No
 
 
 # k线相关
+def adjust_source(security_item, source):
+    # 对于使用者，不需要指定source,系统会选择目前质量最好的source
+    if not source:
+        if security_item['type'] == 'future' or security_item['type'] == 'cryptocurrency':
+            source = 'exchange'
+        if security_item['type'] == 'stock':
+            source = '163'
+    return source
+
+
 def get_kdata_dir(item, fuquan='bfq'):
     # 目前只有股票需要复权信息
     if item['type'] == 'stock':
@@ -57,7 +67,8 @@ def get_kdata_dir(item, fuquan='bfq'):
         return os.path.join(get_security_dir(item), 'kdata')
 
 
-def get_kdata_path(item, source='163', fuquan='bfq', year=None, quarter=None):
+def get_kdata_path(item, source=None, fuquan='bfq', year=None, quarter=None):
+    source = adjust_source(item, source)
     if source == 'sina':
         if not year and not quarter:
             return os.path.join(get_kdata_dir(item, fuquan), 'dayk.csv')
