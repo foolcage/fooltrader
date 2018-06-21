@@ -44,7 +44,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
     ----------
     security_type : str
         {‘stock’, 'future'},default: stock
-    exchanges : list
+    exchanges : str or list
         ['sh', 'sz','nasdaq','nyse','amex','shfe','dce','zce'],default: ['sh','sz']
     start : str
         the start code,work with end,default:None
@@ -66,6 +66,9 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
 
     """
     df = pd.DataFrame()
+    if type(exchanges) == str:
+        exchanges = [exchanges]
+
     if security_type == 'stock' or security_type == 'future':
         for exchange in exchanges:
             the_path = get_security_list_path(security_type, exchange)

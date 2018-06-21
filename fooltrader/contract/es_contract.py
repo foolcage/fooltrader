@@ -5,6 +5,8 @@ def get_es_kdata_index(security_type='stock', exchange='sh', level='day'):
         return '{}_{}_{}_kdata'.format(security_type, 'china', level)
     elif exchange in ['nasdaq', 'amex', 'nyse']:
         return '{}_{}_{}_kdata'.format(security_type, 'usa', level)
+    else:
+        return '{}_{}_{}_kdata'.format(security_type, exchange, level)
 
 
 def get_es_forecast_event_index(security_id):

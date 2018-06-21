@@ -84,6 +84,25 @@ class StockKData(BaseDocType):
         doc_type = 'doc'
 
 
+class CryptoCurrencyKData(BaseDocType):
+    id = Keyword()
+    securityId = Keyword()
+    timestamp = Date()
+    code = Keyword()
+    open = Float()
+    close = Float()
+    high = Float()
+    low = Float()
+    volume = Float()
+    preClose = Float()
+    change = Float()
+    changePct = Float()
+
+    class Meta:
+        all = MetaField(enabled=False)
+        doc_type = 'doc'
+
+
 class IndexKData(BaseDocType):
     id = Keyword()
     securityId = Keyword()

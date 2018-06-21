@@ -9,6 +9,7 @@ import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
 from fooltrader.api.quote import get_latest_download_trading_date
+from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES
 from fooltrader.contract.data_contract import KDATA_COLUMN_COMMON
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
@@ -16,9 +17,6 @@ from fooltrader.utils.pd_utils import kdata_df_save
 from fooltrader.utils.utils import to_time_str, is_same_date
 
 logger = logging.getLogger(__name__)
-
-CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobi", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
-                            "bitz", "bibox", "zb", "bitstamp"]
 
 
 def generate_security_item(security_type, exchange, code, name, list_date=None):
