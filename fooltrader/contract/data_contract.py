@@ -17,6 +17,10 @@ KDATA_INDEX_COLUMN_163 = ['timestamp', 'code', 'low', 'open', 'close', 'high', '
 # EXCHANGE_LIST_COL = ['sh', 'sz', 'nasdaq', 'nyse', 'amex']
 EXCHANGE_LIST_COL = ['sh', 'sz']
 
+# K线至少包含的数据
+KDATA_COLUMN_COMMON = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'securityId',
+                       'preClose', 'change', 'changePct']
+
 # 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值,平均PE
 KDATA_COLUMN_INDEX = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
                       'preClose', 'change', 'changePct', 'turnoverRate', 'tCap', 'mCap', 'pe']

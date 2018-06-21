@@ -8,6 +8,7 @@ import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
 from fooltrader.api.quote import get_latest_download_trading_date
+from fooltrader.contract.data_contract import KDATA_COLUMN_COMMON
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
 from fooltrader.utils.pd_utils import kdata_df_save
@@ -17,9 +18,6 @@ logger = logging.getLogger(__name__)
 
 CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobi", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
                             "bitz", "bibox", "zb", "bitstamp"]
-
-
-# CRYPTOCURRENCY_EXCHANGES = ["gdax", "bitstamp"]
 
 
 def generate_security_item(security_type, exchange, code, name, list_date=None):
@@ -33,8 +31,8 @@ def generate_security_item(security_type, exchange, code, name, list_date=None):
     }
 
 
-def init_markets():
-    for exchange_str in set(ccxt.exchanges) & set(CRYPTOCURRENCY_EXCHANGES):
+def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
+    for exchange_str in set(ccxt.exchanges) & set(exchanges):
         exchange_dir = get_exchange_dir(security_type='cryptocurrency', exchange=exchange_str)
 
         # 创建交易所目录
@@ -102,7 +100,7 @@ def fetch_cryptocurrency_kdata(exchange_str='bitstamp'):
 
             if start_date and (start_date > end_date):
                 logger.info("{} kdata is ok".format(security_item['code']))
-                return
+                continue
 
             kdatas = exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
 
@@ -113,18 +111,23 @@ def fetch_cryptocurrency_kdata(exchange_str='bitstamp'):
                 kdata_json = {
                     'timestamp': to_time_str(timestamp),
                     'code': security_item['code'],
+                    'name': security_item['name'],
                     'open': kdata[1],
                     'high': kdata[2],
                     'low': kdata[3],
                     'close': kdata[4],
                     'volume': kdata[5],
-                    'securityId': security_item['id']
+                    'securityId': security_item['id'],
+                    'preClose': None,
+                    'change': None,
+                    'changePct': None
                 }
                 df = df.append(kdata_json, ignore_index=True)
             if not df.empty:
-                kdata_df_save(df, get_kdata_path(security_item))
+                df = df.loc[:, KDATA_COLUMN_COMMON]
+                kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
 
 
 if __name__ == '__main__':
-    init_markets()
+    init_markets(exchanges=["gdax", "bitstamp"])
     fetch_cryptocurrency_kdata(exchange_str='gdax')
