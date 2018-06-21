@@ -124,8 +124,8 @@ def _get_security_item(the_type, exchanges, code=None):
     the_type : str
         the security type
 
-    exchanges : str
-        the exchange
+    exchanges : list
+        the exchanges
 
     Returns
     -------
@@ -139,8 +139,11 @@ def _get_security_item(the_type, exchanges, code=None):
     return df.loc[code,]
 
 
-def to_security_item(security_item):
+def to_security_item(security_item, exchange=None):
     if type(security_item) == str:
+        if exchange:
+            return _get_security_item('cryptocurrency', [exchange], security_item)
+
         id_match = re.match(r'(stock|index|future)_(sh|sz|nasdaq|shfe|dce|zce)_([a-zA-Z0-9]+)', security_item)
         if id_match:
             return _get_security_item(the_type=id_match.group(1), exchanges=[id_match.group(2)],
@@ -224,8 +227,8 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source=None,
-              level='day'):
+def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None,
+              source=None, level='day'):
     """
     get kdata.
 
@@ -233,6 +236,10 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
     ----------
     security_item : SecurityItem or str
         the security item,id or code
+
+    exchange : str
+        the exchange,set this for cryptocurrency
+
     the_date : TimeStamp str or TimeStamp
         get the kdata for the exact date
     start_date : TimeStamp str or TimeStamp
@@ -254,7 +261,8 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
 
     """
 
-    security_item = to_security_item(security_item)
+    # 由于数字货币的交易所太多，必须指定exchange
+    security_item = to_security_item(security_item, exchange)
 
     source = adjust_source(security_item, source)
 

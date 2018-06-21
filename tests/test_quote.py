@@ -71,6 +71,11 @@ def test_to_security_item():
     assert item.id == 'future_shfe_ag1301'
     assert item.code == 'ag1301'
 
+    item = quote.to_security_item('BTC-USD', exchange='gdax')
+
+    assert item.id == 'cryptocurrency_gdax_BTC-USD'
+    assert item.code == 'BTC-USD'
+
 
 def test_get_stock_kdata():
     df = quote.get_kdata('600977')
@@ -114,6 +119,18 @@ def test_get_future_kdata():
     df = quote.get_kdata('rb1605', start_date='2015-05-15')
     assert not df.empty
     assert '20160516' in df.index
+
+
+def test_get_cryptocurrency_kdata():
+    df = quote.get_kdata('BTC-USD', exchange='gdax')
+    assert not df.empty
+    assert '2017-09-14' in df.index
+    assert df.loc['2017-09-14', 'changePct'] < -0.18
+
+    df = quote.get_kdata('BTC-JPY', exchange='kraken')
+    assert not df.empty
+    assert '2017-09-14' in df.index
+    assert df.loc['2017-09-14', 'changePct'] < -0.18
 
 
 def test_get_ticks():

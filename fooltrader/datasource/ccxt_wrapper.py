@@ -91,7 +91,7 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
             logger.error("init_markets for {} failed".format(exchange_str), e)
 
 
-def fetch_cryptocurrency_kdata(exchange_str='bitstamp'):
+def fetch_kdata(exchange_str='bitstamp'):
     for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
         exchange = eval("ccxt.{}()".format(exchange_str))
         if exchange.has['fetchOHLCV']:
@@ -102,7 +102,11 @@ def fetch_cryptocurrency_kdata(exchange_str='bitstamp'):
                 logger.info("{} kdata is ok".format(security_item['code']))
                 continue
 
-            kdatas = exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
+            try:
+                kdatas = exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
+            except Exception as e:
+                logger.error("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
+                continue
 
             for kdata in kdatas:
                 timestamp = pd.Timestamp.fromtimestamp(int(kdata[0] / 1000))
@@ -129,5 +133,7 @@ def fetch_cryptocurrency_kdata(exchange_str='bitstamp'):
 
 
 if __name__ == '__main__':
-    init_markets(exchanges=["gdax", "bitstamp"])
-    fetch_cryptocurrency_kdata(exchange_str='gdax')
+    exchanges = ["gdax", "kraken"]
+    init_markets(exchanges=exchanges)
+    for exchange in exchanges:
+        fetch_kdata(exchange_str=exchange)

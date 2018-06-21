@@ -11,7 +11,7 @@ def kdata_df_save(df, to_path, calculate_change=False):
     if calculate_change:
         pre_close = None
         for index in df.index:
-            if pd.notna(df.loc[index, ['preClose', 'change', 'chanePct']]).all():
+            if pd.notna(df.loc[index, ['preClose', 'change', 'changePct']]).all():
                 continue
             current_close = df.loc[index, 'close']
             if pre_close:
