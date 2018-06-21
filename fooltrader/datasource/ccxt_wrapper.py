@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import time
 
 import ccxt
 import pandas as pd
@@ -104,6 +105,8 @@ def fetch_kdata(exchange_str='bitstamp'):
 
             try:
                 kdatas = exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
+                # for rateLimit
+                time.sleep(2)
             except Exception as e:
                 logger.error("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
                 continue
