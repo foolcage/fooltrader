@@ -17,6 +17,7 @@ from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTU
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
     get_security_list_path, get_exchange_trading_calendar_path, adjust_source
 from fooltrader.datamanager.zipdata import unzip
+from fooltrader.utils.pd_utils import kdata_df_save
 from fooltrader.utils.utils import get_file_name, to_time_str, drop_duplicate
 
 logger = logging.getLogger(__name__)
@@ -105,6 +106,8 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
             df = df.loc[codes]
         elif start and end:
             df = df[(df["code"] >= start) & (df["code"] <= end)]
+
+        df = df.drop_duplicates(subset='code', keep='last')
 
     return df
 
@@ -663,7 +666,7 @@ def parse_shfe_data(force_parse=False):
                              'exchange': 'shfe',
                              'type': 'future'}
             # 检查是否需要保存合约meta
-            if security_list is not None and 'code' in security_list.columns:
+            if (not security_list.empty) and ('code' in security_list.columns):
                 security_list = security_list.set_index(security_list['code'], drop=False)
             if the_contract not in security_list.index:
                 security_list = security_list.append(security_item, ignore_index=True)
@@ -690,11 +693,9 @@ def parse_shfe_data(force_parse=False):
 
             saved_df = saved_df.append(the_df, ignore_index=True)
             saved_df = saved_df.loc[:, KDATA_COLUMN_FUTURE]
-            saved_df = saved_df.drop_duplicates(subset='timestamp', keep='last')
-            saved_df = saved_df.set_index(saved_df['timestamp'], drop=False)
-            saved_df.index = pd.to_datetime(saved_df.index)
-            saved_df = saved_df.sort_index()
-            saved_df.to_csv(kdata_path, index=False)
+
+            if not saved_df.empty:
+                kdata_df_save(saved_df, kdata_path)
 
             logger.info("end handling {} in {}".format(the_contract, the_file))
 
