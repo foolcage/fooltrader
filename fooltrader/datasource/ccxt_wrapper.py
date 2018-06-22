@@ -9,7 +9,7 @@ import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
 from fooltrader.api.quote import get_latest_download_trading_date
-from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES, CRYPTOCURRENCY_PAIR
+from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES, CRYPTOCURRENCY_PAIR, SECURITY_TYPE_CRYPTO
 from fooltrader.contract.data_contract import KDATA_COLUMN_COMMON
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
@@ -133,6 +133,7 @@ def fetch_kdata(exchange_str='bitstamp'):
                 kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
 
 
+# not used
 def fetch_tickers(exchange_str):
     exchange = eval("ccxt.{}()".format(exchange_str))
     if exchange.has['fetchTickers']:
@@ -156,6 +157,42 @@ def fetch_tickers(exchange_str):
                     'preClose': ticker['previousClose'],
                     'change': ticker['change'],
                     'changePct': ticker['percentage']
+                }
+                yield tick
+
+            rate_limit = 5
+            time.sleep(rate_limit)
+
+            logger.info("fetch_tickers for {} sleep {}".format(exchange_str, rate_limit))
+
+
+def fetch_ticks(exchange_str):
+    df = get_security_list(security_type=SECURITY_TYPE_CRYPTO, exchanges=exchange_str)
+    pairs = set(df.loc[:, 'name'].tolist()) & set(CRYPTOCURRENCY_PAIR)
+    if not pairs:
+        logger.warning("{} not support pair:{}".format(exchange_str, CRYPTOCURRENCY_PAIR))
+        return
+    else:
+        logger.warning("{} get tick for paris:{}".format(exchange_str, pairs))
+
+    exchange = eval("ccxt.{}()".format(exchange_str))
+    if exchange.has['fetchTrades']:
+        while True:
+
+            for pair in pairs:
+                trades = exchange.fetch_trades(symbol=pair, limit=1)
+
+                trade = trades[0]
+
+                code = pair.replace('/', '-')
+                tick = {
+                    'securityId': "{}_{}_{}".format("cryptocurrency", exchange_str, code),
+                    'code': code,
+                    'name': pair,
+                    'timestamp': trade['timestamp'],
+                    'id': trade['id'],
+                    'price': trade['price'],
+                    'volume': trade['amount']
                 }
                 yield tick
 

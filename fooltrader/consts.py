@@ -168,6 +168,8 @@ CHINA_STOCK_SZ_INDEX = [{'id': 'index_sz_399001',
                          'type': 'index'}
                         ]
 
+SECURITY_TYPE_CRYPTO = 'cryptocurrency'
+
 CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobi", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
                             "bitz", "bibox", "zb", "bitstamp"]
 
