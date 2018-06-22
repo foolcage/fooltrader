@@ -134,24 +134,35 @@ def fetch_kdata(exchange_str='bitstamp'):
 
 
 def fetch_tickers(exchange_str):
-    for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
-        exchange = eval("ccxt.{}()".format(exchange_str))
-        if exchange.has['fetchTickers']:
+    exchange = eval("ccxt.{}()".format(exchange_str))
+    if exchange.has['fetchTickers']:
+        while True:
             tickers = exchange.fetch_tickers()
-            for code, name in CRYPTOCURRENCY_PAIR:
-                if name in tickers:
-                    ticker = tickers[name]
-                    tick = {
-                        'timestamp': ticker['timestamp'],
-                        'securityId': security_item['id'],
-                        'code': code,
-                        'name': name,
-                        'price': ticker['last'],
-                        'preClose': ticker['previousClose'],
-                        'change': ticker['change'],
-                        'changePct': ticker['percentage']
-                    }
-                    yield tick
+            pairs = set(tickers.keys()) & set(CRYPTOCURRENCY_PAIR)
+
+            if not pairs:
+                logger.warning("{} not support pair:{}".format(exchange_str, CRYPTOCURRENCY_PAIR))
+                break
+
+            for pair in pairs:
+                ticker = tickers[pair]
+                code = pair.replace('/', '-')
+                tick = {
+                    'timestamp': ticker['timestamp'],
+                    'securityId': "{}_{}_{}".format("cryptocurrency", exchange_str, code),
+                    'code': code,
+                    'name': pair,
+                    'price': ticker['last'],
+                    'preClose': ticker['previousClose'],
+                    'change': ticker['change'],
+                    'changePct': ticker['percentage']
+                }
+                yield tick
+
+            rate_limit = 5
+            time.sleep(rate_limit)
+
+            logger.info("fetch_tickers for {} sleep {}".format(exchange_str, rate_limit))
 
 
 if __name__ == '__main__':

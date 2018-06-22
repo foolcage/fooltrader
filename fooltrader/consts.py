@@ -174,4 +174,5 @@ CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobi", "bitfinex", "bithumb", "
 CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
                        "BNB", "ETC", "QTUM", "ONT"]
 
-CRYPTOCURRENCY_PAIR = [("{}-{}".format(item, "USDT"), "{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE]
+CRYPTOCURRENCY_PAIR = [("{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
+                      [("{}/{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
