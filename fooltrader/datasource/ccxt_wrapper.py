@@ -9,7 +9,7 @@ import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
 from fooltrader.api.quote import get_latest_download_trading_date
-from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES
+from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES, CRYPTOCURRENCY_PAIR
 from fooltrader.contract.data_contract import KDATA_COLUMN_COMMON
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
@@ -131,6 +131,27 @@ def fetch_kdata(exchange_str='bitstamp'):
             if not df.empty:
                 df = df.loc[:, KDATA_COLUMN_COMMON]
                 kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
+
+
+def fetch_tickers(exchange_str):
+    for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
+        exchange = eval("ccxt.{}()".format(exchange_str))
+        if exchange.has['fetchTickers']:
+            tickers = exchange.fetch_tickers()
+            for code, name in CRYPTOCURRENCY_PAIR:
+                if name in tickers:
+                    ticker = tickers[name]
+                    tick = {
+                        'timestamp': ticker['timestamp'],
+                        'securityId': security_item['id'],
+                        'code': code,
+                        'name': name,
+                        'price': ticker['last'],
+                        'preClose': ticker['previousClose'],
+                        'change': ticker['change'],
+                        'changePct': ticker['percentage']
+                    }
+                    yield tick
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import json
 import logging
 from subprocess import Popen, PIPE, CalledProcessError
 
@@ -9,6 +10,7 @@ from kafka import KafkaProducer
 
 from fooltrader.api.quote import get_security_list, get_ticks, get_kdata, to_security_item
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
+from fooltrader.datasource.ccxt_wrapper import fetch_tickers
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_SEC, TIME_FORMAT_DAY, KAFKA_PATH, ZK_KAFKA_HOST
 
 producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
@@ -81,7 +83,15 @@ def delete_all_topics():
         delete_topic(topic)
 
 
-# consume_topic('stock_sh_600000_day_kdata')
+def cryptocurrency_tick_to_kafka(exchange):
+    for tick in fetch_tickers(exchange):
+        producer.send(get_kafka_tick_topic(tick['securityId']),
+                      bytes(json.dumps(tick), encoding='utf8'),
+                      timestamp_ms=tick['timestamp'])
+
+        logger.debug("tick_to_kafka {}".format(tick))
+
+
 if __name__ == '__main__':
     kdata_to_kafka(security_item='300027', fuquan='hfq')
     # tick_to_kafka(security_item='300027')

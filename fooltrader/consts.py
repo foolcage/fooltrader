@@ -171,3 +171,7 @@ CHINA_STOCK_SZ_INDEX = [{'id': 'index_sz_399001',
 CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobi", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
                             "bitz", "bibox", "zb", "bitstamp"]
 
+CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
+                       "BNB", "ETC", "QTUM", "ONT"]
+
+CRYPTOCURRENCY_PAIR = [("{}-{}".format(item, "USDT"), "{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE]
