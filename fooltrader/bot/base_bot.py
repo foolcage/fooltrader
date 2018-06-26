@@ -1,52 +1,29 @@
 # -*- coding: utf-8 -*-
 
+import json
 import logging
-import math
+import time
+from datetime import datetime, timedelta
 
 import pandas as pd
+from kafka import KafkaConsumer
+from kafka import TopicPartition
 
-from fooltrader.api import esapi
-from fooltrader.domain.account import Account, Position
-from fooltrader.utils.es_utils import es_get_latest_record, es_delete, es_index_mapping
-from fooltrader.utils.utils import fill_doc_type
+from fooltrader.api.quote import to_security_item
+from fooltrader.bot.account_service import AccountService
+from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
+from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 
-ORDER_TYPE_LONG = 0
-ORDER_TYPE_SHORT = 1
-ORDER_TYPE_CLOSE_LONG = 2
-ORDER_TYPE_CLOSE_SHORT = 3
+EVENT_MARKET_OPEN = 0
+EVENT_MARKET_CLOSE = 1
 
 
 class BaseBot(object):
     def on_init(self):
         pass
 
-    def _after_init(self):
-        if type(self.start_date) == str:
-            self.start_date = pd.Timestamp(self.start_date)
-        if type(self.end_date) == str:
-            self.end_date = pd.Timestamp(self.end_date)
-
-        # 时间点
-        self.current_time = pd.Timestamp(self.start_date)
-
-        self._init_account()
-
-    def _init_account(self):
-        account = es_get_latest_record(index='account', query={"term": {"botName": self.bot_name}})
-
-        if account:
-            self.logger.warning("bot:{} has run before,old result would be deleted".format(self.bot_name))
-            es_delete(index='account', query={"term": {"botName": self.bot_name}})
-
-        es_index_mapping('account', Account)
-
-        self.account = Account()
-        self.account.botName = self.bot_name
-        self.account.cash = self.base_capital
-        self.account.positions = []
-        self.account.value = self.base_capital
-        self.account.timestamp = self.start_date
-        self.account.save()
+    def on_event(self, event_item):
+        self.logger.info("got event:{}".format(event_item))
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -63,214 +40,122 @@ class BaseBot(object):
 
         self.bot_name = type(self).__name__.lower()
 
-        self.fuquan = 'hfq'
+        self.stock_fuquan = 'hfq'
+
+        self.need_account = True
+
+        self.topic = None
+
+        self.time_step = timedelta(days=1)
 
         self.on_init()
 
         self._after_init()
 
-    def get_account(self, refresh=True):
-        if refresh:
-            account_json = es_get_latest_record(index='account', query={"term": {"botName": self.bot_name}})
-            self.account = Account()
-            fill_doc_type(self.account, account_json)
+    def _after_init(self):
+        if type(self.start_date) == str:
+            self.start_date = pd.Timestamp(self.start_date)
+        if type(self.end_date) == str:
+            self.end_date = pd.Timestamp(self.end_date)
 
-        return self.account
+        # 时间点
+        self.current_time = pd.Timestamp(self.start_date)
 
-    def get_current_position(self, security_id):
-        account = self.get_account()
-        for position in account.positions:
-            if position.securityId == security_id:
-                return position
-        return Position(security_id=security_id)
+        # 是否需要账户，回测需要，只是监听和告警不需要
+        if self.need_account:
+            self.account_service = AccountService(bot_name=self.bot_name, timestamp=self.current_time,
+                                                  base_capital=self.base_capital, buy_cost=self.buy_cost,
+                                                  sell_cost=self.sell_cost, slippage=self.slippage,
+                                                  stock_fuquan=self.stock_fuquan)
 
-    # 计算收盘账户
-    def calculate_closing_account(self):
-        account = self.get_account()
-        for position in account.positions:
-            kdata = esapi.get_kdata(security_item=position['securityId'], the_date=self.current_time)
-            closing_price = kdata['hfqClose']
-            position.availableLong = position.longAmount
-            position.availableShort = position.shortAmount
+    def dispatch_event(self, topic):
+        if not topic:
+            while True:
+                self.on_event({"timestamp": self.current_time})
 
-            # 做多导致的市值变化体现了value里
-            # 做空导致的市值变化体现在value和cash里
-            position.value = position.longAmount * closing_price + position.shortAmount * closing_price
+                if self.current_time + self.time_step > pd.Timestamp.now():
+                    time.sleep(self.time_step.seconds)
+                else:
+                    self.current_time += self.time_step
 
-            account.cash += 2 * (position.shortAmount * (position.averageShortPrice - closing_price))
+        consumer = KafkaConsumer(topic,
+                                 client_id='fooltrader',
+                                 group_id=self.bot_name,
+                                 value_deserializer=lambda m: json.loads(m.decode('utf8')),
+                                 bootstrap_servers=[KAFKA_HOST])
+        topic_partition = TopicPartition(topic=topic, partition=0)
+        start_timestamp = int(self.start_date.timestamp())
 
-            position.averageShortPrice = closing_price
-            position.averageLongPrice = closing_price
+        # 找到以start_timestamp为起点的offset
+        partition_map_offset_and_timestamp = consumer.offsets_for_times({topic_partition: start_timestamp})
 
-    # 两种情况下会被调用：
-    # 1)操作导致账户更新
-    # 2)当日收盘
-    def save_account(self):
-        self.account.save()
+        if partition_map_offset_and_timestamp:
+            offset_and_timestamp = partition_map_offset_and_timestamp[topic_partition]
 
-    def update_account(self, security_id, new_position):
-        # 先去掉之前的position
-        positions = [position for position in self.account.positions if position.securityId != security_id]
-        # 更新为新的position
-        positions.append(new_position)
-        self.account.positions = positions
-        self.account.save()
+            if offset_and_timestamp:
+                # partition  assigned after poll, and we could seek
+                consumer.poll(5, 1)
+                # move to the offset
+                consumer.seek(topic_partition, offset_and_timestamp.offset)
+                # 目前的最大offset
+                end_offset = consumer.end_offsets([topic_partition])[topic_partition]
+                for message in consumer:
+                    message_time = pd.Timestamp(message.value['timestamp'])
+                    # 设定了结束日期的话,时间到了或者kafka没数据了就结束
+                    if self.end_date and (message_time > self.end_date or message.offset + 1 == end_offset):
+                        consumer.close()
+                        break
 
-    def update_position(self, current_position, order_amount, current_price, order_type):
-        if order_type == ORDER_TYPE_LONG:
-            # 计算平均价
-            long_amount = current_position.longAmount + order_amount
-            current_position.averageLongPrice = (current_position.averageLongPrice *
-                                                 current_position.longAmount + current_price * current_price) / long_amount
+                    self.current_time = message.value['timestamp']
 
-            current_position.longAmount = long_amount
+                    flag = message.value.get('flag')
+                    # 收市计算账户
+                    if flag and flag == EVENT_MARKET_CLOSE and self.need_account:
+                        self.account_service.calculate_closing_account(self.current_time)
 
-            if current_position.tradingT == 0:
-                current_position.availableLong += order_amount
-        elif order_type == ORDER_TYPE_SHORT:
-            short_amount = current_position.shortAmount + order_amount
-            current_position.averageShortPrice = (current_position.averageShortPrice *
-                                                  current_position.shortAmount + current_price * current_price) / short_amount
+                    self.on_event(message.value)
 
-            current_position.shortAmount = short_amount
+            else:
+                consumer.poll(5, 1)
+                consumer.seek(topic_partition, consumer.end_offsets([topic_partition])[topic_partition] - 1)
+                message = consumer.poll(5000, 1)
+                kafka_end_date = datetime.fromtimestamp(message[topic_partition][0].timestamp).strftime(
+                    TIME_FORMAT_DAY)
+                self.logger.warning("start:{} is after the last record:{}".format(self.start_date, kafka_end_date))
 
-            if current_position.tradingT == 0:
-                current_position.availableShort += order_amount
+    def run(self):
+        self.logger.info("bot:{} start,account:{}".format(self.bot_name, self.account_service.get_account()))
 
-    # 开多,对于某些品种只能开多，比如中国股票
-    def buy(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_LONG)
+        self.dispatch_event(self.topic)
 
-    # 开空
-    def sell(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_SHORT)
-
-    # 平多
-    def close_long(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_CLOSE_LONG)
-
-    # 平空
-    def close_short(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_CLOSE_SHORT)
-
-    def order(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0,
-              order_type=ORDER_TYPE_LONG):
-        """
-        对每个投资标的开多.
-
-        Parameters
-        ----------
-        security_id : str
-            交易标的id
-
-        current_price : float
-            当前价格
-
-        order_amount : int
-            数量
-
-        order_pct : float
-            使用可用现金的百分比,0.0-1.0
-
-        order_price : float
-            用于限价交易
-
-        order_type : {ORDER_TYPE_LONG,ORDER_TYPE_SHORT,ORDER_TYPE_CLOSE_LONG,ORDER_TYPE_CLOSE_SHORT}
-            交易类型
-
-        Returns
-        -------
+        self.logger.info("bot:{} end,account:{}".format(self.bot_name, self.account_service.get_account()))
 
 
-        """
+class QuoteTradingBot(BaseBot):
+    def on_init(self):
+        self.security_item = None
+        self.level = '1d'
 
-        # 市价交易,就是买卖是"当时"并"一定"能成交的
-        # 简单起见，目前只支持这种方式
-        if order_price == 0:
-            current_position = self.get_current_position(security_id=security_id)
+    def _after_init(self):
+        super()._after_init()
 
-            # 按数量交易
-            if order_amount > 0:
-                # 开多
-                if order_type == ORDER_TYPE_LONG:
-                    need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
-                    if self.account.cash >= need_money:
-                        self.account.cash -= need_money
-                        self.update_position(current_position, order_amount, current_price, order_type)
-                    else:
-                        raise Exception("not enough money")
-                # 开空
-                elif order_type == ORDER_TYPE_SHORT:
-                    need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
-                    if self.account.cash >= need_money:
-                        self.account.cash -= need_money
-                        self.update_position(current_position, order_amount, current_price, order_type)
-                    else:
-                        raise Exception("not enough money")
-                # 平多
-                elif order_type == ORDER_TYPE_CLOSE_LONG:
-                    if current_position.availableLong >= order_amount:
-                        self.account.cash += (order_amount * current_price)
-                        current_position.availableLong -= order_amount
-                        current_position.longAmount -= order_amount
-                    else:
-                        raise Exception("not enough position")
-                # 平空
-                elif order_type == ORDER_TYPE_CLOSE_SHORT:
-                    if current_position.availableShort >= order_amount:
-                        self.account.cash += (order_amount * current_price)
-                        current_position.availableShort -= order_amount
-                        current_position.shortAmount -= order_amount
-                    else:
-                        raise Exception("not enough position")
+        self.security_item = to_security_item(self.security_item)
 
-            # 按仓位比例交易
-            elif 0 < order_pct <= 1:
-                # 开多
-                if order_type == ORDER_TYPE_LONG:
-                    cost = current_price * (1 + self.slippage + self.buy_cost)
-                    want_buy = self.account.cash * order_pct
-                    if want_buy >= cost:
-                        # 买的数量
-                        order_amount = want_buy // cost
-                        # 使用的现金
-                        self.account.cash -= (want_buy - want_buy % cost)
-                        self.update_position(current_position, order_amount, current_price, order_type)
-                    else:
-                        raise Exception("not enough money")
-                # 开空
-                elif order_type == ORDER_TYPE_SHORT:
-                    need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
-                    if self.account.cash >= need_money:
-                        self.account.cash -= need_money
-                        self.update_position(current_position, order_amount, current_price, order_type)
-                    else:
-                        raise Exception("not enough money")
-                # 平多
-                elif order_type == ORDER_TYPE_CLOSE_LONG:
-                    if current_position.availableLong > 1:
-                        order_amount = math.floor(current_position.availableLong * order_pct)
-                        if order_amount != 0:
-                            self.account.cash += (order_amount * current_price)
-                            current_position.availableLong -= order_amount
-                            current_position.longAmount -= order_amount
-                        else:
-                            self.logger.warning("{} availableLong:{} order_pct:{} order_amount:{}", security_id,
-                                                current_position.availableLong, order_pct, order_amount)
-                    else:
-                        raise Exception("not enough position")
-                # 平空
-                elif order_type == ORDER_TYPE_CLOSE_SHORT:
-                    if current_position.availableShort > 1:
-                        order_amount = math.floor(current_position.availableShort * order_pct)
-                        if order_amount != 0:
-                            self.account.cash += (order_amount * current_price)
-                            current_position.availableLong -= order_amount
-                            current_position.longAmount -= order_amount
-                        else:
-                            self.logger.warning("{} availableLong:{} order_pct:{} order_amount:{}", security_id,
-                                                current_position.availableLong, order_pct, order_amount)
-                    else:
-                        raise Exception("not enough position")
+        if self.security_item is None:
+            raise Exception("you must set one security item!")
 
-            self.update_account(security_id, current_position)
+        if self.level == '1d':
+            self.topic = get_kafka_kdata_topic(security_id=self.security_item['id'])
+        elif self.level == 'tick':
+            self.topic = get_kafka_tick_topic(security_id=self.security_item['id'])
+        else:
+            self.logger.error("wrong level:{}".format(self.level))
+
+
+class TimerTradingBot(BaseBot):
+    time_step = timedelta(days=1)
+
+
+class WatchingBot(BaseBot):
+    def on_init(self):
+        self.need_account = False
