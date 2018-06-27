@@ -23,6 +23,9 @@ if __name__ == '__main__':
 
     # exec("from fooltrader.botsamples.{} import {}".format(bot_name, bot_class))
 
-    the_bot = eval("{}()".format(bot_class))
+    if args.security_item:
+        the_bot = eval("{}(security_item='{}')".format(bot_class, args.security_item))
+    else:
+        the_bot = eval("{}()".format(bot_class))
 
     the_bot.run()

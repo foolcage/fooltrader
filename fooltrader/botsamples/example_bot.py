@@ -7,9 +7,17 @@ from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
 
 class ExampleBot(BaseBot):
+
+    def __init__(self, security_item=None):
+        if security_item:
+            self.security_item = security_item
+        else:
+            self.security_item = 'cryptocurrency_kraken_BCH-USD'
+
+        super().__init__()
+
     def on_init(self):
         self.need_account = False
-        self.security_item = 'cryptocurrency_kraken_BCH-USD'
         self.level = 'tick'
 
         self.last_date = None
