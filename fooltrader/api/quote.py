@@ -138,8 +138,10 @@ def _get_security_item(the_type, exchanges, code=None):
     """
     df = get_security_list(security_type=the_type, exchanges=exchanges)
 
-    df = df.set_index(df['code'])
-    return df.loc[code,]
+    if not df.empty:
+        df = df.set_index(df['code'])
+        return df.loc[code,]
+    return None
 
 
 def to_security_item(security_item, exchange=None):
@@ -147,7 +149,8 @@ def to_security_item(security_item, exchange=None):
         if exchange:
             return _get_security_item('cryptocurrency', [exchange], security_item)
 
-        id_match = re.match(r'(stock|index|future)_(sh|sz|nasdaq|shfe|dce|zce)_([a-zA-Z0-9]+)', security_item)
+        id_match = re.match(r'(stock|index|future|cryptocurrency)_([a-z]{2,20})_([a-zA-Z0-9\-]+)',
+                            security_item)
         if id_match:
             return _get_security_item(the_type=id_match.group(1), exchanges=[id_match.group(2)],
                                       code=id_match.group(3))
@@ -293,6 +296,8 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         if the_date:
             if the_date in df.index:
                 df = df.loc[df['timestamp'] == the_date]
+            else:
+                return None
         else:
             if not start_date:
                 if security_item['type'] == 'stock':

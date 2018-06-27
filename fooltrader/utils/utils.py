@@ -172,7 +172,7 @@ def index_df_with_time(df, index='timestamp'):
 
 
 def is_same_date(one, two):
-    return pd.Timestamp(one).date() == pd.Timestamp(two).date()
+    return to_timestamp(one).date() == to_timestamp(two).date()
 
 
 def get_report_date(the_date=datetime.datetime.today().date()):

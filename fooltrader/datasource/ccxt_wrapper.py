@@ -92,6 +92,9 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
 
 def fetch_kdata(exchange_str='bitstamp'):
     for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
+
+        if security_item['name'] not in CRYPTOCURRENCY_PAIR:
+            continue
         exchange = eval("ccxt.{}()".format(exchange_str))
         if exchange.has['fetchOHLCV']:
             start_date, df = get_latest_download_trading_date(security_item)
@@ -203,7 +206,7 @@ def fetch_ticks(exchange_str):
 
 
 if __name__ == '__main__':
-    exchanges = ["gdax", "kraken"]
+    exchanges = ["kraken"]
     init_markets(exchanges=exchanges)
     for exchange in exchanges:
         fetch_kdata(exchange_str=exchange)

@@ -28,27 +28,65 @@ class BaseBot(object):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
-        self.base_capital = 1000000
-        self.buy_cost = 0.001
-        self.sell_cost = 0.001
-        self.slippage = 0.001
+        self.on_init()
 
         # 回测的开始日期
-        self.start_date = pd.Timestamp('2013-01-01')
+        if not hasattr(self, 'start_date'):
+            self.start_date = pd.Timestamp('2013-01-01')
         # 回测的结束日期,为None的话会一直运行
-        self.end_date = pd.Timestamp.today()
+        if not hasattr(self, 'end_date'):
+            self.end_date = pd.Timestamp.today()
+
+        # 交易机器人需要账户，只是做监听告警之类不需要
+        if not hasattr(self, 'need_account'):
+            self.need_account = True
+
+        if self.need_account:
+            if not hasattr(self, 'base_capital'):
+                self.base_capital = 1000000
+
+            if not hasattr(self, 'buy_cost'):
+                self.buy_cost = 0.001
+
+            if not hasattr(self, 'sell_cost'):
+                self.sell_cost = 0.001
+
+            if not hasattr(self, 'slippage'):
+                self.slippage = 0.001
+
+            if not hasattr(self, 'stock_fuquan'):
+                self.stock_fuquan = 'hfq'
 
         self.bot_name = type(self).__name__.lower()
 
-        self.stock_fuquan = 'hfq'
+        # 指定security_item就监听其某级别的行情，否则为只收到timer信息，需要自己主动去查询行情
+        if hasattr(self, 'security_item'):
+            if not self.security_item:
+                raise Exception("you must set one security item!")
 
-        self.need_account = True
+            self.security_item = to_security_item(self.security_item)
 
-        self.topic = None
+            if self.security_item is None:
+                raise Exception("invalid security item:{}".format(self.security_item))
 
-        self.time_step = timedelta(days=1)
+            # 默认日级别行情
+            if not hasattr(self, 'level'):
+                self.level = 'day'
 
-        self.on_init()
+            self.logger.info(
+                "bot:{} listen to security_item:{},level:{}".format(self.bot_name, self.security_item, self.level))
+
+            if self.level == 'day':
+                self.topic = get_kafka_kdata_topic(security_id=self.security_item['id'], level=self.level)
+            elif self.level == 'tick':
+                self.topic = get_kafka_tick_topic(security_id=self.security_item['id'])
+            else:
+                self.logger.error("wrong level:{}".format(self.level))
+        else:
+            # 默认日级别timer
+            if not hasattr(self, 'time_step'):
+                self.time_step = timedelta(days=1)
+            self.logger.info("bot:{} check the market by itself,time_step:{}".format(self.bot_name, self.time_step))
 
         self._after_init()
 
@@ -67,6 +105,11 @@ class BaseBot(object):
                                                   base_capital=self.base_capital, buy_cost=self.buy_cost,
                                                   sell_cost=self.sell_cost, slippage=self.slippage,
                                                   stock_fuquan=self.stock_fuquan)
+
+    def __repr__(self):
+        return '{}({})'.format(
+            self.__class__.__name__,
+            ', '.join("{}={}".format(key, self.__dict__[key]) for key in self.__dict__ if key != 'logger'))
 
     def dispatch_event(self, topic):
         if not topic:
@@ -124,38 +167,8 @@ class BaseBot(object):
                 self.logger.warning("start:{} is after the last record:{}".format(self.start_date, kafka_end_date))
 
     def run(self):
-        self.logger.info("bot:{} start,account:{}".format(self.bot_name, self.account_service.get_account()))
+        self.logger.info("start bot:{}".format(self))
 
         self.dispatch_event(self.topic)
 
-        self.logger.info("bot:{} end,account:{}".format(self.bot_name, self.account_service.get_account()))
-
-
-class QuoteTradingBot(BaseBot):
-    def on_init(self):
-        self.security_item = None
-        self.level = '1d'
-
-    def _after_init(self):
-        super()._after_init()
-
-        self.security_item = to_security_item(self.security_item)
-
-        if self.security_item is None:
-            raise Exception("you must set one security item!")
-
-        if self.level == '1d':
-            self.topic = get_kafka_kdata_topic(security_id=self.security_item['id'])
-        elif self.level == 'tick':
-            self.topic = get_kafka_tick_topic(security_id=self.security_item['id'])
-        else:
-            self.logger.error("wrong level:{}".format(self.level))
-
-
-class TimerTradingBot(BaseBot):
-    time_step = timedelta(days=1)
-
-
-class WatchingBot(BaseBot):
-    def on_init(self):
-        self.need_account = False
+        self.logger.info("finish bot:{}".format(self))
