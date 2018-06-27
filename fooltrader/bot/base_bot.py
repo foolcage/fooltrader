@@ -122,8 +122,8 @@ class BaseBot(object):
                     self.current_time += self.time_step
 
         consumer = KafkaConsumer(topic,
-                                 client_id='fooltrader',
-                                 group_id=self.bot_name,
+                                 # client_id='fooltrader',
+                                 # group_id=self.bot_name,
                                  value_deserializer=lambda m: json.loads(m.decode('utf8')),
                                  bootstrap_servers=[KAFKA_HOST])
         topic_partition = TopicPartition(topic=topic, partition=0)
