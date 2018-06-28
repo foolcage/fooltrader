@@ -7,23 +7,21 @@ from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
 
 class ExampleBot(BaseBot):
-
-    def __init__(self, security_item=None):
-        if security_item:
-            self.security_item = security_item
-        else:
-            self.security_item = 'cryptocurrency_kraken_BCH-USD'
-
-        super().__init__()
-
     def on_init(self):
+        # 设置为True会创建AccountService,可使用self.account_service进行买卖，系统会计算收益
+        # 设置为False,就没有账户信息
         self.need_account = False
-        self.level = 'tick'
 
+        # 设置投资标的，会在on_event里面接收到该标的的行情
+        self.security_item = 'cryptocurrency_kraken_BCH-USD'
+        # 行情的级别
+        self.level = 'tick'
+        # bot运行的结束时间，设置为None将会一直运行
+        self.end_date = None
+
+        # 自定义字段放这里
         self.last_date = None
         self.last_close = None
-
-        self.end_date = None
 
     def on_event(self, event_item):
         # self.logger.info(event_item)

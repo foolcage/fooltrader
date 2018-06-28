@@ -25,7 +25,7 @@ class BaseBot(object):
     def on_event(self, event_item):
         self.logger.info("got event:{}".format(event_item))
 
-    def __init__(self):
+    def __init__(self, security_item=None, level=None):
         self.logger = logging.getLogger(__name__)
 
         self.on_init()
@@ -60,6 +60,11 @@ class BaseBot(object):
         self.bot_name = type(self).__name__.lower()
 
         # 指定security_item就监听其某级别的行情，否则为只收到timer信息，需要自己主动去查询行情
+        if security_item is not None:
+            self.security_item = security_item
+        if level is not None:
+            self.level = level
+
         if hasattr(self, 'security_item'):
             if not self.security_item:
                 raise Exception("you must set one security item!")
@@ -70,7 +75,7 @@ class BaseBot(object):
                 raise Exception("invalid security item:{}".format(self.security_item))
 
             # 默认日级别行情
-            if not hasattr(self, 'level'):
+            if not hasattr(self, 'level') or not self.level:
                 self.level = 'day'
 
             self.logger.info(
