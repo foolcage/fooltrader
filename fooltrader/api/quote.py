@@ -435,10 +435,10 @@ def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
             dayk_path = get_kdata_path(security_item, source='sina', fuquan=fuquan)
             if fuquan == 'hfq':
                 df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN_FQ)
+                    columns=data_contract.KDATA_COLUMN_SINA_FQ)
             else:
                 df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN)
+                    columns=data_contract.KDATA_COLUMN_SINA)
 
             the_dir = get_kdata_dir(security_item, fuquan=fuquan)
 

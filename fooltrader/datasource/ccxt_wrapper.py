@@ -169,14 +169,15 @@ def fetch_tickers(exchange_str):
             logger.info("fetch_tickers for {} sleep {}".format(exchange_str, rate_limit))
 
 
-def fetch_ticks(exchange_str):
-    df = get_security_list(security_type=SECURITY_TYPE_CRYPTO, exchanges=exchange_str)
-    pairs = set(df.loc[:, 'name'].tolist()) & set(CRYPTOCURRENCY_PAIR)
+def fetch_ticks(exchange_str, pairs=None):
     if not pairs:
-        logger.warning("{} not support pair:{}".format(exchange_str, CRYPTOCURRENCY_PAIR))
-        return
-    else:
-        logger.warning("{} get tick for paris:{}".format(exchange_str, pairs))
+        df = get_security_list(security_type=SECURITY_TYPE_CRYPTO, exchanges=exchange_str)
+        pairs = set(df.loc[:, 'name'].tolist()) & set(CRYPTOCURRENCY_PAIR)
+        if not pairs:
+            logger.warning("{} not support pair:{}".format(exchange_str, CRYPTOCURRENCY_PAIR))
+            return
+        else:
+            logger.info("{} get tick for paris:{}".format(exchange_str, pairs))
 
     exchange = eval("ccxt.{}()".format(exchange_str))
     if exchange.has['fetchTrades']:
@@ -202,7 +203,7 @@ def fetch_ticks(exchange_str):
             rate_limit = 5
             time.sleep(rate_limit)
 
-            logger.info("fetch_tickers for {} sleep {}".format(exchange_str, rate_limit))
+            logger.info("fetch_tickers exchange:{} pairs:{} sleep:{}".format(exchange_str, pairs, rate_limit))
 
 
 if __name__ == '__main__':

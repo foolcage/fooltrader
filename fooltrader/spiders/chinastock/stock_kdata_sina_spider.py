@@ -84,11 +84,11 @@ class StockKDataSinaSpider(scrapy.Spider):
         try:
             if fuquan == 'hfq':
                 df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN_FQ)
+                    columns=data_contract.KDATA_COLUMN_SINA_FQ)
 
             else:
                 df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN)
+                    columns=data_contract.KDATA_COLUMN_SINA)
 
             for idx, tr in enumerate(trs):
                 tds = Selector(text=tr).xpath('//td//text()').extract()

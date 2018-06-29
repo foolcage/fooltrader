@@ -9,7 +9,7 @@ import pandas as pd
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
-from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
+from fooltrader.contract.data_contract import KDATA_COLUMN_SINA, KDATA_COLUMN_SINA_FQ
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
     get_security_dir, get_kdata_path, get_trading_dates_path_163
 from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
@@ -232,7 +232,7 @@ def legacy_kdata_to_csv():
                                  ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover',
                                   'securityId',
                                   'fuquan']]
-                            df.columns = KDATA_COLUMN_FQ
+                            df.columns = KDATA_COLUMN_SINA_FQ
 
                             df.to_csv(csv_path, index=False)
                     else:
@@ -241,7 +241,7 @@ def legacy_kdata_to_csv():
                             df = pd.read_json(f, dtype={'code': str})
                             logger.info("{} to {}".format(f, csv_path))
 
-                            df = df.loc[:, KDATA_COLUMN]
+                            df = df.loc[:, KDATA_COLUMN_SINA]
 
                             df.to_csv(csv_path, index=False)
 
@@ -255,10 +255,10 @@ def check_convert_result():
 
                 if fuquan == 'hfq':
                     df = pd.DataFrame(
-                        columns=data_contract.KDATA_COLUMN_FQ)
+                        columns=data_contract.KDATA_COLUMN_SINA_FQ)
                 else:
                     df = pd.DataFrame(
-                        columns=data_contract.KDATA_COLUMN)
+                        columns=data_contract.KDATA_COLUMN_SINA)
 
                 dir = get_kdata_dir(security_item, fuquan=fuquan)
 

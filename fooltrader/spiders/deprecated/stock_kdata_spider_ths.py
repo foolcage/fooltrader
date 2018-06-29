@@ -66,7 +66,7 @@ class StockKDataSpiderTHS(scrapy.Spider):
         price_json = []
 
         try:
-            df = pd.DataFrame(columns=data_contract.KDATA_COLUMN)
+            df = pd.DataFrame(columns=data_contract.KDATA_COLUMN_SINA)
 
             tmp_str = response.text
             json_str = tmp_str[tmp_str.index('{'):tmp_str.index('}') + 1]

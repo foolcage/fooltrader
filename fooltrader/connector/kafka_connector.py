@@ -83,8 +83,8 @@ def delete_all_topics():
         delete_topic(topic)
 
 
-def cryptocurrency_tick_to_kafka(exchange):
-    for tick in fetch_ticks(exchange):
+def cryptocurrency_tick_to_kafka(exchange, pairs=None):
+    for tick in fetch_ticks(exchange, pairs=pairs):
         producer.send(get_kafka_tick_topic(tick['securityId']),
                       bytes(json.dumps(tick), encoding='utf8'),
                       timestamp_ms=tick['timestamp'])
