@@ -169,6 +169,14 @@ def fetch_tickers(exchange_str):
             logger.info("fetch_tickers for {} sleep {}".format(exchange_str, rate_limit))
 
 
+def _check_fetch_trades(exchange, pair):
+    try:
+        exchange.fetch_trades(symbol=pair, limit=1)
+        return True
+    except Exception as e:
+        return False
+
+
 def fetch_ticks(exchange_str, pairs=None):
     if not pairs:
         df = get_security_list(security_type=SECURITY_TYPE_CRYPTO, exchanges=exchange_str)
@@ -181,6 +189,9 @@ def fetch_ticks(exchange_str, pairs=None):
 
     exchange = eval("ccxt.{}()".format(exchange_str))
     if exchange.has['fetchTrades']:
+        # verify one trade at first
+        pairs = [pair for pair in pairs if _check_fetch_trades(exchange, pair)]
+
         while True:
 
             for pair in pairs:
