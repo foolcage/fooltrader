@@ -333,11 +333,6 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         return df
     return pd.DataFrame()
 
-
-def get_latest_factor(security_item):
-    security_item = to_security_item(security_item)
-
-
 def get_latest_download_trading_date(security_item, return_next=True, source=None):
     df = get_kdata(security_item, source=source)
     if len(df) == 0:

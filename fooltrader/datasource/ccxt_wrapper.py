@@ -192,6 +192,8 @@ def fetch_ticks(exchange_str, pairs=None):
         # verify one trade at first
         pairs = [pair for pair in pairs if _check_fetch_trades(exchange, pair)]
 
+        logger.info("after check {} get tick for paris:{}".format(exchange_str, pairs))
+
         while True:
 
             for pair in pairs:

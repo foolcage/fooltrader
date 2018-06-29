@@ -22,6 +22,9 @@ class BaseBot(object):
     def on_init(self):
         pass
 
+    def after_init(self):
+        pass
+
     def on_event(self, event_item):
         self.logger.info("got event:{}".format(event_item))
 
@@ -94,6 +97,8 @@ class BaseBot(object):
             self.logger.info("bot:{} check the market by itself,time_step:{}".format(self.bot_name, self.time_step))
 
         self._after_init()
+
+        self.after_init()
 
     def _after_init(self):
         if type(self.start_date) == str:

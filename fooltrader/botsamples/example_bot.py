@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from fooltrader.api.quote import get_kdata
 from fooltrader.bot.base_bot import BaseBot
+from fooltrader.domain.subscription import Subscription
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
 
@@ -23,6 +24,15 @@ class ExampleBot(BaseBot):
         self.last_date = None
         self.last_close = None
 
+    def after_init(self):
+        s = Subscription.search()
+
+        s = s.filter('term', securityType=self.security_item['type']).filter('term',
+                                                                             exchange=self.security_item['exchange'])
+        results = s.execute()
+
+        self.subscriptions = [hit.to_dict() for hit in results.hits]
+
     def on_event(self, event_item):
         # self.logger.info(event_item)
         if not self.last_date or not is_same_date(self.last_date, self.current_time / 1000):
@@ -37,6 +47,25 @@ class ExampleBot(BaseBot):
                 "{} last day close is:{},now price is:{},the change_pct is:{}".format(self.security_item['id'],
                                                                                       self.last_close,
                                                                                       event_item['price'], change_pct))
+        self.check_condition(current_price=event_item['price'], change_pct=change_pct)
+
+    def check_condition(self, current_price, change_pct):
+        for sub in self.subscriptions:
+            if change_pct > 0 and sub.get('up') and sub.get('up') > current_price:
+                msg = "{} up to {}".format(self.security_item['id'], current_price)
+                self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
+
+            if change_pct < 0 and sub.get('down') and sub.get('down') < current_price:
+                msg = "{} down to {}".format(self.security_item['id'], current_price)
+                self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
+
+            if change_pct > sub.get['upPct']:
+                msg = "{} up {}".format(self.security_item['id'], change_pct)
+                self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
+
+            if change_pct < sub.get['downPct']:
+                msg = "{} down {}".format(self.security_item['id'], change_pct)
+                self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
 
 
 if __name__ == '__main__':

@@ -3,9 +3,11 @@ from elasticsearch_dsl import DocType, Keyword, Nested, MetaField
 
 {
     "id": 123,
-    "alertType": 0,
+    "userId": 111,
+    "securityType": "cryptocurrency",
+    "exchange": "binance",
+    "code": "BTC-USDT",
     "condition": {
-        "symbol": "BTC/USDT",
         "upPct": 1,
         "downPct": 2,
         "up": 7000,
@@ -16,10 +18,12 @@ from elasticsearch_dsl import DocType, Keyword, Nested, MetaField
 }
 
 
-class SymbolSubscription(DocType):
+class Subscription(DocType):
     id = Keyword()
-    openId = Keyword()
+    userId = Keyword()
+    securityType = Keyword()
     exchange = Keyword()
+    code = Keyword()
     condition = Nested()
     interval = Keyword()
 
@@ -30,7 +34,7 @@ class SymbolSubscription(DocType):
 
 class CrossSubscription(DocType):
     id = Keyword()
-    openId = Keyword()
+    userId = Keyword()
     exchanges = Keyword()
     condition = Nested()
     interval = Keyword()
