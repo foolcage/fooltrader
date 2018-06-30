@@ -30,7 +30,7 @@
 #
 # Path to directory where to store the data (separate multiple locations by comma):
 #
-#path.data: /path/to/data
+path.data: /home/yang/D/esdata
 #
 # Path to log files:
 #

@@ -37,7 +37,7 @@ class StockSummarySpider(scrapy.Spider):
 
     def start_requests(self):
         self.security_item = self.settings.get("security_item")
-        self.current_df = get_kdata(security_item=self.security_item)
+        self.current_df = get_kdata(security_item=self.security_item,start_date=self.security_item['listDate'])
 
         the_dates = self.settings.get("the_dates")
         # 上海市场概况放在 上证指数

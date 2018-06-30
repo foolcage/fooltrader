@@ -76,7 +76,7 @@ class SinaCategorySpider(scrapy.Spider):
             if ind['code'] in df.index:
                 current_ind = df.at[ind['code'], self.category_type]
                 # read_csv如果碰到nan数据类型会为float
-                if pd.isnull(current_ind) or not current_ind:
+                if type(current_ind)==list and (pd.isna(current_ind).all() or (not current_ind)):
                     current_ind = response.meta['ind_name']
                 else:
                     if type(current_ind) == list and response.meta['ind_name'] not in current_ind:
