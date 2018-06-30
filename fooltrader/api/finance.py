@@ -236,7 +236,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
             if start_date:
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
                     continue
-
+            print(reportDate[idx])
             reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
 
             if report_period and not is_same_date(report_period, reportDate[idx]):
