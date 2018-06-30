@@ -50,6 +50,9 @@ class StockFinanceReportEventSpider(scrapy.Spider):
     def report_period_from_title(title, period_type, report_event_date):
         try:
             year = re.match('.*(\d{4}).*', title).group(1)
+            report_event_year = pd.Timestamp(report_event_date).date().year
+            if int(year)<int(report_event_year)-2 or int(year)>int(report_event_year):
+                raise Exception('wrong report year')
         except Exception as e:
             year = pd.Timestamp(report_event_date).date().year
             if period_type == 'ndbg':
