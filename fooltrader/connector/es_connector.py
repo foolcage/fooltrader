@@ -136,7 +136,7 @@ def index_kdata_to_es(force=False):
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, IndexKData)
 
-        start_date = None
+        start_date = security_item['listDate']
         if not force:
             query = {
                 "term": {"securityId": ""}
