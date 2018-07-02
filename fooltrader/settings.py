@@ -129,3 +129,19 @@ TIME_FORMAT_DAY = '%Y-%m-%d'
 
 ES_HOSTS = ['localhost:9200']
 # ES_HOSTS = ['localhost:9200']
+
+
+# the action account settings
+SMTP_HOST = 'smtpdm.aliyun.com'
+SMTP_PORT = '80'
+
+EMAIL_USER_NAME = ''
+
+if not EMAIL_USER_NAME:
+    EMAIL_USER_NAME = os.environ.get('EMAIL_USER_NAME')
+
+EMAIL_PASSWORD = ''
+if not EMAIL_PASSWORD:
+    EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+
+WEIXIN_TOKEN = ''
