@@ -66,7 +66,7 @@ class AccountService(object):
     def calculate_closing_account(self, the_date):
         account = self.get_account()
         for position in account.positions:
-            kdata = esapi.get_kdata(security_item=position['securityId'], the_date=the_date)
+            kdata = esapi.es_get_kdata(security_item=position['securityId'], the_date=the_date)
             closing_price = kdata['hfqClose']
             position.availableLong = position.longAmount
             position.availableShort = position.shortAmount

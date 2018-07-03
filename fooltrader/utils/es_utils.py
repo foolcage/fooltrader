@@ -4,9 +4,23 @@ from ast import literal_eval
 
 from elasticsearch_dsl import Index
 
-from fooltrader import es
+from fooltrader import es_client
 
 logger = logging.getLogger(__name__)
+
+
+def es_transform_resp(response, append_meta=False, pageable=True):
+    sources = []
+
+    for hit in response['hits']['hits']:
+        the_json = hit['_source']
+        if append_meta:
+            the_json['_id'] = hit['_id']
+            the_json['_id'] = hit['_id']
+            the_json['_id'] = hit['_id']
+        sources.append(the_json)
+
+    return sources
 
 
 def es_get_latest_record(index, time_field='timestamp', query=None):
@@ -34,7 +48,7 @@ def es_get_latest_record(index, time_field='timestamp', query=None):
 
     try:
         logger.info("search index:{},body:{}".format(index, body))
-        response = es.search(index=index, body=body)
+        response = es_client.search(index=index, body=body)
         if response['hits']['hits']:
             return response['hits']['hits'][0]['_source']
     except Exception as e:
@@ -45,9 +59,9 @@ def es_get_latest_record(index, time_field='timestamp', query=None):
 def es_delete(index, query=None):
     if query:
         body = {"query": query}
-        es.delete_by_query(index=index, body=body)
+        es_client.delete_by_query(index=index, body=body)
     else:
-        es.delete(index=index)
+        es_client.delete(index=index)
 
 
 def es_index_mapping(index_name, doc_type, force=False):
@@ -62,7 +76,7 @@ def es_index_mapping(index_name, doc_type, force=False):
             index.upgrade()
 
 
-def es_query_date_range(start_date, end_date, **terms):
+def es_build_body_with_range(start, end, range_field='timestamp', **terms):
     if terms:
 
         return \
@@ -74,9 +88,9 @@ def es_query_date_range(start_date, end_date, **terms):
                         },
                         "filter": {
                             "range": {
-                                "timestamp": {
-                                    "gte": start_date,
-                                    "lte": end_date
+                                range_field: {
+                                    "gte": start,
+                                    "lte": end
                                 }
                             }
                         }
@@ -89,8 +103,43 @@ def es_query_date_range(start_date, end_date, **terms):
                 "query": {
                     "range": {
                         "timestamp": {
-                            "gte": start_date,
-                            "lte": end_date
+                            "gte": start,
+                            "lte": end
+                        }
+                    }
+                }
+            }
+
+
+def es_build_body_with_range(start, end, range_field='timestamp', **terms):
+    if terms:
+
+        return \
+            {
+                "query": {
+                    "bool": {
+                        "must": {
+                            "term": terms
+                        },
+                        "filter": {
+                            "range": {
+                                range_field: {
+                                    "gte": start,
+                                    "lte": end
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+    else:
+        return \
+            {
+                "query": {
+                    "range": {
+                        "timestamp": {
+                            "gte": start,
+                            "lte": end
                         }
                     }
                 }

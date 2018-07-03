@@ -6,6 +6,22 @@ from fooltrader.bot.base_bot import BaseBot
 from fooltrader.domain.subscription import Subscription
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
+{
+    "id": 123,
+    "userId": 111,
+    "securityType": "cryptocurrency",
+    "exchange": "binance",
+    "code": "BTC-USDT",
+    "condition": {
+        "upPct": 1,
+        "downPct": 2,
+        "up": 7000,
+        "down": 6000,
+        "cross": 0.02
+    },
+    "repeat": False
+}
+
 
 class ExampleBot(BaseBot):
     def on_init(self):
@@ -32,6 +48,9 @@ class ExampleBot(BaseBot):
         results = s.execute()
 
         self.subscriptions = [hit.to_dict() for hit in results.hits]
+
+    def on_subscription(self, event_item):
+        self.subscriptions[event_item['id']] = event_item
 
     def on_event(self, event_item):
         # self.logger.info(event_item)

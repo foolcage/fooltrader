@@ -6,7 +6,7 @@ import logging
 import elasticsearch.helpers
 from elasticsearch_dsl import Index, connections
 
-from fooltrader import EXCHANGE_LIST_COL, es
+from fooltrader import EXCHANGE_LIST_COL, es_client
 from fooltrader.api.event import get_forecast_items
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
     get_finance_summary_items
@@ -54,7 +54,7 @@ def stock_meta_to_es(force=False):
         except Exception as e:
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
     if actions:
-        resp = elasticsearch.helpers.bulk(es, actions)
+        resp = elasticsearch.helpers.bulk(es_client, actions)
         logger.info(resp)
 
 
@@ -66,7 +66,8 @@ def kdata_to_es(start=None, end=None, security_type='stock', exchanges=['sh', 's
     elif security_type == 'cryptocurrency':
         doc_type = CryptoCurrencyKData
 
-    for _, security_item in get_security_list(start=start, end=end, exchanges=exchanges).iterrows():
+    for _, security_item in get_security_list(security_type=security_type, exchanges=exchanges, start=start,
+                                              end=end).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, doc_type)
@@ -102,7 +103,7 @@ def kdata_to_es(start=None, end=None, security_type='stock', exchanges=['sh', 's
             except Exception as e:
                 logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
         if actions:
-            resp = elasticsearch.helpers.bulk(es, actions)
+            resp = elasticsearch.helpers.bulk(es_client, actions)
             logger.info(resp)
 
 
@@ -147,7 +148,7 @@ def finance_sheet_to_es(sheet_type='balance_sheet', force=False):
                 # balance_sheet.save()
                 actions.append(the_doc.to_dict(include_meta=True))
             if actions:
-                resp = elasticsearch.helpers.bulk(es, actions)
+                resp = elasticsearch.helpers.bulk(es_client, actions)
                 logger.info(resp)
         except Exception as e:
             logger.warning("{} wrong {},error:{}", security_item, sheet_type, e)
@@ -177,7 +178,7 @@ def usa_stock_finance_to_es(force=False):
                 fill_doc_type(finance_summary, json_object.to_dict())
                 actions.append(finance_summary.to_dict(include_meta=True))
             if actions:
-                resp = elasticsearch.helpers.bulk(es, actions)
+                resp = elasticsearch.helpers.bulk(es_client, actions)
                 logger.info(resp)
         except Exception as e:
             logger.warn("wrong FinanceSummary:{},error:{}", security_item, e)

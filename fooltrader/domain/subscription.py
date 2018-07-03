@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from elasticsearch_dsl import DocType, Keyword, Nested, MetaField
+from elasticsearch_dsl import Keyword, Nested, MetaField, Boolean
+
+from fooltrader.domain import BaseDocType
 
 {
     "id": 123,
@@ -14,30 +16,30 @@ from elasticsearch_dsl import DocType, Keyword, Nested, MetaField
         "down": 6000,
         "cross": 0.02
     },
-    "interval": "1d"
+    "repeat": False
 }
 
 
-class Subscription(DocType):
+class Subscription(BaseDocType):
     id = Keyword()
     userId = Keyword()
     securityType = Keyword()
     exchange = Keyword()
     code = Keyword()
     condition = Nested()
-    interval = Keyword()
+    repeat = Boolean()
 
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
 
 
-class CrossSubscription(DocType):
+class CrossSubscription((BaseDocType)):
     id = Keyword()
     userId = Keyword()
     exchanges = Keyword()
     condition = Nested()
-    interval = Keyword()
+    repeat = Boolean()
 
     class Meta:
         doc_type = 'doc'

@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 import math
 
-from fooltrader import es
+from elasticsearch_dsl import Search
+
+from fooltrader import es_client
 from fooltrader.api.quote import to_security_item
-from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK
+from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_FUTURE, KDATA_COLUMN_INDEX, \
+    KDATA_COLUMN_COMMON
 from fooltrader.contract.es_contract import get_es_kdata_index
-from fooltrader.utils.es_utils import es_query_date_range
 from fooltrader.utils.utils import to_time_str
 
 
-def get_kdata(security_item, the_date=None, start_date=None, end_date=None, level='day', fields=KDATA_COLUMN_STOCK,
-              from_idx=0, size=10):
+def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, level='day', fields=None,
+                 from_idx=0, size=10):
     """
     get kdata.
 
@@ -26,6 +28,8 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, leve
         end date
     level : str or int
         the kdata level,{1,5,15,30,60,'day','week','month'},default : 'day'
+    fields : filed list for es _source
+        if not set,would use the default fields for the security type
     from_idx : int
         pagination start offset
     size : int
@@ -38,36 +42,43 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, leve
     """
     security_item = to_security_item(security_item)
 
-    # 单日的日k线直接按id获取
     index = get_es_kdata_index(security_type=security_item['type'], exchange=security_item['exchange'],
                                level=level)
     if not fields:
-        return None
+        if security_item['type'] == 'stock':
+            fields = KDATA_COLUMN_STOCK
+        elif security_item['type'] == 'future':
+            fields = KDATA_COLUMN_FUTURE
+        elif security_item['type'] == 'index':
+            fields = KDATA_COLUMN_INDEX
+        else:
+            fields = KDATA_COLUMN_COMMON
 
-    if 'factor' not in fields:
-        fields.append('factor')
-
+    # 单日的日k线直接按id获取
     if level == 'day' and the_date:
-        id = '{}_{}'.format(security_item['id'], to_time_str(the_date))
-        return es.get_source(index=index, doc_type='doc', id=id, _source_include=fields)
+        doc_id = '{}_{}'.format(security_item['id'], to_time_str(the_date))
+        return es_client.get_source(index=index, doc_type='doc', id=doc_id, _source_include=fields)
     elif start_date and end_date:
-        query_json = es_query_date_range(start_date, end_date, code=security_item['code'])
+        s = Search(using=es_client, index=index, doc_type='doc') \
+            .source(include=fields) \
+            .filter('term', code=security_item['code']) \
+            .filter('range', timestamp={'gte': start_date, 'lte': end_date}) \
+            .sort({"timestamp": {"order": "asc"}})
 
-        resp = es.search(index=index, doc_type='doc', _source_include=fields,
-                         body=query_json, from_=from_idx, size=size,
-                         sort='timestamp:asc')
+        resp = s[from_idx:from_idx + size].execute()
+
         return resp['hits']
 
 
 if __name__ == '__main__':
-    print(get_kdata('300027', the_date='2017-09-04'))
-    print(get_kdata('300027', the_date='2017-09-04', fields=['close']))
-    kdata = get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=0, size=10)
+    print(es_get_kdata('300027', the_date='2017-09-04'))
+    print(es_get_kdata('300027', the_date='2017-09-04', fields=['close']))
+    kdata = es_get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=0, size=10)
 
     for item in kdata['hits']:
         print(item)
     steps = math.ceil(kdata['total'] / 10)
     for i in range(1, steps + 1):
-        the_data = get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=i * 10)
+        the_data = es_get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=i * 10)
         for item in the_data['hits']:
             print(item)

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import threading
 import time
 from datetime import datetime, timedelta
 
@@ -14,11 +15,10 @@ from fooltrader.bot.account_service import AccountService
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 
-EVENT_MARKET_OPEN = 0
-EVENT_MARKET_CLOSE = 1
-
 
 class BaseBot(object):
+    func_map_topic = {'on_subscription': 'subscription'}
+
     def on_init(self):
         pass
 
@@ -28,10 +28,17 @@ class BaseBot(object):
     def on_event(self, event_item):
         self.logger.info("got event:{}".format(event_item))
 
+    def on_timer(self, event_item):
+        self.logger.info("got event:{}".format(event_item))
+
     def __init__(self, security_item=None, level=None):
         self.logger = logging.getLogger(__name__)
 
         self.on_init()
+
+        self.threads = []
+        if not hasattr(self, 'start_date'):
+            self.topics = []
 
         # 回测的开始日期
         if not hasattr(self, 'start_date'):
@@ -85,9 +92,9 @@ class BaseBot(object):
                 "bot:{} listen to security_item:{},level:{}".format(self.bot_name, self.security_item, self.level))
 
             if self.level == 'day':
-                self.topic = get_kafka_kdata_topic(security_id=self.security_item['id'], level=self.level)
+                self.quote_topic = get_kafka_kdata_topic(security_id=self.security_item['id'], level=self.level)
             elif self.level == 'tick':
-                self.topic = get_kafka_tick_topic(security_id=self.security_item['id'])
+                self.quote_topic = get_kafka_tick_topic(security_id=self.security_item['id'])
             else:
                 self.logger.error("wrong level:{}".format(self.level))
         else:
@@ -121,16 +128,7 @@ class BaseBot(object):
             self.__class__.__name__,
             ', '.join("{}={}".format(key, self.__dict__[key]) for key in self.__dict__ if key != 'logger'))
 
-    def dispatch_event(self, topic):
-        if not topic:
-            while True:
-                self.on_event({"timestamp": self.current_time})
-
-                if self.current_time + self.time_step > pd.Timestamp.now():
-                    time.sleep(self.time_step.seconds)
-                else:
-                    self.current_time += self.time_step
-
+    def consume_topic_with_func(self, topic, func):
         consumer = KafkaConsumer(topic,
                                  # client_id='fooltrader',
                                  # group_id=self.bot_name,
@@ -161,12 +159,11 @@ class BaseBot(object):
 
                     self.current_time = message.value['timestamp']
 
-                    flag = message.value.get('flag')
-                    # 收市计算账户
-                    if flag and flag == EVENT_MARKET_CLOSE and self.need_account:
-                        self.account_service.calculate_closing_account(self.current_time)
+                    # 收市后计算
+                    self.account_service.calculate_closing_account(self.current_time)
 
-                    self.on_event(message.value)
+                    # self.on_event(message.value)
+                    getattr(self, func)(message.value)
 
             else:
                 consumer.poll(5, 1)
@@ -179,6 +176,33 @@ class BaseBot(object):
     def run(self):
         self.logger.info("start bot:{}".format(self))
 
-        self.dispatch_event(self.topic)
+        funcs = set(dir(self)) & self.func_map_topic.keys()
+
+        consumer = KafkaConsumer(bootstrap_servers=[KAFKA_HOST])
+        current_topics = consumer.topics()
+
+        for func in funcs:
+            topic = self.func_map_topic.get(func)
+            if topic not in current_topics:
+                self.logger.error("you implement func:{},but the topic:{} for it not exist".format(func, topic))
+                continue
+
+            self.threads.append(
+                threading.Thread(target=self.consume_topic_with_func, args=(self.func_map_topic.get(func), func)))
+
+        if self.quote_topic:
+            self.threads.append(
+                threading.Thread(target=self.consume_topic_with_func, args=(self.quote_topic, 'on_event')))
+
+        for the_thread in self.threads:
+            the_thread.start()
+
+        while True:
+            self.on_timer({"timestamp": self.current_time})
+
+            if self.current_time + self.time_step > pd.Timestamp.now():
+                time.sleep(self.time_step.seconds)
+            else:
+                self.current_time += self.time_step
 
         self.logger.info("finish bot:{}".format(self))

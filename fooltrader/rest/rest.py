@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
         "down": 6000,
         "cross": 0.02
     },
-    "interval": "1d"
+    "repeat": False
 }
 
 
