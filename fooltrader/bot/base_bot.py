@@ -14,6 +14,8 @@ from fooltrader.api.quote import to_security_item
 from fooltrader.bot.account_service import AccountService
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
+from fooltrader.utils.utils import is_same_date
+from fooltrader.utils.utils import to_timestamp
 
 
 class BaseBot(object):
@@ -97,11 +99,11 @@ class BaseBot(object):
                 self.quote_topic = get_kafka_tick_topic(security_id=self.security_item['id'])
             else:
                 self.logger.error("wrong level:{}".format(self.level))
-        else:
-            # 默认日级别timer
-            if not hasattr(self, 'time_step'):
-                self.time_step = timedelta(days=1)
-            self.logger.info("bot:{} check the market by itself,time_step:{}".format(self.bot_name, self.time_step))
+
+        # 默认日级别timer
+        if not hasattr(self, 'time_step'):
+            self.time_step = timedelta(days=1)
+        self.logger.info("bot:{} check the market by itself,time_step:{}".format(self.bot_name, self.time_step))
 
         self._after_init()
 
@@ -157,10 +159,11 @@ class BaseBot(object):
                         consumer.close()
                         break
 
-                    self.current_time = message.value['timestamp']
+                    self.current_time = to_timestamp(message.value['timestamp'] / 1000)
 
                     # 收市后计算
-                    self.account_service.calculate_closing_account(self.current_time)
+                    if False:
+                        self.account_service.calculate_closing_account(self.current_time)
 
                     # self.on_event(message.value)
                     getattr(self, func)(message.value)
@@ -200,9 +203,9 @@ class BaseBot(object):
         while True:
             self.on_timer({"timestamp": self.current_time})
 
-            if self.current_time + self.time_step > pd.Timestamp.now():
-                time.sleep(self.time_step.seconds)
-            else:
-                self.current_time += self.time_step
+            if is_same_date(self.current_time, pd.Timestamp.now()):
+                time.sleep(self.time_step.total_seconds())
+
+            self.current_time += self.time_step
 
         self.logger.info("finish bot:{}".format(self))

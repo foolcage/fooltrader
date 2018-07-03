@@ -41,23 +41,28 @@ class ExampleBot(BaseBot):
         self.last_close = None
 
     def after_init(self):
+        self.subscriptions = {}
         s = Subscription.search()
 
-        s = s.filter('term', securityType=self.security_item['type']).filter('term',
-                                                                             exchange=self.security_item['exchange'])
+        s = s.filter('term', securityType=self.security_item['type']) \
+            .filter('term', exchange=self.security_item['exchange'])
         results = s.execute()
 
-        self.subscriptions = [hit.to_dict() for hit in results.hits]
+        for hit in results['hits']['hits']:
+            self.subscriptions[hit['_id']] = hit['_source'].to_dict()
 
     def on_subscription(self, event_item):
-        self.subscriptions[event_item['id']] = event_item
+        self.subscriptions[event_item['_id']] = event_item['_source']
 
     def on_event(self, event_item):
         # self.logger.info(event_item)
-        if not self.last_date or not is_same_date(self.last_date, self.current_time / 1000):
+        if not self.last_date or not is_same_date(self.last_date, self.current_time):
             self.last_date = to_timestamp(event_item['timestamp'] / 1000) - timedelta(days=1)
             self.last_kdata = get_kdata(self.security_item, the_date=to_time_str(self.last_date))
-            self.last_close = self.last_kdata.loc[to_time_str(self.last_date), 'close']
+            if self.last_kdata is not None:
+                self.last_close = self.last_kdata.loc[to_time_str(self.last_date), 'close']
+            else:
+                self.last_close = event_item['price']
 
         change_pct = (self.last_close - event_item['price']) / self.last_close
 
@@ -69,20 +74,22 @@ class ExampleBot(BaseBot):
         self.check_condition(current_price=event_item['price'], change_pct=change_pct)
 
     def check_condition(self, current_price, change_pct):
-        for sub in self.subscriptions:
-            if change_pct > 0 and sub.get('up') and sub.get('up') > current_price:
+        for sub in self.subscriptions.values():
+            condition = sub['condition']
+
+            if change_pct > 0 and condition.get('up') and condition.get('up') > current_price:
                 msg = "{} up to {}".format(self.security_item['id'], current_price)
                 self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
 
-            if change_pct < 0 and sub.get('down') and sub.get('down') < current_price:
+            if change_pct < 0 and condition.get('down') and condition.get('down') < current_price:
                 msg = "{} down to {}".format(self.security_item['id'], current_price)
                 self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
 
-            if change_pct > sub.get['upPct']:
+            if change_pct > condition.get('upPct'):
                 msg = "{} up {}".format(self.security_item['id'], change_pct)
                 self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
 
-            if change_pct < sub.get['downPct']:
+            if change_pct < condition.get('downPct'):
                 msg = "{} down {}".format(self.security_item['id'], change_pct)
                 self.logger.info("notify to:{},msg:{}".format(sub['userId'], msg))
 

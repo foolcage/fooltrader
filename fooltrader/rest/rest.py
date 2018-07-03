@@ -2,12 +2,16 @@
 import logging
 
 from flask import request, jsonify
+from kafka import KafkaProducer
 
 from fooltrader.domain.subscription import Subscription
 from fooltrader.rest import app
+from fooltrader.settings import KAFKA_HOST
 from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
+
+producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
 {
     "id": 123,
@@ -25,6 +29,8 @@ logger = logging.getLogger(__name__)
     "repeat": False
 }
 
+ERROR_SUBSCRIPTION_NOT_FOUND = {"code": 100001, "msg": "subscription id:{0} not found"}
+
 
 @app.route('/subscription', methods=['GET'])
 def get_subscription():
@@ -35,7 +41,7 @@ def get_subscription():
 
     results = s.execute()
 
-    return response(results)
+    return response(payload=results['hits'].to_dict())
 
 
 @app.route('/subscription', defaults={'id': None}, methods=['PUT'])
@@ -49,20 +55,31 @@ def set_subscription(id):
         sub = Subscription.get(id=id, ignore=404)
         if not sub:
             logger.warning('could not find subscription:{}'.format(id))
-            return
+            return response(id, err=ERROR_SUBSCRIPTION_NOT_FOUND)
 
     else:
         sub = Subscription()
 
     fill_doc_type(sub, the_json)
 
-    sub.save()
+    sub.save(force=True)
+    result_json = sub.to_dict(include_meta=True)
 
-    logger.info('subscription:{} saved'.format(sub))
-    return response(sub.to_dict(include_meta=True))
+    logger.info('subscription:{} saved'.format(result_json))
+
+    producer.send('subscription',
+                  bytes(the_json, encoding='utf8'), key=result_json['_id'])
+
+    return response(payload=result_json)
 
 
-def response(code=0, msg='success', payload=None):
+def response(*msg_args, err=None, code=0, msg='success', payload=None):
+    if err:
+        if msg_args:
+            return jsonify({"code": err['code'], "msg": err['msg'].format(*msg_args)})
+        else:
+            return jsonify({"code": err['code'], "msg": err['msg']})
+
     return jsonify({"code": code,
                     "msg": msg,
                     "payload": payload

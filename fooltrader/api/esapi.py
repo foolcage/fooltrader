@@ -67,7 +67,7 @@ def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, l
 
         resp = s[from_idx:from_idx + size].execute()
 
-        return resp['hits']
+        return resp['hits'].to_dict()
 
 
 if __name__ == '__main__':
