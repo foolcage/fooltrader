@@ -283,10 +283,12 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
             dtype = {"code": str, 'timestamp': str}
         df = pd.read_csv(the_path, dtype=dtype)
 
-        if 'factor' in df.columns:
+        if 'factor' in df.columns and source == '163' and security_item['type'] == 'stock':
             df_kdata_has_factor = df[df['factor'].notna()]
             if df_kdata_has_factor.shape[0] > 0:
                 latest_factor = df_kdata_has_factor.tail(1).factor.iat[0]
+            else:
+                latest_factor = None
 
         df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
         df = df.set_index(df['timestamp'], drop=False)
@@ -332,6 +334,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
                     logger.error("missing latest factor for {}".format(security_item['id']))
         return df
     return pd.DataFrame()
+
 
 def get_latest_download_trading_date(security_item, return_next=True, source=None):
     df = get_kdata(security_item, source=source)
