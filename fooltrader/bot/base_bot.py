@@ -17,7 +17,6 @@ from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 from fooltrader.utils.utils import is_same_date
 from fooltrader.utils.utils import to_timestamp
 
-
 class BaseBot(object):
     func_map_topic = {'on_subscription': 'subscription'}
 
@@ -99,11 +98,11 @@ class BaseBot(object):
                 self.quote_topic = get_kafka_tick_topic(security_id=self.security_item['id'])
             else:
                 self.logger.error("wrong level:{}".format(self.level))
-
-        # 默认日级别timer
-        if not hasattr(self, 'time_step'):
-            self.time_step = timedelta(days=1)
-        self.logger.info("bot:{} check the market by itself,time_step:{}".format(self.bot_name, self.time_step))
+        else:
+            # 默认日级别timer
+            if not hasattr(self, 'time_step'):
+                self.time_step = timedelta(days=1)
+            self.logger.info("bot:{} check the market by itself,time_step:{}".format(self.bot_name, self.time_step))
 
         self._after_init()
 
@@ -131,6 +130,15 @@ class BaseBot(object):
             ', '.join("{}={}".format(key, self.__dict__[key]) for key in self.__dict__ if key != 'logger'))
 
     def consume_topic_with_func(self, topic, func):
+        if not topic:
+            while True:
+                self.on_timer({"timestamp": self.current_time})
+
+                if is_same_date(self.current_time, pd.Timestamp.now()):
+                    time.sleep(self.time_step.total_seconds())
+
+                self.current_time += self.time_step
+
         consumer = KafkaConsumer(topic,
                                  # client_id='fooltrader',
                                  # group_id=self.bot_name,
@@ -138,6 +146,16 @@ class BaseBot(object):
                                  bootstrap_servers=[KAFKA_HOST])
         topic_partition = TopicPartition(topic=topic, partition=0)
         start_timestamp = int(self.start_date.timestamp())
+
+        end_offset = consumer.end_offsets([topic_partition])[topic_partition]
+        if end_offset == 0:
+            self.logger.warning("topic:{} end offset:{}".format(topic, end_offset))
+            # 等有数据才能做进一步的判断
+            for message in consumer:
+                self.logger.info("first message:{} to topic:{}".format(message, topic))
+                break
+            consumer.poll(5, 1)
+            consumer.seek(topic_partition, 0)
 
         # 找到以start_timestamp为起点的offset
         partition_map_offset_and_timestamp = consumer.offsets_for_times({topic_partition: start_timestamp})
@@ -153,13 +171,17 @@ class BaseBot(object):
                 # 目前的最大offset
                 end_offset = consumer.end_offsets([topic_partition])[topic_partition]
                 for message in consumer:
-                    message_time = pd.Timestamp(message.value['timestamp'])
+                    if 'timestamp' in message.value:
+                        message_time = to_timestamp(message.value['timestamp'])
+                    else:
+                        message_time = to_timestamp(message.timestamp)
+
                     # 设定了结束日期的话,时间到了或者kafka没数据了就结束
                     if self.end_date and (message_time > self.end_date or message.offset + 1 == end_offset):
                         consumer.close()
                         break
 
-                    self.current_time = to_timestamp(message.value['timestamp'] / 1000)
+                    self.current_time = message_time
 
                     # 收市后计算
                     if False:
@@ -193,19 +215,9 @@ class BaseBot(object):
             self.threads.append(
                 threading.Thread(target=self.consume_topic_with_func, args=(self.func_map_topic.get(func), func)))
 
-        if self.quote_topic:
-            self.threads.append(
-                threading.Thread(target=self.consume_topic_with_func, args=(self.quote_topic, 'on_event')))
-
         for the_thread in self.threads:
             the_thread.start()
 
-        while True:
-            self.on_timer({"timestamp": self.current_time})
-
-            if is_same_date(self.current_time, pd.Timestamp.now()):
-                time.sleep(self.time_step.total_seconds())
-
-            self.current_time += self.time_step
+        self.consume_topic_with_func(self.quote_topic, 'on_event')
 
         self.logger.info("finish bot:{}".format(self))

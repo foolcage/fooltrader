@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import argparse
 import datetime
 import json
 import logging
@@ -95,4 +95,15 @@ def cryptocurrency_tick_to_kafka(exchange, pairs=None):
 if __name__ == '__main__':
     # kdata_to_kafka(security_item='300027', fuquan='hfq')
     # tick_to_kafka(security_item='300027')
-    cryptocurrency_tick_to_kafka('kraken')
+    # cryptocurrency_tick_to_kafka('kraken')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('security_type', help='the security type')
+    parser.add_argument('exchange', help='the exchange')
+    parser.add_argument('codes', nargs='+', help='the security code list')
+
+    args = parser.parse_args()
+
+    if args.security_type == 'cryptocurrency':
+        pairs = [code.replace('-', '/') for code in args.codes]
+
+        cryptocurrency_tick_to_kafka(exchange=args.exchange, pairs=pairs)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 
+import pandas as pd
 from flask import request, jsonify
 from kafka import KafkaProducer
 
@@ -14,7 +16,6 @@ logger = logging.getLogger(__name__)
 producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
 {
-    "id": 123,
     "userId": 111,
     "securityType": "cryptocurrency",
     "exchange": "binance",
@@ -67,9 +68,12 @@ def set_subscription(id):
 
     logger.info('subscription:{} saved'.format(result_json))
 
-    producer.send('subscription',
-                  bytes(the_json, encoding='utf8'), key=result_json['_id'])
-
+    resp = producer.send('subscription',
+                         bytes(json.dumps(result_json), encoding='utf8'),
+                         key=bytes(result_json['_id'], encoding='utf8'),
+                         timestamp_ms=int(pd.Timestamp.now().timestamp()))
+    producer.flush()
+    logger.info(resp)
     return response(payload=result_json)
 
 

@@ -197,16 +197,16 @@ def fetch_ticks(exchange_str, pairs=None):
         while True:
 
             for pair in pairs:
-                trades = exchange.fetch_trades(symbol=pair, limit=1)
+                trades = exchange.fetch_trades(symbol=pair)
 
-                trade = trades[0]
+                trade = trades[-1]
 
                 code = pair.replace('/', '-')
                 tick = {
                     'securityId': "{}_{}_{}".format("cryptocurrency", exchange_str, code),
                     'code': code,
                     'name': pair,
-                    'timestamp': trade['timestamp'],
+                    'timestamp': int(trade['timestamp'] / 1000),
                     'id': trade['id'],
                     'price': trade['price'],
                     'volume': trade['amount']

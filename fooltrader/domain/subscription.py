@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from elasticsearch_dsl import Keyword, Nested, MetaField, Boolean
+from elasticsearch_dsl import Keyword, Nested, MetaField, Boolean, Date, datetime
 
 from fooltrader.domain import BaseDocType
 
@@ -44,3 +44,20 @@ class CrossSubscription((BaseDocType)):
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
+
+
+class SubscriptionTriggered(BaseDocType):
+    id = Keyword()
+    subId = Keyword()
+    timestamp = Date()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+
+    def save(self, using=None, index=None, validate=True, force=True, **kwargs):
+        # assign now if no timestamp given
+        if not self.timestamp:
+            self.timestamp = datetime.now()
+
+        return super().save(using, index, validate, force, **kwargs)
