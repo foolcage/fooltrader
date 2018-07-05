@@ -211,21 +211,6 @@ def drop_duplicate(the_list):
     return list(set(the_list))
 
 
-def adjust_fuquan_price(kdata, latest_factor):
-    kdata['hfqClose'] = kdata['close'] * kdata['factor']
-    kdata['hfqOpen'] = kdata['open'] * kdata['factor']
-    kdata['hfqHigh'] = kdata['high'] * kdata['factor']
-    kdata['hfqLow'] = kdata['low'] * kdata['factor']
-
-    if latest_factor != 0:
-        kdata['qfqClose'] = kdata['hfqClose'] / latest_factor
-        kdata['qfqOpen'] = kdata['hfqOpen'] / latest_factor
-        kdata['qfqHigh'] = kdata['hfqHigh'] / latest_factor
-        kdata['qfqLow'] = kdata['hfqLow'] / latest_factor
-
-    return kdata
-
-
 if __name__ == '__main__':
     aa = chrome_copy_header_to_dict(
         '''
