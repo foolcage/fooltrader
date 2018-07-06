@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import request, Blueprint
 
+from fooltrader.consts import CRYPTOCURRENCY_PAIR
 from fooltrader.domain.security_model import CryptoCurrencyMeta
 from fooltrader.rest.common import success
 
@@ -17,7 +18,7 @@ def get_security():
         doc_type = CryptoCurrencyMeta
 
     s = doc_type().search()
-    s = s.filter('term', exchange=exchange)
+    s = s.filter('term', exchange=exchange).filter('terms', name=CRYPTOCURRENCY_PAIR)
 
     results = s.execute()
 

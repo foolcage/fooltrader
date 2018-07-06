@@ -12,6 +12,8 @@ es_index_mapping('subscription_triggered', SubscriptionTriggered)
 
 app = Flask(__name__)
 
+app.debug = True
+
 app.config.from_object(Config(root_path=FOOLTRADER_STORE_PATH))
 
 app.register_blueprint(security_rest)
