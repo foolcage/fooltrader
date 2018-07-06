@@ -10,7 +10,8 @@ from ast import literal_eval
 import numpy as np
 import pandas as pd
 
-from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX
+from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX, \
+    CRYPTOCURRENCY_EXCHANGES
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
@@ -35,7 +36,7 @@ def get_support_exchanges():
 
 
 # meta
-def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None, end=None,
+def get_security_list(security_type='stock', exchanges=None, start=None, end=None,
                       mode='simple', start_list_date=None, codes=None):
     """
     get security list.
@@ -69,29 +70,20 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
     if type(exchanges) == str:
         exchanges = [exchanges]
 
-    if security_type == 'stock' or security_type == 'future':
-        for exchange in exchanges:
-            the_path = get_security_list_path(security_type, exchange)
-            if os.path.exists(the_path):
-                # 股票的元数据如果存到es,需要做一些转化
-                if mode == 'es' and security_type == 'stock':
-                    tmp_df = pd.read_csv(the_path,
-                                         converters={'code': str,
-                                                     'sinaIndustry': convert_to_list_if_need,
-                                                     'sinaConcept': convert_to_list_if_need,
-                                                     'sinaArea': convert_to_list_if_need})
-                else:
-                    tmp_df = pd.read_csv(the_path, dtype=str)
-                df = df.append(tmp_df, ignore_index=True)
+    if security_type == 'stock':
+        if not exchanges:
+            exchanges = ['sh', 'sz']
+    elif security_type == 'future':
+        if not exchanges:
+            exchanges = ['shfe', 'dce', 'zce']
+    elif security_type == 'cryptocurrency':
+        if not exchanges:
+            exchanges = CRYPTOCURRENCY_EXCHANGES
 
-    elif security_type == 'index':
-        for exchange in exchanges:
-            if 'sh' == exchange:
-                df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
-            if 'sz' == exchange:
-                df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
-            if 'nasdaq' == exchange:
-                df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
+    if security_type == 'index':
+        df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
+        df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
+        df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
     else:
         for exchange in exchanges:
             the_path = get_security_list_path(security_type, exchange)

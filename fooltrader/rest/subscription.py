@@ -3,65 +3,69 @@ import json
 import logging
 
 import pandas as pd
-from flask import request, jsonify
+from flask import request, Blueprint
+from marshmallow import ValidationError
 
 from fooltrader import kafka_producer
-from fooltrader.domain.subscription import Subscription
-from fooltrader.rest import app
+from fooltrader.domain.subscription_model import PriceSubscription
+from fooltrader.domain.subscription_schema import PriceSubscriptionSchema
+from fooltrader.rest.common import error, success
 from fooltrader.utils.utils import fill_doc_type
 
 logger = logging.getLogger(__name__)
 
-{
-    "userId": 111,
-    "securityType": "cryptocurrency",
-    "exchange": "binance",
-    "code": "BTC-USDT",
-    "condition": {
-        "upPct": 1,
-        "downPct": 2,
-        "up": 7000,
-        "down": 6000,
-        "cross": 0.02
-    },
-    "repeat": False
-}
+ERROR_SUBSCRIPTION_NOT_FOUND = {"code": 200001, "msg": "subscription id:{0} not found"}
 
-ERROR_SUBSCRIPTION_NOT_FOUND = {"code": 100001, "msg": "subscription id:{0} not found"}
+ERROR_NO_INPUT_JSON_PROVIDED = {"code": 100001, "msg": "no input json provided"}
+ERROR_INVALID_INPUT_JSON = {"code": 100002, "msg": "invalid input json,{0}"}
+
+price_subscription_shema = PriceSubscriptionSchema()
+
+subscription_rest = Blueprint('subscription', __name__,
+                              template_folder='templates')
 
 
-@app.route('/subscription', methods=['GET'])
+@subscription_rest.route('/subscription', methods=['GET'])
 def get_subscription():
     user_id = request.args.get('userId')
 
-    s = Subscription.search()
+    s = PriceSubscription.search()
     s = s.filter('term', userId=user_id)
 
     results = s.execute()
 
-    return response(payload=results['hits'].to_dict())
+    return success(results['hits'].to_dict())
 
 
-@app.route('/subscription', defaults={'id': None}, methods=['PUT'])
-@app.route('/subscription/<id>', methods=['PUT'])
+@subscription_rest.route('/subscription', defaults={'id': None}, methods=['PUT'])
+@subscription_rest.route('/subscription/<id>', methods=['PUT'])
 def set_subscription(id):
     the_json = request.get_json()
 
-    # TODO:check params
+    if not the_json:
+        return error(ERROR_NO_INPUT_JSON_PROVIDED)
 
+    # Validate and deserialize input
+    try:
+        sub_dict, _ = price_subscription_shema.load(the_json)
+    except ValidationError as err:
+        return error(ERROR_INVALID_INPUT_JSON, err.messages)
+
+    # the update operation
     if id:
-        sub = Subscription.get(id=id, ignore=404)
-        if not sub:
+        # FIXME:just check whether exist?
+        sub_model = PriceSubscription.get(id=id, ignore=404)
+        if not sub_model:
             logger.warning('could not find subscription:{}'.format(id))
-            return response(id, err=ERROR_SUBSCRIPTION_NOT_FOUND)
-
+            return error(ERROR_SUBSCRIPTION_NOT_FOUND, id)
     else:
-        sub = Subscription()
+        sub_model = PriceSubscription()
 
-    fill_doc_type(sub, the_json)
+    fill_doc_type(sub_model, the_json)
 
-    sub.save(force=True)
-    result_json = sub.to_dict(include_meta=True)
+    sub_model.save(force=True)
+
+    result_json = sub_model.to_dict(include_meta=True)
 
     logger.info('subscription:{} saved'.format(result_json))
 
@@ -73,17 +77,4 @@ def set_subscription(id):
 
     logger.info(resp)
 
-    return response(payload=result_json)
-
-
-def response(*msg_args, err=None, code=0, msg='success', payload=None):
-    if err:
-        if msg_args:
-            return jsonify({"code": err['code'], "msg": err['msg'].format(*msg_args)})
-        else:
-            return jsonify({"code": err['code'], "msg": err['msg']})
-
-    return jsonify({"code": code,
-                    "msg": msg,
-                    "payload": payload
-                    })
+    return success(payload=result_json)

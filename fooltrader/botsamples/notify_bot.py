@@ -7,7 +7,7 @@ from fooltrader.api.quote import get_kdata
 from fooltrader.bot.actions import EmailAction
 from fooltrader.bot.base_bot import BaseBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata
-from fooltrader.domain.subscription import Subscription, SubscriptionTriggered
+from fooltrader.domain.subscription import PriceSubscription, SubscriptionTriggered
 from fooltrader.settings import KAFKA_HOST
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
@@ -50,7 +50,7 @@ class NotifyBot(BaseBot):
     def after_init(self):
         self.subscriptions = {}
         self.has_triggered = []
-        s = Subscription.search()
+        s = PriceSubscription.search()
 
         s = s.filter('term', securityType=self.security_item['type']) \
             .filter('term', exchange=self.security_item['exchange'])

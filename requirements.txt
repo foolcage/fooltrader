@@ -7,7 +7,7 @@ Twisted == 17.5.0
 
 demjson == 2.2.4
 
-elasticsearch-dsl>=6.0.0,<7.0.0
+elasticsearch-dsl == 6.1.0
 
 kafka_python == 1.4.3
 
@@ -28,3 +28,5 @@ requests == 2.18.4
 ccxt == 1.14.224
 
 Flask == 1.0
+
+marshmallow

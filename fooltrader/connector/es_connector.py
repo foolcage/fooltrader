@@ -15,6 +15,7 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_
 from fooltrader.domain.event import ForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
 from fooltrader.domain.quote import StockMeta, StockKData, IndexKData, CryptoCurrencyKData
+from fooltrader.domain.security_model import CryptoCurrencyMeta
 from fooltrader.settings import US_STOCK_CODES, ES_HOSTS
 from fooltrader.utils.es_utils import es_get_latest_record
 from fooltrader.utils.utils import fill_doc_type, is_same_date
@@ -51,6 +52,33 @@ def stock_meta_to_es(force=False):
             stock_meta = StockMeta(meta={'id': item['id']})
             fill_doc_type(stock_meta, json.loads(item.to_json()))
             actions.append(stock_meta.to_dict(include_meta=True))
+        except Exception as e:
+            logger.warn("wrong SecurityItem:{},error:{}", item, e)
+    if actions:
+        resp = elasticsearch.helpers.bulk(es_client, actions)
+        logger.info(resp)
+
+
+def security_meta_to_es(security_type='cryptocurrency', force=False):
+    if security_type == 'cryptocurrency':
+        doc_type = CryptoCurrencyMeta
+
+    es_index_mapping('crypto_currency_meta', doc_type)
+    start_date = None
+    if not force:
+        latest_record = es_get_latest_record('stock_meta', time_field='listDate')
+        logger.info("latest_record:{}".format(latest_record))
+        if latest_record:
+            start_date = latest_record['listDate']
+
+    actions = []
+    for _, item in get_security_list(security_type=security_type).iterrows():
+        if start_date and item['listDate'] and is_same_date(start_date, item['listDate']):
+            continue
+        try:
+            security_meta = doc_type(meta={'id': item['id']})
+            fill_doc_type(security_meta, json.loads(item.to_json()))
+            actions.append(security_meta.to_dict(include_meta=True))
         except Exception as e:
             logger.warn("wrong SecurityItem:{},error:{}", item, e)
     if actions:
@@ -203,8 +231,9 @@ if __name__ == '__main__':
     # security_meta_to_es()
     # stock_meta_to_es(force=True)
     connections.create_connection(hosts=ES_HOSTS)
-    kdata_to_es(start='300027', end='300028', force=True)
-    kdata_to_es(security_type='index')
+    security_meta_to_es(force=True)
+    # kdata_to_es(start='300027', end='300028', force=True)
+    # kdata_to_es(security_type='index')
     # balance_sheet_to_es()
     # index_kdata_to_es(force=False)
     # cash_flow_statement_to_es()
