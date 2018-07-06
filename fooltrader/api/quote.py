@@ -35,6 +35,13 @@ def get_support_exchanges():
     return ['sh', 'sz', 'shfe', 'dce', 'zce']
 
 
+security_type_map_exchanges = {
+    "stock": ['sh', 'sz'],
+    "future": ['shfe', 'dce', 'zce'],
+    "cryptocurrency": CRYPTOCURRENCY_EXCHANGES
+}
+
+
 # meta
 def get_security_list(security_type='stock', exchanges=None, start=None, end=None,
                       mode='simple', start_list_date=None, codes=None):
@@ -70,15 +77,8 @@ def get_security_list(security_type='stock', exchanges=None, start=None, end=Non
     if type(exchanges) == str:
         exchanges = [exchanges]
 
-    if security_type == 'stock':
-        if not exchanges:
-            exchanges = ['sh', 'sz']
-    elif security_type == 'future':
-        if not exchanges:
-            exchanges = ['shfe', 'dce', 'zce']
-    elif security_type == 'cryptocurrency':
-        if not exchanges:
-            exchanges = CRYPTOCURRENCY_EXCHANGES
+    if not exchanges:
+        exchanges = security_type_map_exchanges[security_type]
 
     if security_type == 'index':
         df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
@@ -88,7 +88,14 @@ def get_security_list(security_type='stock', exchanges=None, start=None, end=Non
         for exchange in exchanges:
             the_path = get_security_list_path(security_type, exchange)
             if os.path.exists(the_path):
-                df = df.append(pd.read_csv(the_path, dtype=str), ignore_index=True)
+                if mode == 'es' and security_type == 'stock':
+                    df = df.append(pd.read_csv(the_path,
+                                               converters={'code': str,
+                                                           'sinaIndustry': convert_to_list_if_need,
+                                                           'sinaConcept': convert_to_list_if_need,
+                                                           'sinaArea': convert_to_list_if_need}))
+                else:
+                    df = df.append(pd.read_csv(the_path, dtype=str), ignore_index=True)
 
     if not df.empty > 0:
         if start_list_date:
