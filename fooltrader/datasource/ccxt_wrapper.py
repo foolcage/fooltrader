@@ -69,6 +69,8 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
 
                 df = df.append(security_item, ignore_index=True)
 
+                logger.info("init_markets,exchange:{} security:{}".format(exchange_str, security_item))
+
                 if markets_type == dict:
                     security_info = markets[market]
 
@@ -85,7 +87,7 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
             if not df.empty:
                 df.to_csv(get_security_list_path(security_type='cryptocurrency', exchange=exchange_str),
                           index=False)
-
+            logger.error("init_markets for {} success".format(exchange_str))
         except Exception as e:
             logger.error("init_markets for {} failed".format(exchange_str), e)
 

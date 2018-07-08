@@ -1,33 +1,12 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
 
-from kafka import KafkaProducer
-
 from fooltrader.api.quote import get_kdata
 from fooltrader.bot.actions import EmailAction
 from fooltrader.bot.base_bot import BaseBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata
-from fooltrader.domain.subscription import PriceSubscription, SubscriptionTriggered
-from fooltrader.settings import KAFKA_HOST
+from fooltrader.domain.subscription_model import PriceSubscription, SubscriptionTriggered
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
-
-{
-    "id": 123,
-    "userId": 111,
-    "securityType": "cryptocurrency",
-    "exchange": "binance",
-    "code": "BTC-USDT",
-    "condition": {
-        "upPct": 1,
-        "downPct": 2,
-        "up": 7000,
-        "down": 6000,
-        "cross": 0.02
-    },
-    "repeat": False
-}
-
-producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
 
 class NotifyBot(BaseBot):

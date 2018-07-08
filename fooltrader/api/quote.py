@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX, \
-    CRYPTOCURRENCY_EXCHANGES
+    SECURITY_TYPE_MAP_EXCHANGES
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
@@ -33,13 +33,6 @@ def convert_to_list_if_need(input):
 
 def get_support_exchanges():
     return ['sh', 'sz', 'shfe', 'dce', 'zce']
-
-
-security_type_map_exchanges = {
-    "stock": ['sh', 'sz'],
-    "future": ['shfe', 'dce', 'zce'],
-    "cryptocurrency": CRYPTOCURRENCY_EXCHANGES
-}
 
 
 # meta
@@ -78,7 +71,7 @@ def get_security_list(security_type='stock', exchanges=None, start=None, end=Non
         exchanges = [exchanges]
 
     if not exchanges:
-        exchanges = security_type_map_exchanges[security_type]
+        exchanges = SECURITY_TYPE_MAP_EXCHANGES[security_type]
 
     if security_type == 'index':
         df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)

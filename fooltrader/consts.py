@@ -170,11 +170,19 @@ CHINA_STOCK_SZ_INDEX = [{'id': 'index_sz_399001',
 
 SECURITY_TYPE_CRYPTO = 'cryptocurrency'
 
-CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
-                            "bitz", "bibox", "zb", "bitstamp"]
+# CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
+#                             "bitz", "bibox", "zb", "bitstamp"]
+
+CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex"]
 
 CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
                        "BNB", "ETC", "QTUM", "ONT"]
 
 CRYPTOCURRENCY_PAIR = [("{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
                       [("{}/{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
+
+SECURITY_TYPE_MAP_EXCHANGES = {
+    "stock": ['sh', 'sz'],
+    "future": ['shfe', 'dce', 'zce'],
+    "cryptocurrency": CRYPTOCURRENCY_EXCHANGES
+}
