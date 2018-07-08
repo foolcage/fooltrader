@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from fooltrader.api.quote import get_kdata
 from fooltrader.bot.actions import EmailAction
 from fooltrader.bot.base_bot import BaseBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata
-from fooltrader.domain.subscription_model import PriceSubscription, SubscriptionTriggered
+from fooltrader.domain.subscription_model import SubscriptionTriggered, PriceSubscription
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
 
@@ -28,7 +28,8 @@ class NotifyBot(BaseBot):
 
     def after_init(self):
         self.subscriptions = {}
-        self.has_triggered = []
+        self.has_triggered = {}
+
         s = PriceSubscription.search()
 
         s = s.filter('term', securityType=self.security_item['type']) \
@@ -38,14 +39,31 @@ class NotifyBot(BaseBot):
         for hit in results['hits']['hits']:
             self.subscriptions[hit['_id']] = hit['_source'].to_dict()
 
+        # 查询该标的的价格提醒订阅
+        self.update_today_triggered()
+
         self.email_action = EmailAction()
 
+    # 查询当日已经发送的提醒
+    def update_today_triggered(self):
+        sub_triggered_search = SubscriptionTriggered.search()
+
+        sub_triggered_search = sub_triggered_search.filter('term', subType='price') \
+            .filter('range', timestamp={'gte': to_time_str(datetime.now())})
+        results = sub_triggered_search.execute()
+
+        for hit in results['hits']['hits']:
+            json_data = hit['_source'].to_dict()
+            self.has_triggered["{}_{}".format(json_data['subId'], json_data['conditionType'])] = json_data
+
+    # 监听订阅事件
     def on_subscription(self, event_item):
         self.logger.info("on_subscription:{}".format(event_item))
         self.subscriptions[event_item['_id']] = event_item['_source']
 
+    # 监听行情
     def on_event(self, event_item):
-        # self.logger.info(event_item)
+        self.logger.debug(event_item)
         if not self.last_date or not is_same_date(self.last_date, self.current_time):
             self.last_date = to_timestamp(event_item['timestamp']) - timedelta(days=1)
             self.last_kdata = get_kdata(self.security_item, the_date=to_time_str(self.last_date))
@@ -59,49 +77,56 @@ class NotifyBot(BaseBot):
             else:
                 self.logger.error("could not get last close for:{}".format(self.last_date))
 
+            self.update_today_triggered()
+
         change_pct = (self.last_close - event_item['price']) / self.last_close
 
         self.logger.info(
             "{} last day close is:{},now price is:{},the change_pct is:{}".format(self.security_item['id'],
                                                                                   self.last_close,
                                                                                   event_item['price'], change_pct))
-        self.check_condition(current_price=event_item['price'], change_pct=change_pct)
+        self.check_subscription(current_price=event_item['price'], change_pct=change_pct)
 
-    def check_condition(self, current_price, change_pct):
-        triggered = []
+    def handle_trigger(self, trigger_flag, sub_id, subscription, msg):
+        if trigger_flag not in self.has_triggered:
+            sub_triggerd = SubscriptionTriggered(sub_id=sub_id, timestamp=self.current_time, conditionType='up')
+            sub_triggerd.save(index='subscription_triggered')
+            self.has_triggered[trigger_flag] = sub_triggerd.to_dict()
+
+            if 'weixin' in subscription['actions']:
+                self.logger.info("send msg:{} to user:{}".format(msg, subscription['userId']))
+
+    def check_subscription(self, current_price, change_pct):
+
         for sub_id in self.subscriptions:
-            sub = self.subscriptions[sub_id]
-            condition = sub['condition']
+            subscription = self.subscriptions[sub_id]
 
-            if change_pct > 0 and condition.get('up') and condition.get('up') > current_price:
+            if change_pct > 0 and subscription.get('up') and current_price > subscription.get('up'):
                 msg = "{} up to {}".format(self.security_item['id'], current_price)
-                self.logger.info("notify to user:{},msg:{}".format(sub['userId'], msg))
-                if "email" in sub:
-                    self.email_action.send_message(sub['email'], "price notification", msg)
+                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
 
-            if change_pct < 0 and condition.get('down') and condition.get('down') < current_price:
+                triggered_flag = "{}_{}".format(sub_id, 'up')
+
+                self.handle_trigger(triggered_flag, sub_id, subscription, msg)
+
+            if change_pct < 0 and subscription.get('down') and current_price < subscription.get('down'):
                 msg = "{} down to {}".format(self.security_item['id'], current_price)
-                self.logger.info("notify to user:{},msg:{}".format(sub['userId'], msg))
-                if "email" in sub:
-                    self.email_action.send_message(sub['email'], "price notification", msg)
+                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
 
-            if change_pct > 0 and condition.get('upPct') and change_pct > condition.get('upPct'):
+                triggered_flag = "{}_{}".format(sub_id, 'down')
+                self.handle_trigger(triggered_flag, sub_id, msg)
+
+            if change_pct > 0 and subscription.get('upPct') and change_pct > subscription.get('upPct'):
                 msg = "{} up {}".format(self.security_item['id'], change_pct)
-                self.logger.info("notify to user:{},msg:{}".format(sub['userId'], msg))
-                if "email" in sub:
-                    self.email_action.send_message(sub['email'], "price notification", msg)
+                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
+                triggered_flag = "{}_{}".format(sub_id, 'upPct')
+                self.handle_trigger(triggered_flag, sub_id, subscription, msg)
 
-            if change_pct < 0 and condition.get('downPct') and change_pct < condition.get('downPct'):
+            if change_pct < 0 and subscription.get('downPct') and change_pct < subscription.get('downPct'):
                 msg = "{} down {}".format(self.security_item['id'], change_pct)
-                self.logger.info("notify to user:{},msg:{}".format(sub['userId'], msg))
-                if "email" in sub:
-                    self.email_action.send_message(sub['email'], "price notification", msg)
-
-            st = SubscriptionTriggered(sub_id=sub_id, timestamp=self.current_time)
-            st.save(index='subscription_triggered')
-            triggered.append(sub_id)
-        if self.subscriptions:
-            self.subscriptions = [v for k, v in self.subscriptions.items() if (v['repeat'] or k not in triggered)]
+                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
+                triggered_flag = "{}_{}".format(sub_id, 'downPct')
+                self.handle_trigger(triggered_flag, sub_id, subscription, msg)
 
 
 if __name__ == '__main__':

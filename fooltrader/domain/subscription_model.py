@@ -1,10 +1,29 @@
 # -*- coding: utf-8 -*-
-from elasticsearch_dsl import Keyword, Nested, MetaField, Boolean, Date, datetime, Float
+from elasticsearch_dsl import Keyword, MetaField, Boolean, Date, datetime, Float
 
 from fooltrader.domain import BaseDocType
 
 
-class PriceCondition(BaseDocType):
+class PriceSubscription(BaseDocType):
+    """
+        {
+            "id": 123,
+            "userId": 111,
+            "type": "price",
+            "securityType": "cryptocurrency",
+            "exchange": "binance",
+            "code": "BTC-USDT",
+            "upPct": 1,
+            "downPct": 2,
+            "up": 7000,
+            "down": 6000,
+            "actions": ["weixin", "email", "shortMsg"],
+            "repeat": False
+        }
+    """
+    id = Keyword()
+    userId = Keyword()
+
     securityType = Keyword()
     exchange = Keyword()
     code = Keyword()
@@ -13,29 +32,6 @@ class PriceCondition(BaseDocType):
     upTo = Float()
     downTo = Float()
 
-
-class PriceSubscription(BaseDocType):
-    """
-    {
-        "id": 123,
-        "userId": 111,
-        "type": "price",
-        "condition": {
-            "securityType": "cryptocurrency",
-            "exchange": "binance",
-            "code": "BTC-USDT",
-            "upPct": 1,
-            "downPct": 2,
-            "up": 7000,
-            "down": 6000
-        },
-        "actions": [weixin,email,shortMsg],
-        "repeat": False
-    }
-    """
-    id = Keyword()
-    userId = Keyword()
-    condition = Nested(PriceCondition)
     repeat = Boolean()
     actions = Keyword()
 
@@ -44,17 +40,15 @@ class PriceSubscription(BaseDocType):
         all = MetaField(enabled=False)
 
 
-class CrossCondition(BaseDocType):
-    exchanges = Keyword()
-    cross = Float()
-
-
 class CrossSubscription(BaseDocType):
     id = Keyword()
     userId = Keyword()
+
     exchanges = Keyword()
-    condition = Nested()
+    cross = Float()
+
     repeat = Boolean()
+    actions = Keyword()
 
     class Meta:
         doc_type = 'doc'
@@ -64,6 +58,8 @@ class CrossSubscription(BaseDocType):
 class SubscriptionTriggered(BaseDocType):
     id = Keyword()
     subId = Keyword()
+    subType = Keyword()
+    conditionType = Keyword()
     timestamp = Date()
 
     class Meta:
