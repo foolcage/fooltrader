@@ -93,13 +93,15 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
 
 
 def fetch_kdata(exchange_str='bitstamp'):
-    for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
+    ccxt_exchange = eval("ccxt.{}()".format(exchange_str))
+    if ccxt_exchange.has['fetchOHLCV']:
+        for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
 
-        if security_item['name'] not in CRYPTOCURRENCY_PAIR:
-            continue
-        exchange = eval("ccxt.{}()".format(exchange_str))
-        if exchange.has['fetchOHLCV']:
+            if security_item['name'] not in CRYPTOCURRENCY_PAIR:
+                continue
+
             start_date, df = get_latest_download_trading_date(security_item)
+            # 日K线只抓到昨天
             end_date = pd.Timestamp.today() - pd.DateOffset(1)
 
             if start_date and (start_date > end_date):
@@ -107,9 +109,9 @@ def fetch_kdata(exchange_str='bitstamp'):
                 continue
 
             try:
-                kdatas = exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
+                kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
                 # for rateLimit
-                time.sleep(2)
+                time.sleep(5)
             except Exception as e:
                 logger.error("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
                 continue
@@ -136,6 +138,10 @@ def fetch_kdata(exchange_str='bitstamp'):
             if not df.empty:
                 df = df.loc[:, KDATA_COLUMN_COMMON]
                 kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
+                logger.info(
+                    "fetch_kdata for exchange:{} security:{} success".format(exchange_str, security_item['name']))
+    else:
+        logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
 
 
 # not used
