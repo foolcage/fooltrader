@@ -88,13 +88,19 @@ class NotifyBot(BaseBot):
         self.check_subscription(current_price=event_item['price'], change_pct=change_pct)
 
     def handle_trigger(self, trigger_flag, sub_id, subscription, msg):
+        triggered = False
         if trigger_flag not in self.has_triggered:
             sub_triggerd = SubscriptionTriggered(sub_id=sub_id, timestamp=self.current_time, conditionType='up')
             sub_triggerd.save(index='subscription_triggered')
-            self.has_triggered[trigger_flag] = sub_triggerd.to_dict()
+
+            triggered = True
 
             if 'weixin' in subscription['actions']:
                 self.logger.info("send msg:{} to user:{}".format(msg, subscription['userId']))
+
+        if triggered:
+            self.has_triggered[trigger_flag] = sub_triggerd.to_dict()
+            self.logger.info("trigger:{} happen".format(trigger_flag))
 
     def check_subscription(self, current_price, change_pct):
 

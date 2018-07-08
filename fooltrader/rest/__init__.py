@@ -7,7 +7,7 @@ from fooltrader.rest.security import security_rest
 from fooltrader.rest.subscription import subscription_rest
 from fooltrader.utils.es_utils import es_index_mapping
 
-es_index_mapping('subscription', PriceSubscription)
+es_index_mapping('price_subscription', PriceSubscription)
 es_index_mapping('subscription_triggered', SubscriptionTriggered)
 
 app = Flask(__name__)
