@@ -96,52 +96,55 @@ def fetch_kdata(exchange_str='bitstamp'):
     ccxt_exchange = eval("ccxt.{}()".format(exchange_str))
     if ccxt_exchange.has['fetchOHLCV']:
         for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
-
-            if security_item['name'] not in CRYPTOCURRENCY_PAIR:
-                continue
-
-            start_date, df = get_latest_download_trading_date(security_item)
-            # 日K线只抓到昨天
-            end_date = pd.Timestamp.today() - pd.DateOffset(1)
-
-            if start_date and (start_date > end_date):
-                logger.info("{} kdata is ok".format(security_item['code']))
-                continue
-
             try:
-                kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
-                # for rateLimit
-                time.sleep(5)
-            except Exception as e:
-                logger.error("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
-                continue
-
-            for kdata in kdatas:
-                timestamp = pd.Timestamp.fromtimestamp(int(kdata[0] / 1000))
-                if is_same_date(timestamp, pd.Timestamp.today()):
+                if security_item['name'] not in CRYPTOCURRENCY_PAIR:
                     continue
-                kdata_json = {
-                    'timestamp': to_time_str(timestamp),
-                    'code': security_item['code'],
-                    'name': security_item['name'],
-                    'open': kdata[1],
-                    'high': kdata[2],
-                    'low': kdata[3],
-                    'close': kdata[4],
-                    'volume': kdata[5],
-                    'securityId': security_item['id'],
-                    'preClose': None,
-                    'change': None,
-                    'changePct': None
-                }
-                df = df.append(kdata_json, ignore_index=True)
-            if not df.empty:
-                df = df.loc[:, KDATA_COLUMN_COMMON]
-                kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
+
+                start_date, df = get_latest_download_trading_date(security_item)
+                # 日K线只抓到昨天
+                end_date = pd.Timestamp.today() - pd.DateOffset(1)
+
+                if start_date and (start_date > end_date):
+                    logger.info("{} kdata is ok".format(security_item['code']))
+                    continue
+
+                try:
+                    kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
+                    # for rateLimit
+                    time.sleep(5)
+                except Exception as e:
+                    logger.error("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
+                    continue
+
+                for kdata in kdatas:
+                    timestamp = pd.Timestamp.fromtimestamp(int(kdata[0] / 1000))
+                    if is_same_date(timestamp, pd.Timestamp.today()):
+                        continue
+                    kdata_json = {
+                        'timestamp': to_time_str(timestamp),
+                        'code': security_item['code'],
+                        'name': security_item['name'],
+                        'open': kdata[1],
+                        'high': kdata[2],
+                        'low': kdata[3],
+                        'close': kdata[4],
+                        'volume': kdata[5],
+                        'securityId': security_item['id'],
+                        'preClose': None,
+                        'change': None,
+                        'changePct': None
+                    }
+                    df = df.append(kdata_json, ignore_index=True)
+                if not df.empty:
+                    df = df.loc[:, KDATA_COLUMN_COMMON]
+                    kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
+                    logger.info(
+                        "fetch_kdata for exchange:{} security:{} success".format(exchange_str, security_item['name']))
+            except Exception as e:
                 logger.info(
-                    "fetch_kdata for exchange:{} security:{} success".format(exchange_str, security_item['name']))
-    else:
-        logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
+                    "fetch_kdata for exchange:{} security:{} failed".format(exchange_str, security_item['name'], e))
+        else:
+            logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
 
 
 # not used

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+import logging
+
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def kdata_df_save(df, to_path, calculate_change=False):
@@ -11,13 +15,17 @@ def kdata_df_save(df, to_path, calculate_change=False):
     if calculate_change:
         pre_close = None
         for index in df.index:
-            if pd.notna(df.loc[index, ['preClose', 'change', 'changePct']]).all():
-                continue
-            current_close = df.loc[index, 'close']
-            if pre_close:
-                df.loc[index, 'preClose'] = pre_close
-                change = current_close - pre_close
-                df.loc[index, 'change'] = change
-                df.loc[index, 'changePct'] = change / current_close
-            pre_close = df.loc[index, 'close']
+            try:
+                if pd.notna(df.loc[index, ['preClose', 'change', 'changePct']]).all():
+                    continue
+                current_close = df.loc[index, 'close']
+                if pre_close:
+                    df.loc[index, 'preClose'] = pre_close
+                    change = current_close - pre_close
+                    df.loc[index, 'change'] = change
+                    df.loc[index, 'changePct'] = change / current_close
+                pre_close = df.loc[index, 'close']
+            except  Exception as e:
+                logger.error("pre_close:{},current:{}".format(pre_close, df.loc[index, :]), e)
+
     df.to_csv(to_path, index=False)
