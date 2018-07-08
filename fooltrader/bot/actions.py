@@ -88,15 +88,15 @@ class WeixinAction(Action):
                     "color": "#173177"
                 },
                 "keyword1": {
-                    "value": kv['name'],
+                    "value": str(kv['name']),
                     "color": "#173177"
                 },
                 "keyword2": {
-                    "value": kv['price'],
+                    "value": str(kv['price']),
                     "color": "#173177"
                 },
                 "keyword3": {
-                    "value": kv['change_pct'],
+                    "value": str(kv['change_pct']),
                     "color": "#173177"
                 },
                 "remark": {
@@ -108,4 +108,9 @@ class WeixinAction(Action):
 
         the_data = json.dumps(the_json, ensure_ascii=False).encode('utf-8')
 
-        requests.post(self.SEND_MSG_URL.format(self.token), the_data)
+        resp = requests.post(self.SEND_MSG_URL.format(self.token), the_data)
+
+        self.logger.info("send weixin resp:{}".format(resp.text))
+
+        if resp.json() and resp.json()["errcode"] == 0:
+            self.logger.info("send weixin to user:{} data:{} success".format(to_user, the_json))
