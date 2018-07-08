@@ -111,7 +111,7 @@ class NotifyBot(BaseBot):
 
     def check_subscription(self, current_price, change_pct):
 
-        for sub_id in self.subscriptions:
+        for sub_id in self.subscriptions.keys():
             subscription = self.subscriptions[sub_id]
 
             if change_pct > 0 and subscription.get('up') and current_price > subscription.get('up'):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import email
+import json
 import logging
 import smtplib
 from email.header import Header
@@ -104,4 +105,7 @@ class WeixinAction(Action):
                 }
             }
         }
-        requests.post(self.SEND_MSG_URL.format(self.token), the_json)
+
+        the_data = json.dumps(the_json, ensure_ascii=False).encode('utf-8')
+
+        requests.post(self.SEND_MSG_URL.format(self.token), the_data)
