@@ -2,7 +2,7 @@
 from datetime import timedelta, datetime
 
 from fooltrader.api.quote import get_kdata
-from fooltrader.bot.actions import EmailAction
+from fooltrader.bot.actions import EmailAction, WeixinAction
 from fooltrader.bot.base_bot import BaseBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata
 from fooltrader.domain.subscription_model import SubscriptionTriggered, PriceSubscription
@@ -43,6 +43,7 @@ class NotifyBot(BaseBot):
         self.update_today_triggered()
 
         self.email_action = EmailAction()
+        self.weixin_action = WeixinAction()
 
     # 查询当日已经发送的提醒
     def update_today_triggered(self):
@@ -87,7 +88,7 @@ class NotifyBot(BaseBot):
                                                                                   event_item['price'], change_pct))
         self.check_subscription(current_price=event_item['price'], change_pct=change_pct)
 
-    def handle_trigger(self, trigger_flag, sub_id, subscription, msg):
+    def handle_trigger(self, trigger_flag, sub_id, subscription, current_price, change_pct):
         triggered = False
         if trigger_flag not in self.has_triggered:
             sub_triggerd = SubscriptionTriggered(sub_id=sub_id, timestamp=self.current_time, conditionType='up')
@@ -95,8 +96,14 @@ class NotifyBot(BaseBot):
 
             triggered = True
 
+            self.logger.info(
+                "send msg to user:{},price:{},change_pct:{}".format(subscription['userId'], current_price,
+                                                                    change_pct))
+
             if 'weixin' in subscription['actions']:
-                self.logger.info("send msg:{} to user:{}".format(msg, subscription['userId']))
+                self.weixin_action.send_message(subscription['userId'], title="价格条件触发", body=None,
+                                                name=self.security_item['name'], price=current_price,
+                                                change_pct=change_pct)
 
         if triggered:
             self.has_triggered[trigger_flag] = sub_triggerd.to_dict()
@@ -113,26 +120,26 @@ class NotifyBot(BaseBot):
 
                 triggered_flag = "{}_{}".format(sub_id, 'up')
 
-                self.handle_trigger(triggered_flag, sub_id, subscription, msg)
+                self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
             if change_pct < 0 and subscription.get('down') and current_price < subscription.get('down'):
                 msg = "{} down to {}".format(self.security_item['id'], current_price)
                 self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
 
                 triggered_flag = "{}_{}".format(sub_id, 'down')
-                self.handle_trigger(triggered_flag, sub_id, msg)
+                self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
             if change_pct > 0 and subscription.get('upPct') and change_pct > subscription.get('upPct'):
                 msg = "{} up {}".format(self.security_item['id'], change_pct)
                 self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
                 triggered_flag = "{}_{}".format(sub_id, 'upPct')
-                self.handle_trigger(triggered_flag, sub_id, subscription, msg)
+                self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
             if change_pct < 0 and subscription.get('downPct') and change_pct < subscription.get('downPct'):
                 msg = "{} down {}".format(self.security_item['id'], change_pct)
                 self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
                 triggered_flag = "{}_{}".format(sub_id, 'downPct')
-                self.handle_trigger(triggered_flag, sub_id, subscription, msg)
+                self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
 
 if __name__ == '__main__':

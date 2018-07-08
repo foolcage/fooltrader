@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 
 import requests
 
-from fooltrader.settings import SMTP_HOST, SMTP_PORT, EMAIL_PASSWORD, EMAIL_USER_NAME
+from fooltrader.settings import SMTP_HOST, SMTP_PORT, EMAIL_PASSWORD, EMAIL_USER_NAME, WEIXIN_APP_ID, WEIXIN_APP_SECRECT
 
 
 class Action(object):
@@ -44,70 +44,64 @@ class EmailAction(Action):
 
 
 class WeixinAction(Action):
-    WEIXIN_TOKEN = 'aaa'
-    GET_TEMPLATE_URL = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token={}".format(
-        WEIXIN_TOKEN)
-    SEND_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}".format(WEIXIN_TOKEN)
+    GET_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}".format(
+        WEIXIN_APP_ID, WEIXIN_APP_SECRECT)
 
-    {
-        "touser": "OPENID",
-        "template_id": "ngqIpbwh8bUfcSsECmogfXcV14J0tQlEpBO27izEYtY",
-        "url": "http://weixin.qq.com/download",
-        "miniprogram": {
-            "appid": "xiaochengxuappid12345",
-            "pagepath": "index?foo=bar"
-        },
-        "data": {
-            "first": {
-                "value": "恭喜你购买成功！",
-                "color": "#173177"
-            },
-            "keyword1": {
-                "value": "巧克力",
-                "color": "#173177"
-            },
-            "keyword2": {
-                "value": "39.8元",
-                "color": "#173177"
-            },
-            "keyword3": {
-                "value": "2014年9月22日",
-                "color": "#173177"
-            },
-            "remark": {
-                "value": "欢迎再次购买！",
-                "color": "#173177"
-            }
-        }
-    }
+    GET_TEMPLATE_URL = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token={}"
+    SEND_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}"
 
-    def send_message(self, to_user, title, body, **kwargs):
-        template_id = 'aaa'
+    token = None
+
+    def __init__(self) -> None:
+        self.refresh_token()
+
+    def refresh_token(self):
+        resp = requests.get(self.GET_TOKEN_URL)
+        self.logger.info("refresh_token resp.status_code:{}, resp.text:{}".format(resp.status_code, resp.text))
+
+        if resp.status_code == 200 and resp.json() and 'access_token' in resp.json():
+            self.token = resp.json()['access_token']
+        else:
+            self.logger.error("could not refresh_token")
+
+    def send_message(self, to_user, title, body, **kv):
+        # 先固定一个template
+
+        # {
+        #     "template_id": "mkqi-L1h56mH637vLXiuS_ulLTs1byDYYgLBbSXQ65U",
+        #     "title": "涨跌幅提醒",
+        #     "primary_industry": "金融业",
+        #     "deputy_industry": "证券|基金|理财|信托",
+        #     "content": "{{first.DATA}}\n股票名：{{keyword1.DATA}}\n最新价：{{keyword2.DATA}}\n涨跌幅：{{keyword3.DATA}}\n{{remark.DATA}}",
+        #     "example": "您好，腾新控股最新价130.50元，上涨达到设置的3.2%\r\n股票名：腾讯控股（00700）\r\n最新价：130.50元\r\n涨跌幅：+3.2%\r\n点击查看最新实时行情。"
+        # }
+
+        template_id = 'mkqi-L1h56mH637vLXiuS_ulLTs1byDYYgLBbSXQ65U'
         the_json = {
             "touser": to_user,
             "template_id": template_id,
             "url": "http://www.foolcage.com",
             "data": {
                 "first": {
-                    "value": "恭喜你购买成功！",
+                    "value": title,
                     "color": "#173177"
                 },
                 "keyword1": {
-                    "value": "巧克力",
+                    "value": kv['name'],
                     "color": "#173177"
                 },
                 "keyword2": {
-                    "value": "39.8元",
+                    "value": kv['price'],
                     "color": "#173177"
                 },
                 "keyword3": {
-                    "value": "2014年9月22日",
+                    "value": kv['change_pct'],
                     "color": "#173177"
                 },
                 "remark": {
-                    "value": "欢迎再次购买！",
+                    "value": "你设置的提醒已触发",
                     "color": "#173177"
                 }
             }
         }
-        requests.post(self.SEND_MSG_URL, the_json)
+        requests.post(self.SEND_MSG_URL.format(self.token), the_json)
