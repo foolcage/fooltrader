@@ -185,6 +185,7 @@ CRYPTOCURRENCY_PAIR = [("{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY
 
 SECURITY_TYPE_MAP_EXCHANGES = {
     "stock": ['sh', 'sz'],
+    "index": ['sh', 'sz'],
     "future": ['shfe', 'dce', 'zce'],
     "cryptocurrency": CRYPTOCURRENCY_EXCHANGES
 }

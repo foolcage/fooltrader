@@ -183,7 +183,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    crawl_stock_meta()
+    # crawl_stock_meta()
     crawl_index_quote()
-    crawl_stock_quote(args.start_code, args.end_code)
-    crawl_finance_data(args.start_code, args.end_code)
+    # crawl_stock_quote(args.start_code, args.end_code)
+    # crawl_finance_data(args.start_code, args.end_code)

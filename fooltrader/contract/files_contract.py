@@ -54,7 +54,7 @@ def adjust_source(security_item, source):
     if not source:
         if security_item['type'] == 'future' or security_item['type'] == 'cryptocurrency':
             source = 'exchange'
-        if security_item['type'] == 'stock':
+        if security_item['type'] == 'stock' or security_item['type'] == 'index':
             source = '163'
     return source
 
