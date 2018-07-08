@@ -67,10 +67,13 @@ class StockTickSpider(scrapy.Spider):
             if content_type_header.decode("utf-8") == 'application/vnd.ms-excel':
                 content = response.body
             else:
-                kdata_json = get_kdata(security_item, trading_date).to_json()
-                content = kdata_to_tick(kdata_json)
-                self.logger.info("{} {} generate tick from kdata {}", security_item['code'], trading_date, content)
-                content = content.encode('GB2312')
+                kdata_df = get_kdata(security_item, the_date=trading_date)
+                if trading_date in kdata_df.index:
+                    json_data = kdata_df.loc[trading_date, :]
+                    content = kdata_to_tick(json_data)
+                    self.logger.info(
+                        "{} {} generate tick from kdata {}".format(security_item['code'], trading_date, content))
+                    content = content.encode('GB2312')
             sina_tick_to_csv(security_item, io.BytesIO(content), trading_date)
         else:
             self.logger.error(
