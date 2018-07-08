@@ -143,8 +143,8 @@ def fetch_kdata(exchange_str='bitstamp'):
             except Exception as e:
                 logger.info(
                     "fetch_kdata for exchange:{} security:{} failed".format(exchange_str, security_item['name'], e))
-        else:
-            logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
+    else:
+        logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
 
 
 # not used
