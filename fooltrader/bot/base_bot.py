@@ -17,6 +17,7 @@ from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
 from fooltrader.utils.utils import is_same_date
 from fooltrader.utils.utils import to_timestamp
 
+
 class BaseBot(object):
     func_map_topic = {'on_subscription': 'subscription'}
 
@@ -38,6 +39,10 @@ class BaseBot(object):
         self.on_init()
 
         self.threads = []
+
+        if not hasattr(self, 'living_mode'):
+            self.living_mode = False
+
         if not hasattr(self, 'start_date'):
             self.topics = []
 

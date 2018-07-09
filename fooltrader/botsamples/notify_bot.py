@@ -19,6 +19,7 @@ class NotifyBot(BaseBot):
         self.security_item = 'cryptocurrency_kraken_BCH-USD'
         # 行情的级别
         self.level = 'tick'
+
         # bot运行的结束时间，设置为None将会一直运行
         self.end_date = None
 
@@ -80,7 +81,7 @@ class NotifyBot(BaseBot):
 
             self.update_today_triggered()
 
-        change_pct = (self.last_close - event_item['price']) / self.last_close
+        change_pct = (event_item['price'] - self.last_close) / self.last_close
 
         self.logger.info(
             "{} last day close is:{},now price is:{},the change_pct is:{}".format(self.security_item['id'],
