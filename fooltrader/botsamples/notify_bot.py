@@ -115,29 +115,19 @@ class NotifyBot(BaseBot):
             subscription = self.subscriptions[sub_id]
 
             if change_pct > 0 and subscription.get('up') and current_price > subscription.get('up'):
-                msg = "{} up to {}".format(self.security_item['id'], current_price)
-                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
-
                 triggered_flag = "{}_{}".format(sub_id, 'up')
 
                 self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
             if change_pct < 0 and subscription.get('down') and current_price < subscription.get('down'):
-                msg = "{} down to {}".format(self.security_item['id'], current_price)
-                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
-
                 triggered_flag = "{}_{}".format(sub_id, 'down')
                 self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
             if change_pct > 0 and subscription.get('upPct') and change_pct > subscription.get('upPct'):
-                msg = "{} up {}".format(self.security_item['id'], change_pct)
-                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
                 triggered_flag = "{}_{}".format(sub_id, 'upPct')
                 self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
             if change_pct < 0 and subscription.get('downPct') and change_pct < subscription.get('downPct'):
-                msg = "{} down {}".format(self.security_item['id'], change_pct)
-                self.logger.info("notify to user:{},msg:{}".format(subscription['userId'], msg))
                 triggered_flag = "{}_{}".format(sub_id, 'downPct')
                 self.handle_trigger(triggered_flag, sub_id, subscription, current_price, change_pct)
 
