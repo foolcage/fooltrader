@@ -102,7 +102,8 @@ def get_security_list(security_type='stock', exchanges=None, start=None, end=Non
         elif start and end:
             df = df[(df["code"] >= start) & (df["code"] <= end)]
 
-        df = df.drop_duplicates(subset='code', keep='last')
+        if security_type != 'cryptocurrency':
+            df = df.drop_duplicates(subset='code', keep='last')
 
     return df
 
