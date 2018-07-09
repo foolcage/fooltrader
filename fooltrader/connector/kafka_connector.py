@@ -89,7 +89,7 @@ def cryptocurrency_tick_to_kafka(exchange, pairs=None):
                       bytes(json.dumps(tick), encoding='utf8'),
                       timestamp_ms=tick['timestamp'])
 
-        logger.info("tick_to_kafka {}".format(tick))
+        logger.debug("tick_to_kafka {}".format(tick))
 
 
 if __name__ == '__main__':

@@ -30,3 +30,5 @@ ccxt == 1.14.224
 Flask == 1.0
 
 marshmallow
+
+schedule

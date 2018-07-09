@@ -96,7 +96,7 @@ class NotifyBot(BaseBot):
 
             triggered = True
 
-            self.logger.info(
+            self.logger.debug(
                 "send msg to user:{},price:{},change_pct:{}".format(subscription['userId'], current_price,
                                                                     change_pct))
 

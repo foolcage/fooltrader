@@ -13,8 +13,8 @@ class PriceSubscriptionSchema(Schema):
             "code": "BTC-USDT",
             "upPct": 1,
             "downPct": 2,
-            "upTo": 7000,
-            "downTo": 6000,
+            "up": 7000,
+            "down": 6000,
             "actions": ["weixin", "email", "shortMsg"],
             "repeat": False
         }
@@ -28,8 +28,8 @@ class PriceSubscriptionSchema(Schema):
     code = fields.Str()
     upPct = fields.Float()
     downPct = fields.Float()
-    upTo = fields.Float()
-    downTo = fields.Float()
+    up = fields.Float()
+    down = fields.Float()
 
     repeat = fields.Boolean(missing=False)
     actions = fields.List(fields.String)

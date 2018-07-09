@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import requests
+import schedule
 
 from fooltrader.settings import SMTP_HOST, SMTP_PORT, EMAIL_PASSWORD, EMAIL_USER_NAME, WEIXIN_APP_ID, WEIXIN_APP_SECRECT
 
@@ -55,6 +56,8 @@ class WeixinAction(Action):
 
     def __init__(self) -> None:
         self.refresh_token()
+
+        schedule.every(10).minutes.do(self.refresh_token())
 
     def refresh_token(self):
         resp = requests.get(self.GET_TOKEN_URL)
