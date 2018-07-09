@@ -16,6 +16,8 @@ def get_security():
 
     if not exchange:
         exchange = SECURITY_TYPE_MAP_EXCHANGES[security_type]
+    else:
+        exchange = [exchange]
 
     if security_type == 'cryptocurrency':
         doc_type = CryptoCurrencyMeta
