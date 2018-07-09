@@ -103,7 +103,7 @@ class NotifyBot(BaseBot):
             if 'weixin' in subscription['actions']:
                 self.weixin_action.send_message(subscription['userId'], title="价格条件触发", body=None,
                                                 name=self.security_item['name'], price=current_price,
-                                                change_pct=change_pct)
+                                                change_pct='{:.2%}'.format(change_pct))
 
         if triggered:
             self.has_triggered[trigger_flag] = sub_triggerd.to_dict()

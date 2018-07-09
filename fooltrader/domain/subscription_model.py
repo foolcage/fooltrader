@@ -15,8 +15,8 @@ class PriceSubscription(BaseDocType):
             "code": "BTC-USDT",
             "upPct": 1,
             "downPct": 2,
-            "up": 7000,
-            "down": 6000,
+            "upTo": 7000,
+            "downTo": 6000,
             "actions": ["weixin", "email", "shortMsg"],
             "repeat": False
         }
