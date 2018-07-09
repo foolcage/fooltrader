@@ -7,6 +7,7 @@ import scrapy
 from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
+import traceback
 
 from fooltrader.api import event
 from fooltrader.api.quote import get_security_list
@@ -89,7 +90,7 @@ class StockFinanceReportEventSpider(scrapy.Spider):
                 if i == 0:
                     if not df.empty:
                         latest = pd.Timestamp(report_event_dates[0]).date()
-                        if df.index.contains(latest) and (df.loc[latest, 'title'] == title):
+                        if df.index.contains(latest) and ((type(df.loc[latest,'title'])==str and df.loc[latest,'title']==title) or (type(df.loc[latest,'title'])==list and (df.loc[latest,'title'] == title).any()) ):
                             self.logger.info(
                                 "{} {} report has been the latest".format(security_item['code'], report_period))
                             return
@@ -106,6 +107,7 @@ class StockFinanceReportEventSpider(scrapy.Spider):
                 df = index_df_with_time(df, index='reportEventDate')
                 df.to_csv(path, index=False)
         except Exception as e:
+            traceback.print_exc()
             self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
 
     @classmethod
