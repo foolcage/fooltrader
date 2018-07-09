@@ -66,9 +66,9 @@ def security_meta_to_es(security_type='cryptocurrency', force=False):
     es_index_mapping('crypto_currency_meta', doc_type)
     start_date = None
     if not force:
-        latest_record = es_get_latest_record('stock_meta', time_field='listDate')
+        latest_record = es_get_latest_record('crypto_currency_meta', time_field='listDate')
         logger.info("latest_record:{}".format(latest_record))
-        if latest_record:
+        if latest_record and 'listDate' in latest_record:
             start_date = latest_record['listDate']
 
     actions = []
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     # security_meta_to_es()
     # stock_meta_to_es(force=True)
     connections.create_connection(hosts=ES_HOSTS)
-    security_meta_to_es(force=True)
+    security_meta_to_es(force=False)
     # kdata_to_es(start='300027', end='300028', force=True)
     # kdata_to_es(security_type='index')
     # balance_sheet_to_es()
