@@ -57,7 +57,7 @@ class WeixinAction(Action):
     def __init__(self) -> None:
         self.refresh_token()
 
-        schedule.every(10).minutes.do(self.refresh_token())
+        schedule.every(10).minutes.do(self.refresh_token)
 
     def refresh_token(self):
         resp = requests.get(self.GET_TOKEN_URL)
