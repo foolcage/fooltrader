@@ -10,7 +10,7 @@ import pandas as pd
 from fooltrader import get_exchange_dir, get_security_list
 from fooltrader.api.quote import get_latest_download_trading_date
 from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES, CRYPTOCURRENCY_PAIR, SECURITY_TYPE_CRYPTO
-from fooltrader.contract.data_contract import KDATA_COLUMN_COMMON
+from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
 from fooltrader.utils.pd_utils import kdata_df_save
@@ -136,7 +136,7 @@ def fetch_kdata(exchange_str='bitstamp'):
                     }
                     df = df.append(kdata_json, ignore_index=True)
                 if not df.empty:
-                    df = df.loc[:, KDATA_COLUMN_COMMON]
+                    df = df.loc[:, KDATA_COMMON_COL]
                     kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
                     logger.info(
                         "fetch_kdata for exchange:{} security:{} success".format(exchange_str, security_item['name']))

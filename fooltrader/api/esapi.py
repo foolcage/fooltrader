@@ -5,8 +5,8 @@ from elasticsearch_dsl import Search
 
 from fooltrader import es_client
 from fooltrader.api.quote import to_security_item
-from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_FUTURE, KDATA_COLUMN_INDEX, \
-    KDATA_COLUMN_COMMON
+from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
+    KDATA_COMMON_COL
 from fooltrader.contract.es_contract import get_es_kdata_index
 from fooltrader.utils.utils import to_time_str
 
@@ -46,13 +46,13 @@ def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, l
                                level=level)
     if not fields:
         if security_item['type'] == 'stock':
-            fields = KDATA_COLUMN_STOCK
+            fields = KDATA_STOCK_COL
         elif security_item['type'] == 'future':
-            fields = KDATA_COLUMN_FUTURE
+            fields = KDATA_FUTURE_COL
         elif security_item['type'] == 'index':
-            fields = KDATA_COLUMN_INDEX
+            fields = KDATA_INDEX_COL
         else:
-            fields = KDATA_COLUMN_COMMON
+            fields = KDATA_COMMON_COL
 
     # 单日的日k线直接按id获取
     if level == 'day' and the_date:

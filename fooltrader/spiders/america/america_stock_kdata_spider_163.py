@@ -10,7 +10,7 @@ from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
-    KDATA_COLUMN_INDEX, KDATA_COLUMN_STOCK
+    KDATA_INDEX_COL, KDATA_STOCK_COL
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.settings import US_STOCK_CODES
 from fooltrader.utils.utils import to_time_str
@@ -144,11 +144,11 @@ class AmericaStockKdataSpider(scrapy.Spider):
             if item['type'] == 'index':
                 df_current = df_current.dropna(subset=KDATA_INDEX_COLUMN_163)
                 # 保证col顺序
-                df_current = df_current.loc[:, KDATA_COLUMN_INDEX]
+                df_current = df_current.loc[:, KDATA_INDEX_COL]
             else:
                 df_current = df_current.dropna(subset=KDATA_COLUMN_163)
                 # 保证col顺序
-                df_current = df_current.loc[:, KDATA_COLUMN_STOCK]
+                df_current = df_current.loc[:, KDATA_STOCK_COL]
 
             df_current = df_current.drop_duplicates(subset='timestamp', keep='last')
             df_current = df_current.set_index(df_current['timestamp'], drop=False)

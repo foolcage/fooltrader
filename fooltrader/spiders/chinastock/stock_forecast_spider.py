@@ -12,6 +12,14 @@ from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract.files_contract import get_forecast_event_path
 
 
+# 业绩预告抓取
+# 上市公司预计年度经营业绩将出现下列情形之一的，应当在会计年度结束后一个月内进行业绩预告，预计中期和第三季度业绩将出现下列情形之一的，可以进行业绩预告：
+#
+# （一）净利润为负值；
+#
+# （二）净利润与上年同期相比上升或者下降50％以上；
+#
+# （三）实现扭亏为盈。
 class StockForecastSpider(scrapy.Spider):
     name = "stock_forecast"
 

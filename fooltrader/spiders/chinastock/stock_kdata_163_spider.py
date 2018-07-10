@@ -10,8 +10,8 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
-from fooltrader.contract.data_contract import KDATA_COLUMN_STOCK, KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
-    KDATA_COLUMN_INDEX
+from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
+    KDATA_INDEX_COL
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.spiders.common import random_proxy
@@ -91,14 +91,14 @@ class StockKdata163Spider(scrapy.Spider):
                 df['tCap'] = None
                 df['mCap'] = None
                 df['pe'] = None
-                df.columns = KDATA_COLUMN_INDEX
+                df.columns = KDATA_INDEX_COL
             # 股票数据
             else:
                 df = df.loc[:,
                      ['日期', 'code', 'name', '最低价', '开盘价', '收盘价', '最高价', '成交量', '成交金额', 'securityId', '前收盘', '涨跌额',
                       '涨跌幅', '换手率', '总市值', '流通市值']]
                 df['factor'] = None
-                df.columns = KDATA_COLUMN_STOCK
+                df.columns = KDATA_STOCK_COL
 
             # 合并到当前csv中
             saved_df = saved_df.append(df, ignore_index=True)
@@ -106,11 +106,11 @@ class StockKdata163Spider(scrapy.Spider):
             if item['type'] == 'index':
                 saved_df = saved_df.dropna(subset=KDATA_INDEX_COLUMN_163)
                 # 保证col顺序
-                saved_df = saved_df.loc[:, KDATA_COLUMN_INDEX]
+                saved_df = saved_df.loc[:, KDATA_INDEX_COL]
             else:
                 saved_df = saved_df.dropna(subset=KDATA_COLUMN_163)
                 # 保证col顺序
-                saved_df = saved_df.loc[:, KDATA_COLUMN_STOCK]
+                saved_df = saved_df.loc[:, KDATA_STOCK_COL]
 
             saved_df = saved_df.drop_duplicates(subset='timestamp', keep='last')
             saved_df = saved_df.set_index(saved_df['timestamp'],drop=False)

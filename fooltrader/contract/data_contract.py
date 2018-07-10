@@ -5,28 +5,38 @@
 """
 
 # 投资标的
-SECURITY_COLUMN = ['code', 'name', 'listDate', 'exchange', 'type', 'id']
+SECURITY_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id']
+
+# 代码,名字,上市日期,交易所,类型,id,新浪行业,新浪概念,区域,板块(美股才有),细分行业(美股才有)
+STOCK_META_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaConcept', 'sinaArea',
+                  'sector', 'industry']
 
 # 通用k线
-KDATA_COLUMN_COMMON = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'securityId',
-                       'preClose', 'change', 'changePct']
+KDATA_COMMON_COL = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'securityId',
+                    'preClose', 'change', 'changePct']
 # tick
-TICK_COLUNM = ['timestamp', 'price', 'volume', 'turnover', 'direction']
+TICK_COL = ['timestamp', 'price', 'volume', 'turnover', 'direction']
 
 # 指数K线
 # 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值,平均PE
-KDATA_COLUMN_INDEX = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
-                      'preClose', 'change', 'changePct', 'turnoverRate', 'tCap', 'mCap', 'pe']
+KDATA_INDEX_COL = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
+                   'preClose', 'change', 'changePct', 'turnoverRate', 'tCap', 'mCap', 'pe']
 
 # 个股K线
 # 日期,代码,名称,最低,开盘,收盘,最高,成交量(股),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),换手率(%),总市值,流通市值,复权因子
-KDATA_COLUMN_STOCK = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
-                      'preClose', 'change', 'changePct', 'turnoverRate', 'tCap', 'mCap', 'factor']
+KDATA_STOCK_COL = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
+                   'preClose', 'change', 'changePct', 'turnoverRate', 'tCap', 'mCap', 'factor']
 # 期货K线
 # 日期,代码,名称,最低,开盘,收盘,最高,成交量(手),成交额(元),唯一标识,前收盘,涨跌额,涨跌幅(%),持仓量,结算价,前结算,涨跌额(按结算价),涨跌幅(按结算价)
-KDATA_COLUMN_FUTURE = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
-                       'preClose', 'change', 'changePct', 'openInterest', 'settlement', 'preSettlement', 'change1',
-                       'changePct1']
+KDATA_FUTURE_COL = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'turnover', 'securityId',
+                    'preClose', 'change', 'changePct', 'openInterest', 'settlement', 'preSettlement', 'change1',
+                    'changePct1']
+
+# 业绩预告
+EVENT_STOCK_FINANCE_FORECAST_COL = ["timestamp", "reportPeriod", "securityId", "type", "description", "preEPS",
+                                    "changeStart", "change"]
+# 业绩公告
+EVENT_STOCK_FINANCE_REPORT_COL = ["timestamp", "reportPeriod", "securityId", "title", "url"]
 
 # ***********************************************************
 # 以下为一些中间数据，不会直接使用，只是用来合成最终数据或检验数据质量
@@ -45,10 +55,6 @@ KDATA_INDEX_COLUMN_163 = ['timestamp', 'code', 'low', 'open', 'close', 'high', '
 # 上证交易所,深圳交易所,纳斯达克,纽交所,美国证券交易所
 # EXCHANGE_LIST_COL = ['sh', 'sz', 'nasdaq', 'nyse', 'amex']
 EXCHANGE_LIST_COL = ['sh', 'sz']
-
-# 代码,名字,上市日期,交易所,类型,id,新浪行业,新浪概念,区域,板块(美股才有),细分行业(美股才有)
-STOCK_META_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaConcept', 'sinaArea',
-                  'sector', 'industry']
 
 FINANCE_SUMMARY_COL = ["id",
                        "securityId",

@@ -14,7 +14,7 @@ from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_ST
     SECURITY_TYPE_MAP_EXCHANGES
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
-from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
+from fooltrader.contract.data_contract import get_future_name, KDATA_FUTURE_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
     get_security_list_path, get_exchange_trading_calendar_path, adjust_source
 from fooltrader.datamanager.zipdata import unzip
@@ -699,7 +699,7 @@ def parse_shfe_data(force_parse=False):
                 saved_df = pd.DataFrame()
 
             saved_df = saved_df.append(the_df, ignore_index=True)
-            saved_df = saved_df.loc[:, KDATA_COLUMN_FUTURE]
+            saved_df = saved_df.loc[:, KDATA_FUTURE_COL]
 
             if not saved_df.empty:
                 kdata_df_save(saved_df, kdata_path)

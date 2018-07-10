@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from fooltrader.contract.data_contract import TICK_COLUNM
+from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import TIME_FORMAT_DAY
 
@@ -155,7 +155,7 @@ def sina_tick_to_csv(security_item, the_content, the_date):
     csv_path = get_tick_path(security_item, the_date)
     df = read_csv(the_content, "GB2312", sep='\s+')
     df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
-    df.columns = TICK_COLUNM
+    df.columns = TICK_COL
     df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
     df.to_csv(csv_path, index=False)
 

@@ -11,7 +11,7 @@ from scrapy import signals
 
 from fooltrader.api.quote import get_kdata
 from fooltrader.consts import DEFAULT_SH_SUMMARY_HEADER
-from fooltrader.contract.data_contract import KDATA_COLUMN_INDEX
+from fooltrader.contract.data_contract import KDATA_INDEX_COL
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.utils.utils import to_float
 
@@ -134,7 +134,7 @@ class StockSummarySpider(scrapy.Spider):
         return spider
 
     def spider_closed(self, spider, reason):
-        self.current_df = self.current_df.loc[:, KDATA_COLUMN_INDEX]
+        self.current_df = self.current_df.loc[:, KDATA_INDEX_COL]
         print(self.current_df)
         self.current_df.to_csv(get_kdata_path(item=self.security_item), index=False)
         spider.logger.info('Spider closed: %s,%s\n', spider.name, reason)

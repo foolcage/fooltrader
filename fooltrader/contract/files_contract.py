@@ -96,6 +96,10 @@ def get_forecast_event_path(item, event='forecast'):
     return os.path.join(get_event_dir(item), '{}.json'.format(event))
 
 
+def get_finance_forecast_event_path(item):
+    return os.path.join(get_event_dir(item), 'finance_forecast.csv')
+
+
 def get_event_path(item, event='finance_report'):
     return os.path.join(get_event_dir(item), '{}.csv'.format(event))
 
