@@ -90,7 +90,7 @@ ENV/
 # Rope project settings
 .ropeproject
 
-tick/
+./tick
 full/
 data/
 *.zip
