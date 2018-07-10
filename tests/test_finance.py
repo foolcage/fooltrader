@@ -1,5 +1,5 @@
 from fooltrader.api import finance
-from fooltrader.legacy import legacy
+
 
 def test_get_balance_sheet_items():
     balance_sheets = finance.get_balance_sheet_items('600977')
