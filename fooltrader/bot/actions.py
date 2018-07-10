@@ -42,7 +42,7 @@ class EmailAction(Action):
         try:
             self.client.sendmail(EMAIL_USER_NAME, to_user, msg.as_string())
         except Exception as e:
-            self.logger.error('send email failed', e)
+            self.logger.exception('send email failed', e)
 
 
 class WeixinAction(Action):
@@ -66,7 +66,7 @@ class WeixinAction(Action):
         if resp.status_code == 200 and resp.json() and 'access_token' in resp.json():
             self.token = resp.json()['access_token']
         else:
-            self.logger.error("could not refresh_token")
+            self.logger.exception("could not refresh_token")
 
     def send_message(self, to_user, title, body, **kv):
         # 先固定一个template

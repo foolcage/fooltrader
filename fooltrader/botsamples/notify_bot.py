@@ -77,7 +77,7 @@ class NotifyBot(BaseBot):
             if self.last_kdata is not None:
                 self.last_close = self.last_kdata.loc[to_time_str(self.last_date), 'close']
             else:
-                self.logger.error("could not get last close for:{}".format(self.last_date))
+                self.logger.exception("could not get last close for:{}".format(self.last_date))
 
             self.update_today_triggered()
 

@@ -109,7 +109,7 @@ class StockKDataSinaSpider(scrapy.Spider):
                     df.loc[idx] = [timestamp, item['code'], low, open, close, high, volume, turnover, securityId]
             df.to_csv(path, index=False)
         except Exception as e:
-            self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting k data url={} error={}'.format(response.url, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

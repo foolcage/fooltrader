@@ -13,7 +13,7 @@ from fooltrader.contract.data_contract import KDATA_COLUMN_SINA, KDATA_COLUMN_SI
     EVENT_STOCK_FINANCE_REPORT_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
     get_security_dir, get_kdata_path, get_trading_dates_path_163, get_event_dir, get_finance_forecast_event_path, \
-    get_event_path
+    get_finance_report_event_path
 from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ def merge_ths_kdata(security_item, dates):
 
 
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
 
 
 def remove_old_trading_dates():
@@ -321,12 +321,12 @@ def forecast_event_to_csv():
 
 def finance_report_event_to_csv():
     for index, security_item in get_security_list().iterrows():
-        the_path = get_event_path(security_item)
+        the_path = get_finance_report_event_path(security_item)
         if os.path.exists(the_path):
             df = pd.read_csv(the_path)
             df = df.rename(columns={'reportEventDate': 'timestamp', 'reportDate': 'reportPeriod'})
             df = df.loc[:, EVENT_STOCK_FINANCE_REPORT_COL]
-            df.to_csv(get_event_path(security_item), index=False)
+            df.to_csv(get_finance_report_event_path(security_item), index=False)
             logger.info("transform {} report event".format(security_item['code']))
 
 

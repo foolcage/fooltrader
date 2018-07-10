@@ -175,15 +175,15 @@ def is_same_date(one, two):
     return to_timestamp(one).date() == to_timestamp(two).date()
 
 
-def get_report_date(the_date=datetime.datetime.today().date()):
-    if the_date.month > 10:
-        return "{}{}".format(the_date.year, '0930')
-    elif the_date.month > 7:
-        return "{}{}".format(the_date.year, '0630')
-    elif the_date.month > 4:
-        return "{}{}".format(the_date.year, '0331')
+def get_report_period(the_date=datetime.datetime.today().date()):
+    if the_date.month >= 10:
+        return "{}{}".format(the_date.year, '-09-30')
+    elif the_date.month >= 7:
+        return "{}{}".format(the_date.year, '-06-30')
+    elif the_date.month >= 4:
+        return "{}{}".format(the_date.year, '-03-31')
     else:
-        return "{}{}".format(the_date.year - 1, '1231')
+        return "{}{}".format(the_date.year - 1, '-12-31')
 
 
 def to_timestamp(the_time):

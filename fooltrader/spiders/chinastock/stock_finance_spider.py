@@ -62,7 +62,7 @@ class StockFinanceSpider(scrapy.Spider):
                 f.write(response.body)
                 f.flush()
         else:
-            self.logger.error(
+            self.logger.exception(
                 "get finance sheet error:url={} content type={} body={}".format(response.url, content_type_header,
                                                                                 response.body))
 

@@ -237,7 +237,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
                 if pd.Timestamp(reportDate[idx]) < pd.Timestamp(start_date):
                     continue
 
-            reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+            reportEventDate = get_report_event_date(security_item, report_period=reportDate[idx])
 
             if report_period and not is_same_date(report_period, reportDate[idx]):
                 continue
@@ -248,7 +248,8 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
 
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-                "reportDate": to_time_str(reportDate[idx]),
+                "reportPeriod": to_time_str(reportDate[idx]),
+                "timestamp": reportEventDate,
                 "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
@@ -440,7 +441,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
             result_list.append(the_data)
 
         if result_list:
-            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportDate']))
+            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportPeriod']))
         return result_list
 
 
@@ -549,7 +550,7 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
             if report_period and not is_same_date(report_period, reportDate[idx]):
                 continue
 
-            reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+            reportEventDate = get_report_event_date(security_item, report_period=reportDate[idx])
 
             # use report_event_date to filter the reportEventDate before it for not getting future data
             if report_event_date and pd.Timestamp(report_event_date) < pd.Timestamp(reportEventDate):
@@ -557,7 +558,8 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
 
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-                "reportDate": to_time_str(reportDate[idx]),
+                "reportPeriod": to_time_str(reportDate[idx]),
+                "timestamp": reportEventDate,
                 "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
@@ -632,7 +634,7 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
             result_list.append(the_data)
 
         if result_list:
-            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportDate']))
+            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportPeriod']))
         return result_list
 
 
@@ -829,7 +831,7 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
             if report_period and not is_same_date(report_period, reportDate[idx]):
                 continue
 
-            reportEventDate = get_report_event_date(security_item, report_date=reportDate[idx])
+            reportEventDate = get_report_event_date(security_item, report_period=reportDate[idx])
 
             # use report_event_date to filter the reportEventDate before it for not getting future data
             if report_event_date and pd.Timestamp(report_event_date) < pd.Timestamp(reportEventDate):
@@ -837,7 +839,8 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
 
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
-                "reportDate": to_time_str(reportDate[idx]),
+                "reportPeriod": to_time_str(reportDate[idx]),
+                "timestamp": reportEventDate,
                 "reportEventDate": reportEventDate,
                 "securityId": security_item["id"],
                 "code": security_item["code"],
@@ -1014,7 +1017,7 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
             result_list.append(the_data)
 
         if result_list:
-            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportDate']))
+            result_list = sorted(result_list, key=lambda x: pd.Timestamp(x['reportPeriod']))
         return result_list
 
 
@@ -1036,9 +1039,9 @@ def get_finance_summary_items(security_item, start_date=None, report_period=None
 
 def _download_finance_data_if_need(the_path, the_code):
     if not os.path.exists(the_path):
-        import fooltrader.datamanager.datamanager as datamanager
+        from fooltrader.datamanager.china_stock_manager import crawl_finance_data
         logger.info("try to download the finance data at first")
-        datamanager.crawl_finance_data(start_code=the_code, end_code=the_code)
+        crawl_finance_data(start_code=the_code, end_code=the_code)
 
 
 if __name__ == '__main__':

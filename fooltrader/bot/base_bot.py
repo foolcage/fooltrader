@@ -102,7 +102,7 @@ class BaseBot(object):
             elif self.level == 'tick':
                 self.quote_topic = get_kafka_tick_topic(security_id=self.security_item['id'])
             else:
-                self.logger.error("wrong level:{}".format(self.level))
+                self.logger.exception("wrong level:{}".format(self.level))
         else:
             # 默认日级别timer
             if not hasattr(self, 'time_step'):
@@ -214,7 +214,7 @@ class BaseBot(object):
         for func in funcs:
             topic = self.func_map_topic.get(func)
             if topic not in current_topics:
-                self.logger.error("you implement func:{},but the topic:{} for it not exist".format(func, topic))
+                self.logger.exception("you implement func:{},but the topic:{} for it not exist".format(func, topic))
                 continue
 
             self.threads.append(

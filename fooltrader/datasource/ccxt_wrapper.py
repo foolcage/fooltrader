@@ -46,7 +46,7 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
             # markets有些为key=symbol的dict,有些为list
             markets_type = type(markets)
             if markets_type != dict and markets_type != list:
-                logger.error("unknown return markets type {}".format(markets_type))
+                logger.exception("unknown return markets type {}".format(markets_type))
                 return
 
             for market in markets:
@@ -87,9 +87,9 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
             if not df.empty:
                 df.to_csv(get_security_list_path(security_type='cryptocurrency', exchange=exchange_str),
                           index=False)
-            logger.error("init_markets for {} success".format(exchange_str))
+            logger.exception("init_markets for {} success".format(exchange_str))
         except Exception as e:
-            logger.error("init_markets for {} failed".format(exchange_str), e)
+            logger.exception("init_markets for {} failed".format(exchange_str), e)
 
 
 def fetch_kdata(exchange_str='bitstamp'):
@@ -113,7 +113,7 @@ def fetch_kdata(exchange_str='bitstamp'):
                     # for rateLimit
                     time.sleep(5)
                 except Exception as e:
-                    logger.error("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
+                    logger.exception("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']), e)
                     continue
 
                 for kdata in kdatas:

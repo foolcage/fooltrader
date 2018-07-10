@@ -102,14 +102,14 @@ class StockKDataSpiderTHS(scrapy.Spider):
 
             df.to_csv(path, index=False, )
         except Exception as e:
-            self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting k data url={} error={}'.format(response.url, e))
 
         if len(trading_dates) > 0:
             try:
                 with open(get_trading_dates_path_ths(item), "w") as f:
                     json.dump(trading_dates, f)
             except Exception as e:
-                self.logger.error(
+                self.logger.exception(
                     'error when saving trading dates url={} path={} error={}'.format(response.url, path, e))
 
     @classmethod

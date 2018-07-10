@@ -46,7 +46,7 @@ class StockGNSpider(scrapy.Spider):
                                  link=link, news_title=news_title, news_link=news_link, leadings=leadings, count=count,
                                  producer='10jqka', type='gn')
         except Exception as e:
-            self.logger.error('error parse 10jqka gainian sector url:{} {}'.format(response.url, e))
+            self.logger.exception('error parse 10jqka gainian sector url:{} {}'.format(response.url, e))
 
     def get_gn_url(self, index):
         return 'http://q.10jqka.com.cn/gn/index/field/addtime/order/desc/page/{}/ajax/1'.format(index)

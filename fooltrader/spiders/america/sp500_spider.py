@@ -51,7 +51,7 @@ class Sp500Spider(scrapy.Spider):
                 self.df_close = self.df_close.append(price_jsons, ignore_index=True)
                 self.df_close = index_df_with_time(self.df_close)
         except Exception as e:
-            self.logger.error('error when getting sp500 price url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting sp500 price url={} error={}'.format(response.url, e))
 
     def download_sp500_pe(self, response):
         trs = response.xpath('//*[@id="datatable"]/tr').extract()
@@ -70,7 +70,7 @@ class Sp500Spider(scrapy.Spider):
                 self.df_pe = self.df_pe.append(price_jsons, ignore_index=True)
                 self.df_pe = index_df_with_time(self.df_pe)
         except Exception as e:
-            self.logger.error('error when getting sp500 pe url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting sp500 pe url={} error={}'.format(response.url, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

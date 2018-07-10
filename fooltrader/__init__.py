@@ -97,9 +97,9 @@ logger = logging.getLogger(__name__)
 try:
     es_client = connections.create_connection(hosts=ES_HOSTS)
 except Exception as e:
-    logger.error(e)
+    logger.exception(e)
 
 try:
     kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 except Exception as e:
-    logger.error(e)
+    logger.exception(e)

@@ -7,7 +7,7 @@ import elasticsearch.helpers
 from elasticsearch_dsl import Index, connections
 
 from fooltrader import EXCHANGE_LIST_COL, es_client
-from fooltrader.api.event import get_forecast_items
+from fooltrader.api.event import get_finance_forecast_event
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
     get_finance_summary_items
 from fooltrader.api.quote import get_security_list, get_kdata
@@ -218,7 +218,7 @@ def forecast_event_to_es():
         index_name = get_es_forecast_event_index(security_item['id'])
         es_index_mapping(index_name, ForecastEvent)
 
-        for json_object in get_forecast_items(security_item):
+        for json_object in get_finance_forecast_event(security_item):
             try:
                 forcast_event = ForecastEvent(meta={'id': json_object['id']})
                 fill_doc_type(forcast_event, json_object)

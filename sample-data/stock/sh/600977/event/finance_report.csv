@@ -1,7 +1,7 @@
-id,reportDate,reportEventDate,securityId,title,url
-stock_sh_600977_2016-08-30_2016-06-30,2016-06-30,2016-08-30,stock_sh_600977,中国电影2016年半年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=2720931
-stock_sh_600977_2016-10-29_2016-09-30,2016-09-30,2016-10-29,stock_sh_600977,中国电影2016年第三季度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=2837405
-stock_sh_600977_2017-04-28_2017-03-31,2017-03-31,2017-04-28,stock_sh_600977,中国电影2017年第一季度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3356926
-stock_sh_600977_2017-04-28_2016-12-31,2016-12-31,2017-04-28,stock_sh_600977,中国电影2016年年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3356920
-stock_sh_600977_2017-08-30_2017-06-30,2017-06-30,2017-08-30,stock_sh_600977,中国电影2017年半年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3709291
-stock_sh_600977_2017-10-30_2017-09-30,2017-09-30,2017-10-30,stock_sh_600977,中国电影2017年第三季度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3837532
+timestamp,reportPeriod,securityId,title,url
+2016-08-30,2016-06-30,stock_sh_600977,中国电影2016年半年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=2720931
+2016-10-29,2016-09-30,stock_sh_600977,中国电影2016年第三季度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=2837405
+2017-04-28,2017-03-31,stock_sh_600977,中国电影2017年第一季度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3356926
+2017-04-28,2016-12-31,stock_sh_600977,中国电影2016年年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3356920
+2017-08-30,2017-06-30,stock_sh_600977,中国电影2017年半年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3709291
+2017-10-30,2017-09-30,stock_sh_600977,中国电影2017年第三季度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=600977&id=3837532

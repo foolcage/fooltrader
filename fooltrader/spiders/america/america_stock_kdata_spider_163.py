@@ -156,7 +156,7 @@ class AmericaStockKdataSpider(scrapy.Spider):
             df_current = df_current.sort_index()
             df_current.to_csv(path, index=False)
         except Exception as e:
-            self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting k data url={} error={}'.format(response.url, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

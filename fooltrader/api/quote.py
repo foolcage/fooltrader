@@ -324,7 +324,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
                     df['qfqHigh'] = df.hfqHigh / latest_factor
                     df['qfqLow'] = df.hfqLow / latest_factor
                 else:
-                    logger.error("missing latest factor for {}".format(security_item['id']))
+                    logger.exception("missing latest factor for {}".format(security_item['id']))
         return df
     return pd.DataFrame()
 

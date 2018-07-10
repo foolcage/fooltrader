@@ -118,7 +118,7 @@ class StockKdata163Spider(scrapy.Spider):
             saved_df = saved_df.sort_index()
             saved_df.to_csv(path, index=False)
         except Exception as e:
-            self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting k data url={} error={}'.format(response.url, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

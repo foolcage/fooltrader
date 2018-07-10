@@ -62,7 +62,7 @@ class FutureShfeSpider(scrapy.Spider):
                 f.flush()
 
         else:
-            self.logger.error(
+            self.logger.exception(
                 "get shfe year {} data failed:the_path={} url={} content type={} body={}".format(the_year,
                                                                                                  the_path,
                                                                                                  response.url,

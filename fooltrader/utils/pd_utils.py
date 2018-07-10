@@ -26,6 +26,6 @@ def kdata_df_save(df, to_path, calculate_change=False):
                     df.loc[index, 'changePct'] = change / current_close
                 pre_close = df.loc[index, 'close']
             except  Exception as e:
-                logger.error("pre_close:{},current:{}".format(pre_close, df.loc[index, :].to_dict()), e)
+                logger.exception("pre_close:{},current:{}".format(pre_close, df.loc[index, :].to_dict()), e)
 
     df.to_csv(to_path, index=False)

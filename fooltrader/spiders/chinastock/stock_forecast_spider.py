@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json
-
+import pandas as pd
 import scrapy
 from scrapy import Request
 from scrapy import Selector
@@ -9,9 +8,6 @@ from scrapy import signals
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.consts import DEFAULT_KDATA_HEADER
-from fooltrader.contract.files_contract import get_forecast_event_path
-
-
 # 业绩预告抓取
 # 上市公司预计年度经营业绩将出现下列情形之一的，应当在会计年度结束后一个月内进行业绩预告，预计中期和第三季度业绩将出现下列情形之一的，可以进行业绩预告：
 #
@@ -20,6 +16,11 @@ from fooltrader.contract.files_contract import get_forecast_event_path
 # （二）净利润与上年同期相比上升或者下降50％以上；
 #
 # （三）实现扭亏为盈。
+from fooltrader.contract.data_contract import EVENT_STOCK_FINANCE_FORECAST_COL
+from fooltrader.contract.files_contract import get_finance_forecast_event_path
+from fooltrader.utils.utils import index_df_with_time
+
+
 class StockForecastSpider(scrapy.Spider):
     name = "stock_forecast"
 
@@ -75,9 +76,8 @@ class StockForecastSpider(scrapy.Spider):
                 except Exception as e:
                     pass
 
-                json_item = {"id": '{}_{}'.format(security_item['id'], tds[3]),
-                             "securityId": security_item['id'],
-                             "reportDate": tds[3],
+                json_item = {"securityId": security_item['id'],
+                             "timestamp": tds[3],
                              "reportPeriod": tds[4],
                              "type": tds[2],
                              "description": tds[5],
@@ -88,19 +88,15 @@ class StockForecastSpider(scrapy.Spider):
                 forecast_jsons.append(json_item)
 
             if forecast_jsons:
-                try:
-                    with open(get_forecast_event_path(security_item), "w") as f:
-                        json.dump(forecast_jsons, f, ensure_ascii=False)
-                except Exception as e:
-                    self.logger.error(
-                        'error when saving forecast url={} path={} error={}'.format(response.url,
-                                                                                    get_forecast_event_path(
-                                                                                        security_item), e))
-
+                df = pd.DataFrame(forecast_jsons)
+                df = df.drop_duplicates()
+                df = df[:, EVENT_STOCK_FINANCE_FORECAST_COL]
+                df = index_df_with_time(df)
+                df.to_csv(get_finance_forecast_event_path(security_item), index=False)
 
 
         except Exception as e:
-            self.logger.error('error when getting k data url={} error={}'.format(response.url, e))
+            self.logger.exception('error when getting k data url={} error={}'.format(response.url, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

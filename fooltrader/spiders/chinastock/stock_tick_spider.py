@@ -76,7 +76,7 @@ class StockTickSpider(scrapy.Spider):
                     content = content.encode('GB2312')
             sina_tick_to_csv(security_item, io.BytesIO(content), trading_date)
         else:
-            self.logger.error(
+            self.logger.exception(
                 "get tick error:url={} content type={} body={}".format(response.url, content_type_header,
                                                                        response.body))
 
