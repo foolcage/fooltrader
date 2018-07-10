@@ -4,7 +4,7 @@ import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from fooltrader.datamanager.datamanager import crawl_finance_data
+from fooltrader.datamanager.china_stock_manager import crawl_finance_data
 
 logger = logging.getLogger(__name__)
 

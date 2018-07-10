@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from fooltrader.contract.data_contract import TICK_COLUNM
+from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import TIME_FORMAT_DAY
 
@@ -155,7 +155,7 @@ def sina_tick_to_csv(security_item, the_content, the_date):
     csv_path = get_tick_path(security_item, the_date)
     df = read_csv(the_content, "GB2312", sep='\s+')
     df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
-    df.columns = TICK_COLUNM
+    df.columns = TICK_COL
     df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
     df.to_csv(csv_path, index=False)
 
@@ -172,21 +172,27 @@ def index_df_with_time(df, index='timestamp'):
 
 
 def is_same_date(one, two):
-    return pd.Timestamp(one).date() == pd.Timestamp(two).date()
+    return to_timestamp(one).date() == to_timestamp(two).date()
 
 
-def get_report_date(the_date=datetime.datetime.today().date()):
-    if the_date.month > 10:
-        return "{}{}".format(the_date.year, '0930')
-    elif the_date.month > 7:
-        return "{}{}".format(the_date.year, '0630')
-    elif the_date.month > 4:
-        return "{}{}".format(the_date.year, '0331')
+def get_report_period(the_date=datetime.datetime.today().date()):
+    if the_date.month >= 10:
+        return "{}{}".format(the_date.year, '-09-30')
+    elif the_date.month >= 7:
+        return "{}{}".format(the_date.year, '-06-30')
+    elif the_date.month >= 4:
+        return "{}{}".format(the_date.year, '-03-31')
     else:
-        return "{}{}".format(the_date.year - 1, '1231')
+        return "{}{}".format(the_date.year - 1, '-12-31')
 
 
 def to_timestamp(the_time):
+    if type(the_time) == float:
+        the_time = int(the_time)
+
+    if type(the_time) == int:
+        return pd.Timestamp.fromtimestamp(the_time)
+
     return pd.Timestamp(the_time)
 
 

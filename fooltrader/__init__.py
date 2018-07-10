@@ -5,12 +5,14 @@ import os
 from datetime import datetime
 
 import pandas as pd
+from elasticsearch_dsl import connections
+from kafka import KafkaProducer
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir, \
     get_exchange_dir, get_exchange_cache_dir
-from fooltrader.settings import FOOLTRADER_STORE_PATH
+from fooltrader.settings import FOOLTRADER_STORE_PATH, ES_HOSTS, KAFKA_HOST
 
 
 def init_log():
@@ -89,3 +91,15 @@ def init_env():
 pd.set_option('expand_frame_repr', False)
 
 init_log()
+
+logger = logging.getLogger(__name__)
+
+try:
+    es_client = connections.create_connection(hosts=ES_HOSTS)
+except Exception as e:
+    logger.exception(e)
+
+try:
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
+except Exception as e:
+    logger.exception(e)

@@ -1,0 +1,13 @@
+code,exchange,id,listDate,name,type
+BCH-BTC,gdax,cryptocurrency_gdax_BCH-BTC,,BCH/BTC,cryptocurrency
+BCH-USD,gdax,cryptocurrency_gdax_BCH-USD,,BCH/USD,cryptocurrency
+BTC-EUR,gdax,cryptocurrency_gdax_BTC-EUR,,BTC/EUR,cryptocurrency
+BTC-GBP,gdax,cryptocurrency_gdax_BTC-GBP,,BTC/GBP,cryptocurrency
+BTC-USD,gdax,cryptocurrency_gdax_BTC-USD,,BTC/USD,cryptocurrency
+ETH-BTC,gdax,cryptocurrency_gdax_ETH-BTC,,ETH/BTC,cryptocurrency
+ETH-EUR,gdax,cryptocurrency_gdax_ETH-EUR,,ETH/EUR,cryptocurrency
+ETH-USD,gdax,cryptocurrency_gdax_ETH-USD,,ETH/USD,cryptocurrency
+LTC-BTC,gdax,cryptocurrency_gdax_LTC-BTC,,LTC/BTC,cryptocurrency
+LTC-EUR,gdax,cryptocurrency_gdax_LTC-EUR,,LTC/EUR,cryptocurrency
+LTC-USD,gdax,cryptocurrency_gdax_LTC-USD,,LTC/USD,cryptocurrency
+BCH-EUR,gdax,cryptocurrency_gdax_BCH-EUR,,BCH/EUR,cryptocurrency

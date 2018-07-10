@@ -58,9 +58,17 @@ class StockKData(BaseDocType):
     timestamp = Date()
     code = Keyword()
     open = Float()
+    hfqOpen = Float()
+    qfqOpen = Float()
     close = Float()
+    hfqClose = Float()
+    qfqClose = Float()
     high = Float()
+    hfqHigh = Float()
+    qfqHigh = Float()
     low = Float()
+    hfqLow = Float()
+    qfqLow = Float()
     volume = Float()
     turnover = Float()
     preClose = Float()
@@ -70,6 +78,25 @@ class StockKData(BaseDocType):
     tCap = Float()
     mCap = Float()
     factor = Float()
+
+    class Meta:
+        all = MetaField(enabled=False)
+        doc_type = 'doc'
+
+
+class CryptoCurrencyKData(BaseDocType):
+    id = Keyword()
+    securityId = Keyword()
+    timestamp = Date()
+    code = Keyword()
+    open = Float()
+    close = Float()
+    high = Float()
+    low = Float()
+    volume = Float()
+    preClose = Float()
+    change = Float()
+    changePct = Float()
 
     class Meta:
         all = MetaField(enabled=False)

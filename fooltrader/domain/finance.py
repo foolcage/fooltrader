@@ -10,7 +10,8 @@ class BalanceSheet(BaseDocType):
     id = Keyword()
     securityId = Keyword()
     code = Keyword()
-    reportDate = Date()
+    reportPeriod = Date()
+    timestamp = Date()
     reportEventDate = Date()
     # 货币资金
     moneyFunds = Float()
@@ -196,7 +197,8 @@ class IncomeStatement(BaseDocType):
     id = Keyword()
     securityId = Keyword()
     code = Keyword()
-    reportDate = Date()
+    reportPeriod = Date()
+    timestamp = Date()
     reportEventDate = Date()
     # /*营业总收入*/
     # 营业收入
@@ -264,7 +266,8 @@ class CashFlowStatement(DocType):
     id = Keyword()
     securityId = Keyword()
     code = Keyword()
-    reportDate = Date()
+    reportPeriod = Date()
+    timestamp = Date()
     reportEventDate = Date()
 
     # /*一、经营活动产生的现金流量*/

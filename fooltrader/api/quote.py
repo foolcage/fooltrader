@@ -7,16 +7,17 @@ import os
 import re
 from ast import literal_eval
 
-import numpy as np
 import pandas as pd
 
-from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX
+from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX, \
+    SECURITY_TYPE_MAP_EXCHANGES
 from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
-from fooltrader.contract.data_contract import get_future_name, KDATA_COLUMN_FUTURE
+from fooltrader.contract.data_contract import get_future_name, KDATA_FUTURE_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
-    get_security_list_path, get_exchange_trading_calendar_path
+    get_security_list_path, get_exchange_trading_calendar_path, adjust_source
 from fooltrader.datamanager.zipdata import unzip
+from fooltrader.utils.pd_utils import kdata_df_save
 from fooltrader.utils.utils import get_file_name, to_time_str, drop_duplicate
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def get_support_exchanges():
 
 
 # meta
-def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None, end=None,
+def get_security_list(security_type='stock', exchanges=None, start=None, end=None,
                       mode='simple', start_list_date=None, codes=None):
     """
     get security list.
@@ -43,7 +44,7 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
     ----------
     security_type : str
         {‘stock’, 'future'},default: stock
-    exchanges : list
+    exchanges : str or list
         ['sh', 'sz','nasdaq','nyse','amex','shfe','dce','zce'],default: ['sh','sz']
     start : str
         the start code,work with end,default:None
@@ -65,31 +66,30 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
 
     """
     df = pd.DataFrame()
-    if security_type == 'stock' or security_type == 'future':
+    if type(exchanges) == str:
+        exchanges = [exchanges]
+
+    if not exchanges:
+        exchanges = SECURITY_TYPE_MAP_EXCHANGES[security_type]
+
+    if security_type == 'index':
+        df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
+        df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
+        df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
+    else:
         for exchange in exchanges:
             the_path = get_security_list_path(security_type, exchange)
             if os.path.exists(the_path):
-                # 股票的元数据如果存到es,需要做一些转化
                 if mode == 'es' and security_type == 'stock':
-                    tmp_df = pd.read_csv(the_path,
-                                         converters={'code': str,
-                                                     'sinaIndustry': convert_to_list_if_need,
-                                                     'sinaConcept': convert_to_list_if_need,
-                                                     'sinaArea': convert_to_list_if_need})
+                    df = df.append(pd.read_csv(the_path,
+                                               converters={'code': str,
+                                                           'sinaIndustry': convert_to_list_if_need,
+                                                           'sinaConcept': convert_to_list_if_need,
+                                                           'sinaArea': convert_to_list_if_need}))
                 else:
-                    tmp_df = pd.read_csv(the_path, dtype=str)
-                df = df.append(tmp_df, ignore_index=True)
+                    df = df.append(pd.read_csv(the_path, dtype=str), ignore_index=True)
 
-    elif security_type == 'index':
-        for exchange in exchanges:
-            if 'sh' == exchange:
-                df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
-            if 'sz' == exchange:
-                df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
-            if 'nasdaq' == exchange:
-                df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
-
-    if df.size > 0:
+    if not df.empty > 0:
         if start_list_date:
             df['listDate'] = pd.to_datetime(df['listDate'])
             df = df[df['listDate'] >= pd.Timestamp(start_list_date)]
@@ -101,9 +101,8 @@ def get_security_list(security_type='stock', exchanges=['sh', 'sz'], start=None,
         elif start and end:
             df = df[(df["code"] >= start) & (df["code"] <= end)]
 
-    # FIXME:
-    # 期货列表有重复的数据，需要检查一下
-    df = df.drop_duplicates(subset='code', keep='last')
+        if security_type != 'cryptocurrency':
+            df = df.drop_duplicates(subset='code', keep='last')
 
     return df
 
@@ -120,8 +119,8 @@ def _get_security_item(the_type, exchanges, code=None):
     the_type : str
         the security type
 
-    exchanges : str
-        the exchange
+    exchanges : list
+        the exchanges
 
     Returns
     -------
@@ -131,13 +130,19 @@ def _get_security_item(the_type, exchanges, code=None):
     """
     df = get_security_list(security_type=the_type, exchanges=exchanges)
 
-    df = df.set_index(df['code'])
-    return df.loc[code,]
+    if not df.empty:
+        df = df.set_index(df['code'])
+        return df.loc[code,]
+    return None
 
 
-def to_security_item(security_item):
+def to_security_item(security_item, exchange=None):
     if type(security_item) == str:
-        id_match = re.match(r'(stock|index|future)_(sh|sz|nasdaq|shfe|dce|zce)_([a-zA-Z0-9]+)', security_item)
+        if exchange:
+            return _get_security_item('cryptocurrency', [exchange], security_item)
+
+        id_match = re.match(r'(stock|index|future|cryptocurrency)_([a-z]{2,20})_([a-zA-Z0-9\-]+)',
+                            security_item)
         if id_match:
             return _get_security_item(the_type=id_match.group(1), exchanges=[id_match.group(2)],
                                       code=id_match.group(3))
@@ -220,8 +225,8 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None, source='163',
-              level='day'):
+def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None,
+              source=None, level='day'):
     """
     get kdata.
 
@@ -229,6 +234,10 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
     ----------
     security_item : SecurityItem or str
         the security item,id or code
+
+    exchange : str
+        the exchange,set this for cryptocurrency
+
     the_date : TimeStamp str or TimeStamp
         get the kdata for the exact date
     start_date : TimeStamp str or TimeStamp
@@ -240,7 +249,7 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
     dtype : type
         the data type for the csv column,default: None
     source : str
-        the data source,{'163','sina'},default: '163'
+        the data source,{'163','sina','exchange'},just used for internal merge
     level : str or int
         the kdata level,{1,5,15,30,60,'day','week','month'},default : 'day'
 
@@ -250,11 +259,10 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
 
     """
 
-    security_item = to_security_item(security_item)
+    # 由于数字货币的交易所太多，必须指定exchange
+    security_item = to_security_item(security_item, exchange)
 
-    # 目前期货数据只支持交易所
-    if security_item['type'] == 'future':
-        source = 'exchange'
+    source = adjust_source(security_item, source)
 
     # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
     if source == '163':
@@ -267,6 +275,13 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
             dtype = {"code": str, 'timestamp': str}
         df = pd.read_csv(the_path, dtype=dtype)
 
+        if 'factor' in df.columns and source == '163' and security_item['type'] == 'stock':
+            df_kdata_has_factor = df[df['factor'].notna()]
+            if df_kdata_has_factor.shape[0] > 0:
+                latest_factor = df_kdata_has_factor.tail(1).factor.iat[0]
+            else:
+                latest_factor = None
+
         df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
         df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
@@ -275,50 +290,46 @@ def get_kdata(security_item, the_date=None, start_date=None, end_date=None, fuqu
         if the_date:
             if the_date in df.index:
                 df = df.loc[df['timestamp'] == the_date]
+            else:
+                return None
         else:
-            if not start_date:
-                if security_item['type'] == 'stock':
-                    if type(security_item['listDate']) != str and np.isnan(security_item['listDate']):
-                        start_date = '2002-01-01'
-                    else:
-                        start_date = security_item['listDate']
-                elif security_item['type'] == 'index':
-                    start_date = datetime.datetime.today() - datetime.timedelta(days=30)
+            if not start_date and not pd.isna(security_item['listDate']):
+                start_date = security_item['listDate']
             if not end_date:
                 end_date = datetime.datetime.today()
 
             if start_date and end_date:
                 df = df.loc[start_date:end_date]
 
-        #
+        # 复权处理
         if source == '163' and security_item['type'] == 'stock':
-            if fuquan == 'bfq':
-                return df
             if 'factor' in df.columns:
-                current_factor = df.tail(1).factor.iat[0]
                 # 后复权是不变的
-                df.close *= df.factor
-                df.open *= df.factor
-                df.high *= df.factor
-                df.low *= df.factor
-                if fuquan == 'qfq':
-                    # 前复权需要根据最新的factor往回算
-                    df.close /= current_factor
-                    df.open /= current_factor
-                    df.high /= current_factor
-                    df.low /= current_factor
+                df['hfqClose'] = df.close * df.factor
+                df['hfqOpen'] = df.open * df.factor
+                df['hfqHigh'] = df.high * df.factor
+                df['hfqLow'] = df.low * df.factor
+
+                # 前复权需要根据最新的factor往回算,当前价格不变
+                if latest_factor:
+                    df['qfqClose'] = df.hfqClose / latest_factor
+                    df['qfqOpen'] = df.hfqOpen / latest_factor
+                    df['qfqHigh'] = df.hfqHigh / latest_factor
+                    df['qfqLow'] = df.hfqLow / latest_factor
+                else:
+                    logger.exception("missing latest factor for {}".format(security_item['id']))
         return df
     return pd.DataFrame()
 
 
-def get_latest_download_trading_date(security_item, return_next=True, source='163'):
+def get_latest_download_trading_date(security_item, return_next=True, source=None):
     df = get_kdata(security_item, source=source)
     if len(df) == 0:
-        return pd.Timestamp(security_item['listDate'])
+        return pd.Timestamp(security_item['listDate']), df
     if return_next:
-        return df.index[-1] + pd.DateOffset(1)
+        return df.index[-1] + pd.DateOffset(1), df
     else:
-        return df.index[-1]
+        return df.index[-1], df
 
 
 def get_trading_calendar(security_type='future', exchange='shfe'):
@@ -408,10 +419,10 @@ def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
             dayk_path = get_kdata_path(security_item, source='sina', fuquan=fuquan)
             if fuquan == 'hfq':
                 df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN_FQ)
+                    columns=data_contract.KDATA_COLUMN_SINA_FQ)
             else:
                 df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN)
+                    columns=data_contract.KDATA_COLUMN_SINA)
 
             the_dir = get_kdata_dir(security_item, fuquan=fuquan)
 
@@ -655,7 +666,7 @@ def parse_shfe_data(force_parse=False):
                              'exchange': 'shfe',
                              'type': 'future'}
             # 检查是否需要保存合约meta
-            if security_list is not None and 'code' in security_list.columns:
+            if (not security_list.empty) and ('code' in security_list.columns):
                 security_list = security_list.set_index(security_list['code'], drop=False)
             if the_contract not in security_list.index:
                 security_list = security_list.append(security_item, ignore_index=True)
@@ -681,12 +692,10 @@ def parse_shfe_data(force_parse=False):
                 saved_df = pd.DataFrame()
 
             saved_df = saved_df.append(the_df, ignore_index=True)
-            saved_df = saved_df.loc[:, KDATA_COLUMN_FUTURE]
-            saved_df = saved_df.drop_duplicates(subset='timestamp', keep='last')
-            saved_df = saved_df.set_index(saved_df['timestamp'], drop=False)
-            saved_df.index = pd.to_datetime(saved_df.index)
-            saved_df = saved_df.sort_index()
-            saved_df.to_csv(kdata_path, index=False)
+            saved_df = saved_df.loc[:, KDATA_FUTURE_COL]
+
+            if not saved_df.empty:
+                kdata_df_save(saved_df, kdata_path)
 
             logger.info("end handling {} in {}".format(the_contract, the_file))
 

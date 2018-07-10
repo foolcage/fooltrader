@@ -3,7 +3,7 @@
 from pytdx.hq import TdxHq_API
 
 from fooltrader.api import quote
-from fooltrader.contract.data_contract import KDATA_COLUMN
+from fooltrader.contract.data_contract import KDATA_COLUMN_SINA
 from fooltrader.utils.utils import get_exchange
 
 
@@ -17,7 +17,7 @@ def get_tdx_kdata(security_item, start, end):
         df = df[['date', 'code', 'low', 'open', 'close', 'high', 'vol', 'amount']]
         df['securityId'] = df['code'].apply(lambda x: 'stock_{}_{}'.format(get_exchange(x), x))
         df['vol'] = df['vol'].apply(lambda x: x * 100)
-        df.columns = KDATA_COLUMN
+        df.columns = KDATA_COLUMN_SINA
     return df
 
 

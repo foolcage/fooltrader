@@ -108,7 +108,7 @@ class AmericaStockFinanceSpider(scrapy.Spider):
 
             df.to_csv(path, index=False)
         else:
-            self.logger.error(
+            self.logger.exception(
                 "get finance csv error:url={} content type={} body={}".format(response.url, content_type_header,
                                                                               response.body))
 

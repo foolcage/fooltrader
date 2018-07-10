@@ -16,16 +16,16 @@ class BaseProxySpider(object):
             try:
                 save_proxy(http_jsons, protocol='http')
             except Exception as e:
-                logger.error("failed to save http proxy json:{}", e)
+                logger.exception("failed to save http proxy json:{}", e)
 
         if https_jsons:
             try:
                 save_proxy(https_jsons, protocol='https')
             except Exception as e:
-                logger.error("failed to save https proxy json:{}", e)
+                logger.exception("failed to save https proxy json:{}", e)
 
         if socks_jsons:
             try:
                 save_proxy(socks_jsons, protocol='socks')
             except Exception as e:
-                logger.error("failed to save socks proxy json:{}", e)
+                logger.exception("failed to save socks proxy json:{}", e)

@@ -71,6 +71,11 @@ def test_to_security_item():
     assert item.id == 'future_shfe_ag1301'
     assert item.code == 'ag1301'
 
+    item = quote.to_security_item('BTC-USD', exchange='gdax')
+
+    assert item.id == 'cryptocurrency_gdax_BTC-USD'
+    assert item.code == 'BTC-USD'
+
 
 def test_get_stock_kdata():
     df = quote.get_kdata('600977')
@@ -90,30 +95,42 @@ def test_get_stock_kdata():
 
 
 def test_get_stock_fuquan_kdata():
-    # 根据factor计算的后复权价格
-    df = quote.get_kdata('600977', the_date='2018-03-29', fuquan='hfq')
-
-    # 从新浪获取的后复权价格
-    df1 = quote.get_kdata('600977', the_date='2018-03-29', fuquan='hfq', source='sina')
-
-    # 四舍五入取两位小数
-    assert round(df.loc['2018-03-29', 'close'], 2) == round(df1.loc['2018-03-29', 'close'], 2)
-
-    # 根据factor计算的前复权价格
-    df = quote.get_kdata('600977', the_date='2016-08-09', fuquan='qfq')
+    # 有当前价，前复权，后复权
+    df = quote.get_kdata('600977', the_date='2016-08-09')
 
     # 从新浪获取的后复权价格
     df1 = quote.get_kdata('600977', the_date='2016-08-09', fuquan='hfq', source='sina')
 
     # 四舍五入取两位小数
-    assert round(df.loc['2016-08-09', 'close'], 2) == round(
-        df1.loc['2016-08-09', 'close'] / df1.loc['2016-08-09', 'factor'], 2)
+    # 后复权 和 新浪计算的一致
+    assert round(df.loc['2016-08-09', 'hfqClose'], 2) == round(df1.loc['2016-08-09', 'close'], 2)
+
+    # 从新浪获取的后复权价格
+    df_hfq = quote.get_kdata('600977', the_date='2016-08-09', fuquan='hfq', source='sina')
+    latest_kdata = quote.get_kdata('600977', the_date='2018-03-29', fuquan='hfq', source='sina')
+
+    # 四舍五入取两位小数
+    # 前复权 和 新浪计算的一致
+    assert round(df.loc['2016-08-09', 'qfqClose'], 2) == round(
+        df_hfq.loc['2016-08-09', 'close'] / latest_kdata.loc['2018-03-29', 'factor'], 2)
 
 
 def test_get_future_kdata():
     df = quote.get_kdata('rb1605', start_date='2015-05-15')
     assert not df.empty
     assert '20160516' in df.index
+
+
+def test_get_cryptocurrency_kdata():
+    df = quote.get_kdata('BTC-USD', exchange='gdax')
+    assert not df.empty
+    assert '2017-09-14' in df.index
+    assert df.loc['2017-09-14', 'changePct'] < -0.18
+
+    df = quote.get_kdata('BTC-JPY', exchange='kraken')
+    assert not df.empty
+    assert '2017-09-14' in df.index
+    assert df.loc['2017-09-14', 'changePct'] < -0.18
 
 
 def test_get_ticks():

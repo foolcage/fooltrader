@@ -1,0 +1,6 @@
+{
+  "smtp_host": "smtpdm.aliyun.com",
+  "smtp_port": 80,
+  "user_name": "",
+  "password": ""
+}

@@ -9,9 +9,11 @@ import pandas as pd
 
 from fooltrader.api.quote import get_security_list
 from fooltrader.contract import data_contract
-from fooltrader.contract.data_contract import KDATA_COLUMN, KDATA_COLUMN_FQ
+from fooltrader.contract.data_contract import KDATA_COLUMN_SINA, KDATA_COLUMN_SINA_FQ, EVENT_STOCK_FINANCE_FORECAST_COL, \
+    EVENT_STOCK_FINANCE_REPORT_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
-    get_security_dir, get_kdata_path, get_trading_dates_path_163
+    get_security_dir, get_kdata_path, get_trading_dates_path_163, get_event_dir, get_finance_forecast_event_path, \
+    get_finance_report_event_path
 from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
 
 logger = logging.getLogger(__name__)
@@ -109,7 +111,7 @@ def merge_ths_kdata(security_item, dates):
 
 
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
 
 
 def remove_old_trading_dates():
@@ -232,7 +234,7 @@ def legacy_kdata_to_csv():
                                  ['timestamp', 'code', 'low', 'open', 'close', 'high', 'volume', 'turnover',
                                   'securityId',
                                   'fuquan']]
-                            df.columns = KDATA_COLUMN_FQ
+                            df.columns = KDATA_COLUMN_SINA_FQ
 
                             df.to_csv(csv_path, index=False)
                     else:
@@ -241,7 +243,7 @@ def legacy_kdata_to_csv():
                             df = pd.read_json(f, dtype={'code': str})
                             logger.info("{} to {}".format(f, csv_path))
 
-                            df = df.loc[:, KDATA_COLUMN]
+                            df = df.loc[:, KDATA_COLUMN_SINA]
 
                             df.to_csv(csv_path, index=False)
 
@@ -255,10 +257,10 @@ def check_convert_result():
 
                 if fuquan == 'hfq':
                     df = pd.DataFrame(
-                        columns=data_contract.KDATA_COLUMN_FQ)
+                        columns=data_contract.KDATA_COLUMN_SINA_FQ)
                 else:
                     df = pd.DataFrame(
-                        columns=data_contract.KDATA_COLUMN)
+                        columns=data_contract.KDATA_COLUMN_SINA)
 
                 dir = get_kdata_dir(security_item, fuquan=fuquan)
 
@@ -301,8 +303,37 @@ def check_result():
                 logger.warn(get_security_dir(security_item))
 
 
+def get_forecast_event_path(item, event='forecast'):
+    return os.path.join(get_event_dir(item), '{}.json'.format(event))
+
+
+def forecast_event_to_csv():
+    for index, security_item in get_security_list().iterrows():
+        the_path = get_forecast_event_path(security_item)
+        if os.path.exists(the_path):
+            df = pd.read_json(get_forecast_event_path(security_item))
+            df = df.rename(columns={'reportDate': 'timestamp'})
+            df = df.loc[:, EVENT_STOCK_FINANCE_FORECAST_COL]
+            df.to_csv(get_finance_forecast_event_path(security_item), index=False)
+            logger.info("transform {} forecast event".format(security_item['code']))
+            os.remove(the_path)
+
+
+def finance_report_event_to_csv():
+    for index, security_item in get_security_list().iterrows():
+        the_path = get_finance_report_event_path(security_item)
+        if os.path.exists(the_path):
+            df = pd.read_csv(the_path)
+            df = df.rename(columns={'reportEventDate': 'timestamp', 'reportDate': 'reportPeriod'})
+            df = df.loc[:, EVENT_STOCK_FINANCE_REPORT_COL]
+            df.to_csv(get_finance_report_event_path(security_item), index=False)
+            logger.info("transform {} report event".format(security_item['code']))
+
+
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
-    remove_old_trading_dates()
+    # remove_old_trading_dates()
     # remove_old_kdata()
     # remove_old_tick()
+    forecast_event_to_csv()
+    finance_report_event_to_csv()

@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import json
 import os
 
 import pandas as pd
 
 from fooltrader.api.quote import to_security_item
-from fooltrader.contract.files_contract import get_forecast_event_path, get_event_path
+from fooltrader.contract.files_contract import get_finance_report_event_path
 from fooltrader.utils.utils import index_df_with_time
 
 
-def get_forecast_items(security_item):
+def get_finance_forecast_event(security_item):
     """
     get forecast items.
 
@@ -21,18 +20,21 @@ def get_forecast_items(security_item):
 
     Returns
     -------
-    list of json
+    DataFrame
 
     """
     security_item = to_security_item(security_item)
-    forecast_path = get_forecast_event_path(security_item)
-    if os.path.exists(forecast_path):
-        with open(forecast_path) as data_file:
-            forecast_json = json.load(data_file)
-            return reversed(forecast_json)
+    path = get_finance_forecast_event(security_item)
+
+    if os.path.exists(path):
+        df = pd.read_csv(path)
+        df = index_df_with_time(df)
+    else:
+        df = pd.DataFrame()
+    return df
 
 
-def get_finance_report_event(security_item, index='reportEventDate'):
+def get_finance_report_event(security_item, index='timestamp'):
     """
     get finance report event items.
 
@@ -41,7 +43,7 @@ def get_finance_report_event(security_item, index='reportEventDate'):
     security_item : SecurityItem or str
         the security item,id or code
 
-    index : {'reportEventDate','reportDate'} default is 'reportEventDate'
+    index : {'timestamp','reportPeriod'} default is 'timestamp'
         the index for the return df
 
     Returns
@@ -50,7 +52,7 @@ def get_finance_report_event(security_item, index='reportEventDate'):
 
     """
     security_item = to_security_item(security_item)
-    path = get_event_path(security_item, event='finance_report')
+    path = get_finance_report_event_path(security_item)
 
     if os.path.exists(path):
         df = pd.read_csv(path)
@@ -60,13 +62,13 @@ def get_finance_report_event(security_item, index='reportEventDate'):
     return df
 
 
-def get_report_event_date(security_item, report_date):
-    df = get_finance_report_event(security_item, index='reportDate')
-    if report_date in df.index:
-        se = df.loc[report_date, 'reportEventDate']
+def get_report_event_date(security_item, report_period):
+    df = get_finance_report_event(security_item, index='reportPeriod')
+    if report_period in df.index:
+        se = df.loc[report_period, 'timestamp']
         if type(se) == str:
             return se
         else:
             return se[-1]
     else:
-        return report_date
+        return report_period
