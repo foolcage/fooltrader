@@ -3,6 +3,7 @@
 import datetime
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 import pandas as pd
 
@@ -11,6 +12,34 @@ from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
+
+
+def init_process_log(file_name, log_dir=None):
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    if log_dir:
+        file_name = os.path.join(log_dir, file_name)
+
+    fh = RotatingFileHandler(file_name, maxBytes=524288000, backupCount=10)
+
+    fh.setLevel(logging.INFO)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        "%(levelname)s  %(threadName)s  %(asctime)s  %(name)s:%(lineno)s  %(funcName)s  %(message)s")
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # filter
+    # fh.addFilter(logging.Filter('fooltrader'))
+
+    # add the handlers to the logger
+    root_logger.addHandler(fh)
+    root_logger.addHandler(ch)
 
 
 def chrome_copy_header_to_dict(src):

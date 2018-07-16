@@ -14,7 +14,7 @@ def crawl(spider, setting):
     process.start()
 
 
-def process_crawl(spider, setting):
+def process_crawl(spider, setting={}):
     p = Process(target=crawl, args=(spider, setting))
     p.start()
     # 爬虫假死
