@@ -2,7 +2,7 @@
 from flask import request, Blueprint
 
 from fooltrader.consts import CRYPTOCURRENCY_PAIR, SECURITY_TYPE_MAP_EXCHANGES
-from fooltrader.domain.security_model import CryptoCurrencyMeta
+from fooltrader.domain.security_model import CryptocurrencyMeta
 from fooltrader.rest.common import success
 
 security_rest = Blueprint('security', __name__,
@@ -20,7 +20,7 @@ def get_security():
         exchange = [exchange]
 
     if security_type == 'cryptocurrency':
-        doc_type = CryptoCurrencyMeta
+        doc_type = CryptocurrencyMeta
 
     s = doc_type().search()
     s = s.filter('terms', exchange=exchange).filter('terms', name=CRYPTOCURRENCY_PAIR)

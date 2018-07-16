@@ -2,6 +2,9 @@ import logging
 
 from elasticsearch_dsl import DocType
 
+from fooltrader.domain.quote import StockMeta, IndexMeta, StockKData
+from fooltrader.domain.security_model import CryptocurrencyMeta
+
 logger = logging.getLogger(__name__)
 
 

@@ -56,6 +56,12 @@ def es_get_latest_record(index, time_field='timestamp', query=None):
     return None
 
 
+def es_get_latest_timestamp(index, time_field='timestamp', query=None):
+    latest_record = es_get_latest_record(index, time_field, query)
+    if latest_record:
+        return latest_record['timestamp']
+
+
 def es_delete(index, query=None):
     if query:
         body = {"query": query}

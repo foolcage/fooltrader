@@ -9,7 +9,7 @@ from fooltrader.contract.files_contract import get_finance_report_event_path
 from fooltrader.utils.utils import index_df_with_time
 
 
-def get_finance_forecast_event(security_item):
+def get_finance_forecast_event(security_item, start_date=None):
     """
     get forecast items.
 
@@ -29,12 +29,14 @@ def get_finance_forecast_event(security_item):
     if os.path.exists(path):
         df = pd.read_csv(path)
         df = index_df_with_time(df)
+        if start_date:
+            df = df.loc[start_date:]
     else:
         df = pd.DataFrame()
     return df
 
 
-def get_finance_report_event(security_item, index='timestamp'):
+def get_finance_report_event(security_item, index='timestamp', start_date=None):
     """
     get finance report event items.
 
@@ -57,6 +59,9 @@ def get_finance_report_event(security_item, index='timestamp'):
     if os.path.exists(path):
         df = pd.read_csv(path)
         df = index_df_with_time(df, index=index)
+        if start_date:
+            df = df.loc[start_date:]
+
     else:
         df = pd.DataFrame()
     return df

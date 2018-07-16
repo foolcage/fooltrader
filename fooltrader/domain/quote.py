@@ -8,6 +8,7 @@ from fooltrader.domain import BaseDocType
 
 class StockMeta(BaseDocType):
     id = Keyword()
+    timestamp = Date()
     type = Keyword()
     exchange = Keyword()
     code = Keyword()
@@ -27,6 +28,7 @@ class StockMeta(BaseDocType):
 
 class IndexMeta(BaseDocType):
     id = Keyword()
+    timestamp = Date()
     type = Keyword()
     exchange = Keyword()
     code = Keyword()
