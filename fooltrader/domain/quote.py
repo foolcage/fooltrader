@@ -2,11 +2,8 @@
 
 from elasticsearch_dsl import Keyword, Date, Float
 from elasticsearch_dsl import MetaField
-from elasticsearch_dsl.connections import connections
 
 from fooltrader.domain import BaseDocType
-
-connections.create_connection(hosts=['localhost'])
 
 
 class StockMeta(BaseDocType):

@@ -5,10 +5,11 @@
 """
 
 # 投资标的
-SECURITY_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id']
+SECURITY_COL = ['code', 'name', 'timestamp', 'listDate', 'exchange', 'type', 'id']
 
 # 代码,名字,上市日期,交易所,类型,id,新浪行业,新浪概念,区域,板块(美股才有),细分行业(美股才有)
-STOCK_META_COL = ['code', 'name', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaConcept', 'sinaArea',
+STOCK_META_COL = ['code', 'name', 'timestamp', 'listDate', 'exchange', 'type', 'id', 'sinaIndustry', 'sinaConcept',
+                  'sinaArea',
                   'sector', 'industry']
 
 # 通用k线

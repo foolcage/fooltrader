@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Date, Text, Float
+from elasticsearch_dsl import Keyword, Date, Float
 from elasticsearch_dsl import MetaField
 
 from fooltrader.domain import BaseDocType
 
 
-class ForecastEvent(BaseDocType):
+class FinanceForecastEvent(BaseDocType):
     id = Keyword()
-    securityId = Keyword()
-    reportDate = Date()
+    timestamp = Date()
     reportPeriod = Date()
+    securityId = Keyword()
     type = Keyword()
-    description = Text()
+    description = Keyword()
     preEPS = Float()
     changeStart = Float()
     change = Float()
 
     class Meta:
+        index = 'finance_forecast_event'
         doc_type = 'doc'
         all = MetaField(enabled=False)
 
 
 class FinanceReportEvent(BaseDocType):
     id = Keyword()
+    timestamp = Date()
+    reportPeriod = Date()
     securityId = Keyword()
-    reportEventDate = Date()
-    reportDate = Date()
     title = Keyword()
     url = Keyword()
+
+    class Meta:
+        index = 'finance_report_event'
+        doc_type = 'doc'
+        all = MetaField(enabled=False)

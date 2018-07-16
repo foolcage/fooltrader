@@ -19,6 +19,7 @@ class Sp500Spider(scrapy.Spider):
                               'code': 'SP500',
                               'name': 'SP500',
                               'listDate': '1871-01-01',
+                              'timestamp': '1871-01-01',
                               'exchange': 'nasdaq',
                               'type': 'index'}
         self.df_close = pd.DataFrame()

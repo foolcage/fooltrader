@@ -10,5 +10,11 @@ def get_es_kdata_index(security_type='stock', exchange='sh', level='day'):
         return '{}_{}_{}_kdata'.format(security_type, exchange, level)
 
 
-def get_es_forecast_event_index(security_id):
-    return '{}_forecast_event'.format(security_id)
+# one index for stock forecast event
+def get_es_finance_forecast_event_index(security_type='stock'):
+    return '{}_finance_forecast_event'.format(security_type)
+
+
+# one index for stock report event
+def get_es_finance_report_event_index(security_type='stock'):
+    return '{}_finance_report_event'.format(security_type)

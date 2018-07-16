@@ -49,6 +49,7 @@ class ChinaStockListSpider(scrapy.Spider):
             df['exchange'] = exchange
             df['type'] = 'stock'
             df['id'] = df[['type', 'exchange', 'code']].apply(lambda x: '_'.join(x.astype(str)), axis=1)
+            df['timestamp'] = df['listDate']
             df = df.dropna(axis=0, how='any')
             df = df.set_index('code', drop=False)
 

@@ -4,35 +4,22 @@ import json
 import logging
 
 import elasticsearch.helpers
-from elasticsearch_dsl import Index, connections
 
 from fooltrader import EXCHANGE_LIST_COL, es_client
 from fooltrader.api.event import get_finance_forecast_event
 from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
     get_finance_summary_items
 from fooltrader.api.quote import get_security_list, get_kdata
-from fooltrader.contract.es_contract import get_es_kdata_index, get_es_forecast_event_index
-from fooltrader.domain.event import ForecastEvent
+from fooltrader.contract.es_contract import get_es_kdata_index, get_es_finance_forecast_event_index
+from fooltrader.domain.event import FinanceForecastEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
 from fooltrader.domain.quote import StockMeta, StockKData, IndexKData, CryptoCurrencyKData
 from fooltrader.domain.security_model import CryptoCurrencyMeta
-from fooltrader.settings import US_STOCK_CODES, ES_HOSTS
-from fooltrader.utils.es_utils import es_get_latest_record
+from fooltrader.settings import US_STOCK_CODES
+from fooltrader.utils.es_utils import es_get_latest_record, es_index_mapping
 from fooltrader.utils.utils import fill_doc_type, is_same_date
 
 logger = logging.getLogger(__name__)
-
-
-def es_index_mapping(index_name, doc_type, force=False):
-    # 创建索引
-    index = Index(index_name)
-    index.doc_type(doc_type)
-
-    if not index.exists():
-        index.create()
-    else:
-        if force:
-            index.upgrade()
 
 
 def stock_meta_to_es(force=False):
@@ -53,7 +40,7 @@ def stock_meta_to_es(force=False):
             fill_doc_type(stock_meta, json.loads(item.to_json()))
             actions.append(stock_meta.to_dict(include_meta=True))
         except Exception as e:
-            logger.warn("wrong SecurityItem:{},error:{}", item, e)
+            logger.exception("wrong SecurityItem:{},error:{}".format(item, e))
     if actions:
         resp = elasticsearch.helpers.bulk(es_client, actions)
         logger.info(resp)
@@ -129,7 +116,7 @@ def kdata_to_es(start=None, end=None, security_type='stock', exchanges=['sh', 's
                 # kdata.save(index=index_name)
                 actions.append(kdata.to_dict(include_meta=True))
             except Exception as e:
-                logger.warn("wrong KdataDay:{},error:{}", kdata_item, e)
+                logger.exception("wrong KdataDay:{},error:{}".format(kdata_item, e))
         if actions:
             resp = elasticsearch.helpers.bulk(es_client, actions)
             logger.info(resp)
@@ -212,25 +199,27 @@ def usa_stock_finance_to_es(force=False):
             logger.warn("wrong FinanceSummary:{},error:{}", security_item, e)
 
 
-def forecast_event_to_es():
-    for _, security_item in get_security_list().iterrows():
-        # 创建索引
-        index_name = get_es_forecast_event_index(security_item['id'])
-        es_index_mapping(index_name, ForecastEvent)
+def finance_forecast_event_to_es():
+    # 创建索引
+    index_name = get_es_finance_forecast_event_index('stock')
+    es_index_mapping(index_name, FinanceForecastEvent)
 
-        for json_object in get_finance_forecast_event(security_item):
+    for _, security_item in get_security_list().iterrows():
+        df_event = get_finance_forecast_event(security_item)
+
+        for _, event_object in df_event.iterrows():
             try:
-                forcast_event = ForecastEvent(meta={'id': json_object['id']})
-                fill_doc_type(forcast_event, json_object)
+                forcast_event = FinanceForecastEvent(meta={'id': event_object['id']})
+                fill_doc_type(forcast_event, event_object)
                 forcast_event.save()
             except Exception as e:
-                logger.warn("wrong ForecastEvent:{},error:{}", json_object, e)
+                logger.exception("wrong ForecastEvent:{},error:{}".format(event_object, e))
 
 
 if __name__ == '__main__':
     # security_meta_to_es()
     # stock_meta_to_es(force=True)
-    connections.create_connection(hosts=ES_HOSTS)
+
     security_meta_to_es(force=False)
     # kdata_to_es(start='300027', end='300028', force=True)
     # kdata_to_es(security_type='index')
