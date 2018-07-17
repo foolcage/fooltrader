@@ -2,7 +2,7 @@
 from flask import request, Blueprint
 
 from fooltrader.consts import CRYPTOCURRENCY_PAIR, SECURITY_TYPE_MAP_EXCHANGES
-from fooltrader.domain.security_model import CryptocurrencyMeta
+from fooltrader.domain.data.es_quote import CryptocurrencyMeta
 from fooltrader.rest.common import success
 
 security_rest = Blueprint('security', __name__,

@@ -5,7 +5,7 @@ from fooltrader.api.technical import get_kdata
 from fooltrader.bot.actions import EmailAction, WeixinAction
 from fooltrader.bot.base_bot import BaseBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata
-from fooltrader.domain.subscription_model import SubscriptionTriggered, PriceSubscription
+from fooltrader.domain.business.es_subscription import SubscriptionTriggered, PriceSubscription
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
 

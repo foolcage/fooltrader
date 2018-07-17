@@ -215,11 +215,12 @@ def get_report_period(the_date=datetime.datetime.today().date()):
         return "{}{}".format(the_date.year - 1, '-12-31')
 
 
+# ms(int) or second(float) or str
 def to_timestamp(the_time):
-    if type(the_time) == float:
-        the_time = int(the_time)
-
     if type(the_time) == int:
+        the_time = the_time / 1000.0
+
+    if type(the_time) == float:
         return pd.Timestamp.fromtimestamp(the_time)
 
     return pd.Timestamp(the_time)

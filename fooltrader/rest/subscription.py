@@ -7,8 +7,8 @@ from flask import request, Blueprint
 from marshmallow import ValidationError
 
 from fooltrader import kafka_producer
-from fooltrader.domain.subscription_model import PriceSubscription
-from fooltrader.domain.subscription_schema import PriceSubscriptionSchema
+from fooltrader.domain.business.es_subscription import PriceSubscription
+from fooltrader.domain.business.subscription_schema import PriceSubscriptionSchema
 from fooltrader.rest.common import error, success
 from fooltrader.utils.utils import fill_doc_type
 

@@ -9,7 +9,7 @@ from fooltrader.api.event import get_report_event_date
 from fooltrader.api.technical import to_security_item
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path, get_finance_path
-from fooltrader.domain.finance import IncomeStatement, BalanceSheet, CashFlowStatement
+from fooltrader.domain.data.es_finance import IncomeStatement, BalanceSheet, CashFlowStatement
 from fooltrader.items import SecurityItem
 from fooltrader.utils.utils import to_float, to_time_str, is_same_date, fill_doc_type
 
@@ -38,6 +38,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
     -------
     list of BalanceSheet
     list of json
+    DataFrame
 
     """
 

@@ -4,7 +4,7 @@ import logging
 import math
 
 from fooltrader.api.esapi import esapi
-from fooltrader.domain.account import Account, Position
+from fooltrader.domain.business.es_account import Account, Position
 from fooltrader.utils.es_utils import es_get_latest_record, es_delete, es_index_mapping
 from fooltrader.utils.utils import fill_doc_type
 

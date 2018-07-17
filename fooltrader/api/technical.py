@@ -17,6 +17,7 @@ from fooltrader.contract.data_contract import get_future_name, KDATA_FUTURE_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
     get_security_list_path, get_exchange_trading_calendar_path, adjust_source
 from fooltrader.datamanager.zipdata import unzip
+from fooltrader.utils import pd_utils
 from fooltrader.utils.pd_utils import kdata_df_save, df_for_date_range
 from fooltrader.utils.utils import get_file_name, to_time_str, drop_duplicate
 
@@ -268,9 +269,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
 
     if os.path.isfile(the_path):
-        if not dtype:
-            dtype = {"code": str, 'timestamp': str}
-        df = pd.read_csv(the_path, dtype=dtype)
+        df = pd_utils.read_csv(the_path)
 
         if 'factor' in df.columns and source == '163' and security_item['type'] == 'stock':
             df_kdata_has_factor = df[df['factor'].notna()]
@@ -279,14 +278,9 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
             else:
                 latest_factor = None
 
-        df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
-        df = df.set_index(df['timestamp'], drop=False)
-        df.index = pd.to_datetime(df.index)
-        df = df.sort_index()
-
         if the_date:
             if the_date in df.index:
-                df = df.loc[df['timestamp'] == the_date]
+                df = df.loc[the_date:the_date, :]
             else:
                 return None
         else:
@@ -315,6 +309,9 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
                     df['qfqLow'] = df.hfqLow / latest_factor
                 else:
                     logger.exception("missing latest factor for {}".format(security_item['id']))
+
+        df['id'] = df[['securityId', 'timestamp']].apply(lambda x: '_'.join(x.astype(str)), axis=1)
+
         return df
     return pd.DataFrame()
 

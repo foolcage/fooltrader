@@ -4,25 +4,60 @@ import json
 import logging
 
 import elasticsearch.helpers
+import pandas as pd
 
 from fooltrader import es_client
 from fooltrader.api.event import get_finance_forecast_event, get_finance_report_event
-from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
+from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, \
+    get_cash_flow_statement_items, \
     get_finance_summary_items
 from fooltrader.api.technical import get_security_list, get_kdata
-from fooltrader.contract.es_contract import get_es_kdata_index, get_es_finance_event_index
-from fooltrader.domain.event import FinanceForecastEvent, FinanceReportEvent
-from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
-from fooltrader.domain.quote import StockMeta, StockKData, IndexKData, CryptoCurrencyKData, IndexMeta
-from fooltrader.domain.security_model import CryptocurrencyMeta
+from fooltrader.contract.es_contract import get_es_kdata_index
+from fooltrader.domain.data.es_event import FinanceForecastEvent, FinanceReportEvent
+from fooltrader.domain.data.es_finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
+from fooltrader.domain.data.es_quote import StockMeta, StockKData, IndexKData, CryptoCurrencyKData, IndexMeta, \
+    CryptocurrencyMeta
 from fooltrader.settings import US_STOCK_CODES
-from fooltrader.utils.es_utils import es_get_latest_record, es_index_mapping, es_get_latest_timestamp
-from fooltrader.utils.utils import fill_doc_type, is_same_date
+from fooltrader.utils.es_utils import es_index_mapping, es_get_latest_timestamp
+from fooltrader.utils.utils import fill_doc_type, index_df_with_time
 
 logger = logging.getLogger(__name__)
 
 
-def security_meta_to_es(security_type='stock', force=False):
+def df_to_es(df, doc_type, index_name=None, timestamp_filed='timestamp', query=None, force=False):
+    if not index_name:
+        index_name = doc_type().meta.index
+
+    es_index_mapping(index_name, doc_type)
+
+    if not force:
+        start_date = es_get_latest_timestamp(index=index_name, query=query, time_field=timestamp_filed)
+        logger.info("{} latest timestamp:{}".format(index_name, start_date))
+        if start_date:
+            df = df.loc[start_date:, :]
+
+    actions = []
+
+    for _, item in df.iterrows():
+        try:
+            es_data = doc_type(meta={'id': item['id'], 'index': index_name})
+
+            item_json = json.loads(item.to_json())
+
+            fill_doc_type(es_data, item_json)
+
+            actions.append(es_data.to_dict(include_meta=True))
+        except Exception as e:
+            logger.exception("wrong item:{},error:{}".format(item, e))
+
+    if actions:
+        resp = elasticsearch.helpers.bulk(es_client, actions)
+        logger.info("index to {} success:{} failed:{}".format(index_name, resp[0], len(resp[1])))
+        if resp[1]:
+            logger.error("index to {} error:{}".format(index_name, resp[1]))
+
+
+def security_meta_to_es(security_type='stock'):
     if security_type == 'stock':
         doc_type = StockMeta
     elif security_type == 'cryptocurrency':
@@ -30,30 +65,12 @@ def security_meta_to_es(security_type='stock', force=False):
     elif security_type == 'index':
         doc_type = IndexMeta
 
-    index_name = "{}_meta".format(security_type)
+    df = get_security_list(security_type=security_type)
 
-    es_index_mapping(index_name, doc_type)
-
-    start_date = None
-    if not force:
-        start_date = es_get_latest_timestamp(index=index_name)
-        logger.info("start_date:{}".format(start_date))
-
-    actions = []
-    for _, item in get_security_list(security_type=security_type, start_list_date=start_date).iterrows():
-        try:
-            security_meta = doc_type(meta={'id': item['id']})
-            security_meta.meta['index'] = index_name
-            fill_doc_type(security_meta, json.loads(item.to_json()))
-            actions.append(security_meta.to_dict(include_meta=True))
-        except Exception as e:
-            logger.exception("wrong SecurityItem:{},error:{}".format(item, e))
-    if actions:
-        resp = elasticsearch.helpers.bulk(es_client, actions)
-        logger.info(resp)
+    df_to_es(df, doc_type, force=True)
 
 
-def kdata_to_es(start=None, end=None, security_type='stock', force=False):
+def kdata_to_es(security_type='stock', start_code=None, end_code=None, force=False):
     if security_type == 'stock':
         doc_type = StockKData
     elif security_type == 'index':
@@ -61,43 +78,23 @@ def kdata_to_es(start=None, end=None, security_type='stock', force=False):
     elif security_type == 'cryptocurrency':
         doc_type = CryptoCurrencyKData
 
-    for _, security_item in get_security_list(security_type=security_type, start_code=start, end_code=end).iterrows():
-        # 创建索引
+    for _, security_item in get_security_list(security_type=security_type, start_code=start_code,
+                                              end_code=end_code).iterrows():
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
-        es_index_mapping(index_name, doc_type)
 
-        start_date = None
-
+        query = None
         if not force:
             query = {
                 "term": {"securityId": ""}
             }
             query["term"]["securityId"] = security_item["id"]
-            start_date = es_get_latest_timestamp(index_name, query=query)
-            logger.info("start_date:{}".format(start_date))
 
-        actions = []
+        df = get_kdata(security_item)
 
-        df_kdata = get_kdata(security_item, start_date=start_date)
-
-        for _, kdata_item in df_kdata.iterrows():
-            try:
-                id = '{}_{}'.format(kdata_item['securityId'], kdata_item['timestamp'])
-                kdata = doc_type(meta={'id': id}, id=id)
-                kdata.meta['index'] = index_name
-                kdata_json = json.loads(kdata_item.to_json())
-
-                fill_doc_type(kdata, kdata_json)
-                # kdata.save(index=index_name)
-                actions.append(kdata.to_dict(include_meta=True))
-            except Exception as e:
-                logger.exception("wrong KdataDay:{},error:{}".format(kdata_item, e))
-        if actions:
-            resp = elasticsearch.helpers.bulk(es_client, actions)
-            logger.info(resp)
+        df_to_es(df, doc_type=doc_type, index_name=index_name, query=query, force=force)
 
 
-def finance_sheet_to_es(sheet_type='balance_sheet', force=False):
+def finance_sheet_to_es(sheet_type='balance_sheet', start_code=None, end_code=None, force=False):
     if sheet_type == 'balance_sheet':
         doc_type = BalanceSheet
     elif sheet_type == 'income_statement':
@@ -107,120 +104,71 @@ def finance_sheet_to_es(sheet_type='balance_sheet', force=False):
 
     es_index_mapping(sheet_type, doc_type)
 
-    for _, security_item in get_security_list().iterrows():
-        try:
-            start_date = None
-            if not force:
-                query = {
-                    "term": {"securityId": ""}
-                }
-                query["term"]["securityId"] = security_item["id"]
-                start_date = es_get_latest_timestamp(index=sheet_type, time_field='reportPeriod', query=query)
-                logger.info("start_date:{}".format(start_date))
+    for _, security_item in get_security_list(start_code=start_code, end_code=end_code).iterrows():
+        query = None
+        if not force:
+            query = {
+                "term": {"securityId": ""}
+            }
+            query["term"]["securityId"] = security_item["id"]
 
-            actions = []
+        if sheet_type == 'balance_sheet':
+            items = get_balance_sheet_items(security_item)
+        elif sheet_type == 'income_statement':
+            items = get_income_statement_items(security_item)
+        elif sheet_type == 'cash_flow_statement':
+            items = get_cash_flow_statement_items(security_item)
 
-            items = []
-            if sheet_type == 'balance_sheet':
-                items = get_balance_sheet_items(security_item, start_date=start_date)
-            elif sheet_type == 'income_statement':
-                items = get_income_statement_items(security_item, start_date=start_date)
-            elif sheet_type == 'cash_flow_statement':
-                items = get_cash_flow_statement_items(security_item, start_date=start_date)
+        df = pd.DataFrame(items)
 
-            for json_object in items:
-                if start_date and is_same_date(start_date, json_object['reportPeriod']):
-                    continue
+        df = index_df_with_time(df, index='reportPeriod')
 
-                the_doc = doc_type(meta={'id': json_object['id']})
-                fill_doc_type(the_doc, json_object)
-                # balance_sheet.save()
-                actions.append(the_doc.to_dict(include_meta=True))
-            if actions:
-                resp = elasticsearch.helpers.bulk(es_client, actions)
-                logger.info(resp)
-        except Exception as e:
-            logger.warning("{} wrong {},error:{}", security_item, sheet_type, e)
+        df_to_es(df, doc_type=doc_type, timestamp_filed='reportPeriod', query=query, force=force)
 
 
 def usa_stock_finance_to_es(force=False):
-    es_index_mapping('finance_summary', FinanceSummary)
+    for _, security_item in get_security_list(security_type='stock', exchanges=['nasdaq'],
+                                              codes=US_STOCK_CODES).iterrows():
+        query = None
+        if not force:
+            query = {
+                "term": {"securityId": ""}
+            }
+            query["term"]["securityId"] = security_item["id"]
 
-    for _, security_item in get_security_list(exchanges=['nasdaq'], codes=US_STOCK_CODES).iterrows():
-        try:
-            start_date = None
-            if not force:
-                query = {
-                    "term": {"securityId": ""}
-                }
-                query["term"]["securityId"] = security_item["id"]
-                latest_record = es_get_latest_record(index='finance_summary', time_field='reportDate', query=query)
-                logger.info("latest_record:{}".format(latest_record))
-                if latest_record:
-                    start_date = latest_record['reportDate']
-            actions = []
-            for _, json_object in get_finance_summary_items(security_item, start_date=start_date).iterrows():
-                if start_date and is_same_date(start_date, json_object['reportDate']):
-                    continue
+        df = get_finance_summary_items(security_item)
 
-                finance_summary = FinanceSummary(meta={'id': json_object['id']})
-                fill_doc_type(finance_summary, json_object.to_dict())
-                actions.append(finance_summary.to_dict(include_meta=True))
-            if actions:
-                resp = elasticsearch.helpers.bulk(es_client, actions)
-                logger.info(resp)
-        except Exception as e:
-            logger.exception("wrong FinanceSummary:{},error:{}".format(security_item, e))
+        df_to_es(df, doc_type=FinanceSummary, timestamp_filed='reportPeriod', query=query, force=force)
 
 
-def finance_event_to_es(event_type='finance_forecast', force=False):
-    index_name = get_es_finance_event_index(event_type)
+def finance_event_to_es(event_type='finance_forecast', start_code=None, end_code=None, force=False):
     if event_type == 'finance_forecast':
         doc_type = FinanceForecastEvent
     elif event_type == 'finance_report':
         doc_type = FinanceReportEvent
 
-    es_index_mapping(index_name, doc_type)
+    for _, security_item in get_security_list(start_code=start_code, end_code=end_code).iterrows():
+        query = None
+        if not force:
+            query = {
+                "term": {"securityId": ""}
+            }
+            query["term"]["securityId"] = security_item["id"]
 
-    for _, security_item in get_security_list().iterrows():
-        try:
-            start_date = None
-            if not force:
-                query = {
-                    "term": {"securityId": ""}
-                }
-                query["term"]["securityId"] = security_item["id"]
-                start_date = es_get_latest_timestamp(index=index_name, query=query)
-                logger.info("start_date:{}".format(start_date))
+        if event_type == 'finance_forecast':
+            df = get_finance_forecast_event(security_item)
+        elif event_type == 'finance_report':
+            df = get_finance_report_event(security_item)
 
-            if event_type == 'finance_forecast':
-                df_event = get_finance_forecast_event(security_item, start_date=start_date)
-            elif event_type == 'finance_report':
-                df_event = get_finance_report_event(security_item, start_date=start_date)
-
-            actions = []
-
-            for _, event_object in df_event.iterrows():
-                the_event = doc_type(meta={'id': event_object['id']})
-                fill_doc_type(the_event, event_object.to_dict())
-                # forcast_event.save()
-                actions.append(the_event.to_dict(include_meta=True))
-            if actions:
-                resp = elasticsearch.helpers.bulk(es_client, actions)
-                logger.info(resp)
-        except Exception as e:
-            logger.exception("wrong {},error:{}".format(security_item, e))
+        df_to_es(df, doc_type=doc_type, query=query, force=force)
 
 
 if __name__ == '__main__':
     # security_meta_to_es()
-    # stock_meta_to_es(force=True)
-
-    security_meta_to_es(force=False)
-    # kdata_to_es(start='300027', end='300028', force=True)
-    # kdata_to_es(security_type='index')
-    # balance_sheet_to_es()
-    # index_kdata_to_es(force=False)
-    # cash_flow_statement_to_es()
-    # forecast_event_to_es()
-    # usa_stock_finance_to_es(force=True)
+    # kdata_to_es(start_code='300027', end_code='300028', force=False)
+    # kdata_to_es(security_type='index', force=True)
+    # finance_sheet_to_es('balance_sheet', start_code='300027', end_code='300028', force=False)
+    # finance_sheet_to_es('income_statement', start_code='300027', end_code='300028', force=False)
+    # finance_sheet_to_es('cash_flow_statement', start_code='300027', end_code='300028', force=False)
+    # finance_event_to_es(start_code='300027', end_code='300028', force=False)
+    finance_event_to_es(event_type='finance_report', start_code='300027', end_code='300028', force=False)

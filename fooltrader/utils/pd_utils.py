@@ -3,6 +3,9 @@ import logging
 
 import pandas as pd
 
+from fooltrader.settings import TIME_FORMAT_SEC
+from fooltrader.utils.utils import to_time_str
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,9 +48,17 @@ def read_csv(csv_path, converters=None, index='timestamp'):
     if converters:
         df = pd.read_csv(csv_path, converters=converters)
     else:
-        df = pd.read_csv(csv_path, dtype=str)
+        df = pd.read_csv(csv_path, dtype={"code": str, 'timestamp': str})
+
+    if not df.empty:
+        # generate id
+        if 'id' not in df.columns and 'securityId' in df.columns and 'timestamp' in df.columns:
+            timestamp_str = df.timestamp.apply(lambda x: to_time_str(x, time_fmt=TIME_FORMAT_SEC))
+
+            df['id'] = df['securityId'] + '_' + timestamp_str
 
     df = df.set_index(df[index], drop=False)
+
     if index == 'timestamp' or index == 'reportPeriod':
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
