@@ -164,11 +164,11 @@ def finance_event_to_es(event_type='finance_forecast', start_code=None, end_code
 
 
 if __name__ == '__main__':
-    # security_meta_to_es()
-    # kdata_to_es(start_code='300027', end_code='300028', force=False)
-    # kdata_to_es(security_type='index', force=True)
-    # finance_sheet_to_es('balance_sheet', start_code='300027', end_code='300028', force=False)
-    # finance_sheet_to_es('income_statement', start_code='300027', end_code='300028', force=False)
-    # finance_sheet_to_es('cash_flow_statement', start_code='300027', end_code='300028', force=False)
-    # finance_event_to_es(start_code='300027', end_code='300028', force=False)
+    security_meta_to_es()
+    kdata_to_es(start_code='300027', end_code='300028', force=False)
+    kdata_to_es(security_type='index', force=True)
+    finance_sheet_to_es('balance_sheet', start_code='300027', end_code='300028', force=False)
+    finance_sheet_to_es('income_statement', start_code='300027', end_code='300028', force=False)
+    finance_sheet_to_es('cash_flow_statement', start_code='300027', end_code='300028', force=False)
+    finance_event_to_es(start_code='300027', end_code='300028', force=False)
     finance_event_to_es(event_type='finance_report', start_code='300027', end_code='300028', force=False)
