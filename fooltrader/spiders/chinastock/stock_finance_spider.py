@@ -4,7 +4,7 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.consts import DEFAULT_BALANCE_SHEET_HEADER
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path

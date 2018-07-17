@@ -92,6 +92,10 @@ def get_event_dir(item):
     return os.path.join(get_security_dir(item), 'event')
 
 
+def get_event_path(item, event_type='finance_forecast'):
+    return os.path.join(get_event_dir(item), '{}.csv'.format(event_type))
+
+
 def get_finance_forecast_event_path(item):
     return os.path.join(get_event_dir(item), 'finance_forecast.csv')
 

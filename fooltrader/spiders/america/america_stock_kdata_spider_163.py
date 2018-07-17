@@ -8,7 +8,7 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
     KDATA_INDEX_COL, KDATA_STOCK_COL
 from fooltrader.contract.files_contract import get_kdata_path

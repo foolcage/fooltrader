@@ -4,7 +4,7 @@ import math
 from elasticsearch_dsl import Search
 
 from fooltrader import es_client
-from fooltrader.api.quote import to_security_item
+from fooltrader.api.technical import to_security_item
 from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
     KDATA_COMMON_COL
 from fooltrader.contract.es_contract import get_es_kdata_index

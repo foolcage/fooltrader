@@ -8,7 +8,7 @@ import ccxt
 import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
-from fooltrader.api.quote import get_latest_download_trading_date
+from fooltrader.api.technical import get_latest_download_trading_date
 from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES, CRYPTOCURRENCY_PAIR, SECURITY_TYPE_CRYPTO
 from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \

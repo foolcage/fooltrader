@@ -8,7 +8,7 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.quote import get_trading_calendar
+from fooltrader.api.technical import get_trading_calendar
 from fooltrader.contract.files_contract import get_exchange_trading_calendar_path
 from fooltrader.utils.utils import next_date, to_time_str, drop_duplicate
 

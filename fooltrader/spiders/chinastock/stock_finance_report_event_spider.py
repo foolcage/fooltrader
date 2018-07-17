@@ -8,7 +8,7 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 from fooltrader.contract.files_contract import get_finance_report_event_path
 from fooltrader.utils.utils import index_df_with_time

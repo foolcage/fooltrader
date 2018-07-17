@@ -2,7 +2,7 @@
 import os
 
 from fooltrader import get_exchange_cache_dir
-from fooltrader.api.quote import get_trading_calendar
+from fooltrader.api.technical import get_trading_calendar
 from fooltrader.datamanager import process_crawl
 from fooltrader.spiders.chinafuture.future_shfe_spider import FutureShfeSpider
 from fooltrader.spiders.chinafuture.shfe_trading_calendar_spider import ShfeTradingCalendarSpider

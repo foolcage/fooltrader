@@ -7,9 +7,9 @@ import elasticsearch.helpers
 
 from fooltrader import es_client
 from fooltrader.api.event import get_finance_forecast_event, get_finance_report_event
-from fooltrader.api.finance import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
+from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items, \
     get_finance_summary_items
-from fooltrader.api.quote import get_security_list, get_kdata
+from fooltrader.api.technical import get_security_list, get_kdata
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_finance_event_index
 from fooltrader.domain.event import FinanceForecastEvent, FinanceReportEvent
 from fooltrader.domain.finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
@@ -61,7 +61,7 @@ def kdata_to_es(start=None, end=None, security_type='stock', force=False):
     elif security_type == 'cryptocurrency':
         doc_type = CryptoCurrencyKData
 
-    for _, security_item in get_security_list(security_type=security_type, start=start, end=end).iterrows():
+    for _, security_item in get_security_list(security_type=security_type, start_code=start, end_code=end).iterrows():
         # 创建索引
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
         es_index_mapping(index_name, doc_type)

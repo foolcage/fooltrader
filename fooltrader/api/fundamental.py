@@ -6,7 +6,7 @@ import os
 import pandas as pd
 
 from fooltrader.api.event import get_report_event_date
-from fooltrader.api.quote import to_security_item
+from fooltrader.api.technical import to_security_item
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path, get_finance_path
 from fooltrader.domain.finance import IncomeStatement, BalanceSheet, CashFlowStatement
@@ -249,8 +249,8 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportPeriod": to_time_str(reportDate[idx]),
-                "timestamp": reportEventDate,
-                "reportEventDate": reportEventDate,
+                "timestamp": to_time_str(reportEventDate),
+                "reportEventDate": to_time_str(reportEventDate),
                 "securityId": security_item["id"],
                 "code": security_item["code"],
                 # 货币资金
@@ -559,8 +559,8 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportPeriod": to_time_str(reportDate[idx]),
-                "timestamp": reportEventDate,
-                "reportEventDate": reportEventDate,
+                "timestamp": to_time_str(reportEventDate),
+                "reportEventDate": to_time_str(reportEventDate),
                 "securityId": security_item["id"],
                 "code": security_item["code"],
                 # /*营业总收入*/
@@ -840,8 +840,8 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportPeriod": to_time_str(reportDate[idx]),
-                "timestamp": reportEventDate,
-                "reportEventDate": reportEventDate,
+                "timestamp": to_time_str(reportEventDate),
+                "reportEventDate": to_time_str(reportEventDate),
                 "securityId": security_item["id"],
                 "code": security_item["code"],
                 # /*一、经营活动产生的现金流量*/

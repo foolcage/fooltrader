@@ -9,18 +9,13 @@ from twisted.internet import defer
 from twisted.internet import reactor
 
 from fooltrader import settings
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, \
     get_kdata_dir
 from fooltrader.spiders.america.america_stock_finance_spider import AmericaStockFinanceSpider
 
 from fooltrader.spiders.america.america_stock_kdata_spider_163 import AmericaStockKdataSpider
-from fooltrader.spiders.america.s500_spider import Sp500Spider
-from fooltrader.spiders.future.future_shfe_spider import FutureShfeSpider
-from fooltrader.spiders.future.shfe_trading_calendar_spider import ShfeTradingCalendarSpider
-from fooltrader.spiders.security_list_spider import SecurityListSpider
-from fooltrader.spiders.stock_kdata_spider import StockKDataSpider
-from fooltrader.spiders.stock_tick_spider import StockTickSpider
+from fooltrader.spiders.chinafuture.shfe_trading_calendar_spider import ShfeTradingCalendarSpider
 
 configure_logging()
 

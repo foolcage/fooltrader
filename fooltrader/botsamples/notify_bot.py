@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta, datetime
 
-from fooltrader.api.quote import get_kdata
+from fooltrader.api.technical import get_kdata
 from fooltrader.bot.actions import EmailAction, WeixinAction
 from fooltrader.bot.base_bot import BaseBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata

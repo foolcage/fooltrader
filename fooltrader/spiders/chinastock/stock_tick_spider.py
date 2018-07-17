@@ -8,7 +8,7 @@ from scrapy import Request
 from scrapy import signals
 
 from fooltrader import settings
-from fooltrader.api.quote import get_security_list, get_trading_dates, get_kdata
+from fooltrader.api.technical import get_security_list, get_trading_dates, get_kdata
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
@@ -54,7 +54,7 @@ class StockTickSpider(scrapy.Spider):
             for request in self.yield_request(item, trading_dates):
                 yield request
         else:
-            for _, item in get_security_list(start=STOCK_START_CODE, end=STOCK_END_CODE).iterrows():
+            for _, item in get_security_list(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE).iterrows():
                 for request in self.yield_request(item):
                     yield request
 

@@ -2,7 +2,7 @@
 
 from pytdx.hq import TdxHq_API
 
-from fooltrader.api import quote
+from fooltrader.api import technical
 from fooltrader.contract.data_contract import KDATA_COLUMN_SINA
 from fooltrader.utils.utils import get_exchange
 
@@ -24,7 +24,7 @@ def get_tdx_kdata(security_item, start, end):
 def save_tdx_kdata(security_item, the_dates):
     df = get_tdx_kdata(security_item, the_dates[0], the_dates[-1])
 
-    quote.merge_to_current_kdata(security_item, df[df.timestamp.isin(the_dates)])
+    technical.merge_to_current_kdata(security_item, df[df.timestamp.isin(the_dates)])
 
 
 if __name__ == '__main__':

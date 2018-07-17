@@ -10,7 +10,7 @@ import pandas as pd
 from kafka import KafkaConsumer
 from kafka import TopicPartition
 
-from fooltrader.api.quote import to_security_item
+from fooltrader.api.technical import to_security_item
 from fooltrader.bot.account_service import AccountService
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
 from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY

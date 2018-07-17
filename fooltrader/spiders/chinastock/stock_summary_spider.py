@@ -9,7 +9,7 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
-from fooltrader.api.quote import get_kdata
+from fooltrader.api.technical import get_kdata
 from fooltrader.consts import DEFAULT_SH_SUMMARY_HEADER
 from fooltrader.contract.data_contract import KDATA_INDEX_COL
 from fooltrader.contract.files_contract import get_kdata_path

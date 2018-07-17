@@ -7,7 +7,7 @@ import shutil
 
 import pandas as pd
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN_SINA, KDATA_COLUMN_SINA_FQ, EVENT_STOCK_FINANCE_FORECAST_COL, \
     EVENT_STOCK_FINANCE_REPORT_COL

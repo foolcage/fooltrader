@@ -8,7 +8,7 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.consts import TONGHUASHUN_KDATA_HEADER
 from fooltrader.contract import data_contract
 from fooltrader.contract.files_contract import get_kdata_path, get_trading_dates_path_ths
@@ -40,7 +40,7 @@ class StockKDataSpiderTHS(scrapy.Spider):
     }
 
     def start_requests(self):
-        for _, item in get_security_list(start=STOCK_START_CODE, end=STOCK_END_CODE).iterrows():
+        for _, item in get_security_list(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE).iterrows():
             for fuquan in ['hfq', 'bfq']:
                 data_path = get_kdata_path(item, fuquan=fuquan, source='ths')
                 data_exist = os.path.isfile(data_path)

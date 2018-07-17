@@ -6,7 +6,7 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.technical import get_security_list
 from fooltrader.consts import DEFAULT_KDATA_HEADER
 # 业绩预告抓取
 # 上市公司预计年度经营业绩将出现下列情形之一的，应当在会计年度结束后一个月内进行业绩预告，预计中期和第三季度业绩将出现下列情形之一的，可以进行业绩预告：
