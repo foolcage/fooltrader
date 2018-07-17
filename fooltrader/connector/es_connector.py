@@ -89,7 +89,7 @@ def kdata_to_es(security_type='stock', start_code=None, end_code=None, force=Fal
             }
             query["term"]["securityId"] = security_item["id"]
 
-        df = get_kdata(security_item)
+        df = get_kdata(security_item, generate_id=True)
 
         df_to_es(df, doc_type=doc_type, index_name=index_name, query=query, force=force)
 

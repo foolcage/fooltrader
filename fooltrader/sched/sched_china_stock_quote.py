@@ -27,7 +27,7 @@ def scheduled_job2():
 if __name__ == '__main__':
     logger.info("start crawling stock china stock quote")
 
-    crawl_stock_quote('000001', '666666')
+    crawl_stock_quote('600000', '666666')
     crawl_index_quote()
 
     logger.info("shed crawling china stock quote")

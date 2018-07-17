@@ -44,13 +44,13 @@ def df_for_date_range(df, start_date=None, end_date=None, timestamp_filed='times
     return df
 
 
-def read_csv(csv_path, converters=None, index='timestamp'):
+def read_csv(csv_path, converters=None, index='timestamp', generate_id=False):
     if converters:
         df = pd.read_csv(csv_path, converters=converters)
     else:
         df = pd.read_csv(csv_path, dtype={"code": str, 'timestamp': str})
 
-    if not df.empty:
+    if (not df.empty) and generate_id:
         # generate id
         if 'id' not in df.columns and 'securityId' in df.columns and 'timestamp' in df.columns:
             timestamp_str = df.timestamp.apply(lambda x: to_time_str(x, time_fmt=TIME_FORMAT_SEC))

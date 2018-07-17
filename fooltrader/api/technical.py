@@ -224,7 +224,7 @@ def get_available_tick_dates(security_item):
 
 # kdata
 def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None,
-              source=None, level='day'):
+              source=None, level='day', generate_id=False):
     """
     get kdata.
 
@@ -269,7 +269,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
 
     if os.path.isfile(the_path):
-        df = pd_utils.read_csv(the_path)
+        df = pd_utils.read_csv(the_path, generate_id=generate_id)
 
         if 'factor' in df.columns and source == '163' and security_item['type'] == 'stock':
             df_kdata_has_factor = df[df['factor'].notna()]
@@ -309,8 +309,6 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
                     df['qfqLow'] = df.hfqLow / latest_factor
                 else:
                     logger.exception("missing latest factor for {}".format(security_item['id']))
-
-        df['id'] = df[['securityId', 'timestamp']].apply(lambda x: '_'.join(x.astype(str)), axis=1)
 
         return df
     return pd.DataFrame()
@@ -371,7 +369,7 @@ def merge_to_current_kdata(security_item, df, fuquan='bfq'):
 
 
 def time_index_df(df):
-    df = df.set_index(df['timestamp'])
+    df = df.set_index(df['timestamp'], drop=False)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
     return df

@@ -7,14 +7,14 @@ import shutil
 
 import pandas as pd
 
-from fooltrader.api.technical import get_security_list
+from fooltrader.api.technical import get_security_list, time_index_df
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN_SINA, KDATA_COLUMN_SINA_FQ, EVENT_STOCK_FINANCE_FORECAST_COL, \
     EVENT_STOCK_FINANCE_REPORT_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_tick_dir, get_tick_path, \
     get_security_dir, get_kdata_path, get_trading_dates_path_163, get_event_dir, get_finance_forecast_event_path, \
     get_finance_report_event_path
-from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime
+from fooltrader.utils.utils import sina_tick_to_csv, get_file_name, get_year_quarter, get_datetime, to_time_str
 
 logger = logging.getLogger(__name__)
 
@@ -330,10 +330,34 @@ def finance_report_event_to_csv():
             logger.info("transform {} report event".format(security_item['code']))
 
 
+def restore_kdata():
+    for index, security_item in get_security_list(start_code='600000', end_code='600017').iterrows():
+        path_163 = get_kdata_path(security_item, source='163', fuquan='bfq')
+        df = pd.read_csv(path_163, dtype=str)
+        df = time_index_df(df)
+
+        if 'id' in df.columns:
+            df = df.drop(['id'], axis=1)
+        df = df[~df.index.duplicated(keep='first')]
+        df.timestamp.apply(lambda x: to_time_str(x))
+        df.to_csv(path_163, index=False)
+
+        for fuquan in ('hfq', 'bfq'):
+            path_sina = get_kdata_path(security_item, source='sina', fuquan=fuquan)
+            df = pd.read_csv(path_sina, dtype=str)
+            df = time_index_df(df)
+            if 'id' in df.columns:
+                df = df.drop(['id'], axis=1)
+            df = df[~df.index.duplicated(keep='first')]
+            df.timestamp = df.timestamp.apply(lambda x: to_time_str(x))
+            df.to_csv(path_sina, index=False)
+
+
 if __name__ == '__main__':
     pd.set_option('expand_frame_repr', False)
     # remove_old_trading_dates()
     # remove_old_kdata()
     # remove_old_tick()
-    forecast_event_to_csv()
-    finance_report_event_to_csv()
+    # forecast_event_to_csv()
+    # finance_report_event_to_csv()
+    restore_kdata()

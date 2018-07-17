@@ -37,6 +37,7 @@ def init_log():
 
 
 def mkdir_for_stock(item):
+    print(item)
     finance_dir = get_finance_dir(item)
     if not os.path.exists(finance_dir):
         os.makedirs(finance_dir)
@@ -92,7 +93,7 @@ def init_env():
 pd.set_option('expand_frame_repr', False)
 
 init_log()
-
+# init_env()
 logger = logging.getLogger(__name__)
 
 try:
