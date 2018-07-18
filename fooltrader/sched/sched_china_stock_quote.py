@@ -5,6 +5,7 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from fooltrader.datamanager.china_stock_manager import crawl_stock_quote, crawl_index_quote
+from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.utils import init_process_log
 
 init_process_log('crawling_china_stock_quote.log')
@@ -27,7 +28,7 @@ def scheduled_job2():
 if __name__ == '__main__':
     logger.info("start crawling stock china stock quote")
 
-    crawl_stock_quote('300027', '300027')
+    crawl_stock_quote(STOCK_START_CODE, STOCK_END_CODE)
     crawl_index_quote()
 
     logger.info("shed crawling china stock quote")
