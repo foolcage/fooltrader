@@ -11,7 +11,6 @@ import pandas as pd
 
 from fooltrader.consts import CHINA_STOCK_SH_INDEX, CHINA_STOCK_SZ_INDEX, USA_STOCK_NASDAQ_INDEX, \
     SECURITY_TYPE_MAP_EXCHANGES
-from fooltrader.contract import data_contract
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import get_future_name, KDATA_FUTURE_COL
 from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, get_exchange_cache_dir, \
@@ -90,7 +89,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
                     df = df.append(pd.read_csv(the_path, dtype=str), ignore_index=True)
 
     if not df.empty > 0:
-        df = df_for_date_range(df, timestamp_filed='listDate', start_date=start_list_date)
+        df = df_for_date_range(df, start_date=start_list_date)
 
         df = df.set_index(df['code'], drop=False)
 
@@ -223,8 +222,8 @@ def get_available_tick_dates(security_item):
 
 
 # kdata
-def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, fuquan='bfq', dtype=None,
-              source=None, level='day', generate_id=False):
+def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, fuquan='bfq', source=None,
+              level='day', generate_id=False):
     """
     get kdata.
 
@@ -244,8 +243,6 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         end date
     fuquan : str
         {"qfq","hfq","bfq"},default:"bfq"
-    dtype : type
-        the data type for the csv column,default: None
     source : str
         the data source,{'163','sina','exchange'},just used for internal merge
     level : str or int
@@ -269,7 +266,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
 
     if os.path.isfile(the_path):
-        df = pd_utils.read_csv(the_path, generate_id=generate_id)
+        df = pd_utils.pd_read_csv(the_path, generate_id=generate_id)
 
         if 'factor' in df.columns and source == '163' and security_item['type'] == 'stock':
             df_kdata_has_factor = df[df['factor'].notna()]
@@ -350,95 +347,6 @@ def kdata_exist(security_item, year, quarter, fuquan=None, source='163'):
     if "{}Q{}".format(year, quarter) in df.index:
         return True
     return False
-
-
-# TODO:use join
-def merge_to_current_kdata(security_item, df, fuquan='bfq'):
-    df = df.set_index(df['timestamp'], drop=False)
-    df.index = pd.to_datetime(df.index)
-    df = df.sort_index()
-
-    df1 = get_kdata(security_item, source='sina', fuquan=fuquan, dtype=str)
-    df1 = df1.append(df)
-
-    df1 = df1.drop_duplicates(subset='timestamp', keep='last')
-    df1 = df1.sort_index()
-
-    the_path = files_contract.get_kdata_path(security_item, source='sina', fuquan=fuquan)
-    df1.to_csv(the_path, index=False)
-
-
-def time_index_df(df):
-    df = df.set_index(df['timestamp'], drop=False)
-    df.index = pd.to_datetime(df.index)
-    df = df.sort_index()
-    return df
-
-
-def add_factor_to_163(security_item):
-    path_163 = get_kdata_path(security_item, source='163', fuquan='bfq')
-    df_163 = pd.read_csv(path_163, dtype=str)
-    df_163 = time_index_df(df_163)
-
-    if 'factor' in df_163.columns:
-        df = df_163[df_163['factor'].isna()]
-
-        if df.empty:
-            logger.info("{} 163 factor is ok", security_item['code'])
-            return
-
-    path_sina = get_kdata_path(security_item, source='sina', fuquan='hfq')
-    df_sina = pd.read_csv(path_sina, dtype=str)
-    df_sina = time_index_df(df_sina)
-
-    df_163['factor'] = df_sina['factor']
-    df_163.to_csv(path_163, index=False)
-
-
-def merge_kdata_to_one(security_item=None, replace=False, fuquan='bfq'):
-    if type(security_item) != 'NoneType':
-        items = pd.DataFrame().append(security_item).iterrows()
-    else:
-        items = get_security_list().iterrows()
-
-    if fuquan:
-        fuquans = [fuquan]
-    else:
-        fuquans = ['bfq', 'hfq']
-
-    for index, security_item in items:
-        for fuquan in fuquans:
-            dayk_path = get_kdata_path(security_item, source='sina', fuquan=fuquan)
-            if fuquan == 'hfq':
-                df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN_SINA_FQ)
-            else:
-                df = pd.DataFrame(
-                    columns=data_contract.KDATA_COLUMN_SINA)
-
-            the_dir = get_kdata_dir(security_item, fuquan=fuquan)
-
-            if os.path.exists(the_dir):
-                files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if
-                         ('dayk.csv' not in f and os.path.isfile(os.path.join(the_dir, f)))]
-                for f in files:
-                    df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
-            if df.size > 0:
-                df = df.set_index(df['timestamp'])
-                df.index = pd.to_datetime(df.index)
-                df = df.sort_index()
-                logger.info("{} to {}".format(security_item['code'], dayk_path))
-                if replace:
-                    df.to_csv(dayk_path, index=False)
-                else:
-                    merge_to_current_kdata(security_item, df, fuquan=fuquan)
-
-            for f in files:
-                logger.info("remove {}".format(f))
-                os.remove(f)
-
-            if fuquan == 'hfq':
-                add_factor_to_163(security_item)
 
 
 def parse_shfe_day_data(force_parse=False):
@@ -693,40 +601,4 @@ def parse_shfe_data(force_parse=False):
 
 
 if __name__ == '__main__':
-    # print(get_kdata('000001'))
-    # parse_shfe_day_data()
     print(get_kdata('ag1801', source='exchange'))
-    # print(get_security_list(security_type='stock', exchanges=['nasdaq'], codes=US_STOCK_CODES))
-    # item = {"code": "000001", "type": "stock", "exchange": "sz"}
-    # assert kdata_exist(item, 1991, 2) == True
-    # assert kdata_exist(item, 1991, 3) == True
-    # assert kdata_exist(item, 1991, 4) == True
-    # assert kdata_exist(item, 1991, 2) == True
-    # assert kdata_exist(item, 1990, 1) == False
-    # assert kdata_exist(item, 2017, 1) == False
-    #
-    # df1 = get_kdata(item,
-    #                 datetime.datetime.strptime('1991-04-01', settings.TIME_FORMAT_DAY),
-    #                 datetime.datetime.strptime('1991-12-31', settings.TIME_FORMAT_DAY))
-    # df1 = df1.set_index(df1['timestamp'])
-    # df1 = df1.sort_index()
-    # print(df1)
-    #
-    # df2 = tdx.get_tdx_kdata(item, '1991-04-01', '1991-12-31')
-    # df2 = df2.set_index(df2['timestamp'], drop=False)
-    # df2 = df2.sort_index()
-    # print(df2)
-    #
-    # for _, data in df1.iterrows():
-    #     if data['timestamp'] in df2.index:
-    #         data2 = df2.loc[data['timestamp']]
-    #         assert data2["low"] == data["low"]
-    #         assert data2["open"] == data["open"]
-    #         assert data2["high"] == data["high"]
-    #         assert data2["close"] == data["close"]
-    #         assert data2["volume"] == data["volume"]
-    #         try:
-    #             assert data2["turnover"] == data["turnover"]
-    #         except Exception as e:
-    #             print(data2["turnover"])
-    #             print(data["turnover"])

@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 def init_process_log(file_name, log_dir=None):
     root_logger = logging.getLogger()
+
+    # reset the handlers
+    root_logger.handlers = []
+
     root_logger.setLevel(logging.INFO)
 
     if log_dir:

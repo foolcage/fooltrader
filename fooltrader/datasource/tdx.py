@@ -20,12 +20,5 @@ def get_tdx_kdata(security_item, start, end):
         df.columns = KDATA_COLUMN_SINA
     return df
 
-
-def save_tdx_kdata(security_item, the_dates):
-    df = get_tdx_kdata(security_item, the_dates[0], the_dates[-1])
-
-    technical.merge_to_current_kdata(security_item, df[df.timestamp.isin(the_dates)])
-
-
 if __name__ == '__main__':
     pass

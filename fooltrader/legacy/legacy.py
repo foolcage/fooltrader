@@ -7,7 +7,7 @@ import shutil
 
 import pandas as pd
 
-from fooltrader.api.technical import get_security_list, time_index_df
+from fooltrader.api.technical import get_security_list
 from fooltrader.contract import data_contract
 from fooltrader.contract.data_contract import KDATA_COLUMN_SINA, KDATA_COLUMN_SINA_FQ, EVENT_STOCK_FINANCE_FORECAST_COL, \
     EVENT_STOCK_FINANCE_REPORT_COL
@@ -328,6 +328,13 @@ def finance_report_event_to_csv():
             df = df.loc[:, EVENT_STOCK_FINANCE_REPORT_COL]
             df.to_csv(get_finance_report_event_path(security_item), index=False)
             logger.info("transform {} report event".format(security_item['code']))
+
+
+def time_index_df(df):
+    df = df.set_index(df['timestamp'], drop=False)
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
+    return df
 
 
 def restore_kdata():
