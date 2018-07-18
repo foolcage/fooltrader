@@ -21,14 +21,60 @@ fooltrader是一个利用*大数据*技术设计的*量化分析交易系统*,�
 ## 1.2 **免费数据源和精心分类的统一api**  
 
 api输出结果具体字段含义请参考[*数据协议*](./docs/contract.md).  
-
-### 获取利润表 ###
+### A股数据 ###
 ```bash
-In [1]: from fooltrader.api import finance
-In [2]: finance.get_income_statement_items('300027',report_period='2017-06-30')
+In [1]:import fooltrader as ft
+In [2]:ft.get_kdata('000778')
 #试一试
-#finance.get_balance_sheet_items('300027',,report_event_date='2017-01-01')
-#finance.get_cash_flow_statement_items('300027')
+#ft.get_kdata('300027',start_date='20170630',end_date='20170715')
+#ft.get_kdata('300027',start_date='20170630',end_date='20170715')
+
+timestamp    code  name    low   open  close   high    volume      turnover       securityId    ...             mCap  factor  hfqClose   hfqOpen   hfqHigh    hfqLow  qfqClose   qfqOpen   qfqHigh    qfqLow
+timestamp                                                                                                    ...                                                                                                         
+1997-06-06  1997-06-06  000778  新兴铸管  18.00  18.10  19.68  20.70  45335789  8.904533e+08  stock_sz_000778    ...     1.416960e+09   1.000  19.68000  18.10000  20.70000  18.00000  1.497375  1.377159  1.574983  1.369550
+1997-06-09  1997-06-09  000778  新兴铸管  18.00  20.00  18.51  20.44  11333248  2.148290e+08  stock_sz_000778    ...     1.332720e+09   1.000  18.51000  20.00000  20.44000  18.00000  1.408354  1.521723  1.555200  1.369550
+1997-06-10  1997-06-10  000778  新兴铸管  16.66  18.50  16.75  18.60   6641283  1.155679e+08  stock_sz_000778    ...     1.206000e+09   1.000  16.75000  18.50000  18.60000  16.66000  1.274443  1.407593  1.415202  1.267595
+1997-06-11  1997-06-11  000778  新兴铸管  15.90  16.60  17.35  17.40   5560642  9.365633e+07  stock_sz_000778    ...     1.249200e+09   1.000  17.35000  16.60000  17.40000  15.90000  1.320094  1.263030  1.323899  1.209769
+1997-06-12  1997-06-12  000778  新兴铸管  16.80  17.68  16.80  17.70   3022235  5.142033e+07  stock_sz_000778    ...     1.209600e+09   1.000  16.80000  17.68000  17.70000  16.80000  1.278247  1.345203  1.346724  1.278247
+```
+### 期货数据 ###
+```bash
+In [3]:ft.get_kdata('rb1601')
+           timestamp    code   name     low    open   close    high    volume     turnover          securityId  preClose  change  changePct  openInterest  settlement  preSettlement  change1  changePct1
+timestamp                                                                                                                                                                                                
+2015-01-16  20150116  rb1601  螺纹钢rb  2533.0  2545.0  2550.0  2568.0      96.0      244.468  future_shfe_rb1601    2518.0    32.0   0.012708          66.0      2546.0         2518.0     28.0    0.011120
+2015-01-19  20150119  rb1601  螺纹钢rb  2515.0  2534.0  2541.0  2558.0     486.0     1231.174  future_shfe_rb1601    2550.0    -5.0  -0.001961         212.0      2533.0         2546.0    -13.0   -0.005106
+2015-01-20  20150120  rb1601  螺纹钢rb  2521.0  2554.0  2529.0  2554.0     134.0      339.290  future_shfe_rb1601    2541.0    -4.0  -0.001574         286.0      2532.0         2533.0     -1.0   -0.000395
+2015-01-21  20150121  rb1601  螺纹钢rb  2516.0  2520.0  2516.0  2540.0     294.0      743.266  future_shfe_rb1601    2529.0   -16.0  -0.006327         410.0      2528.0         2532.0     -4.0   -0.001580
+2015-01-22  20150122  rb1601  螺纹钢rb  2515.0  2519.0  2521.0  2530.0     310.0      782.114  future_shfe_rb1601    2516.0    -7.0  -0.002782         576.0      2522.0         2528.0     -6.0   -0.002373
+
+```
+### 数字货币 ###
+```bash
+In [4]: ft.get_kdata('BTC-USD',exchange='kraken')
+
+             timestamp     code     name     low    open   close    high       volume                     securityId  preClose  change  changePct
+timestamp                                                                                                                                        
+2016-07-08  2016-07-08  BTC-USD  BTC/USD   634.0   640.4   671.4   671.4  1651.592635  cryptocurrency_kraken_BTC-USD       NaN     NaN        NaN
+2016-07-09  2016-07-09  BTC-USD  BTC/USD   622.0   671.9   652.0   671.9  1908.295953  cryptocurrency_kraken_BTC-USD     671.4   -19.4  -0.029755
+2016-07-10  2016-07-10  BTC-USD  BTC/USD   642.4   652.0   650.0   655.6   429.290787  cryptocurrency_kraken_BTC-USD     652.0    -2.0  -0.003077
+2016-07-11  2016-07-11  BTC-USD  BTC/USD   645.3   652.5   650.7   663.3   814.157258  cryptocurrency_kraken_BTC-USD     650.0     0.7   0.001076
+2016-07-12  2016-07-12  BTC-USD  BTC/USD   647.1   650.7   666.0   675.9   923.800268  cryptocurrency_kraken_BTC-USD     650.7    15.3   0.022973
+
+```
+### tick ###
+```
+In [5]: for item in ft.get_ticks('000338'):
+    ...:     print(item)
+```
+![](./screenshots/tick.gif)
+
+### 基本面数据 ###
+```bash
+In [5]: ft.get_income_statement_items('300027',report_period='2017-06-30')
+#试一试
+#ft.get_balance_sheet_items('300027',,report_event_date='2017-01-01')
+#ft.get_cash_flow_statement_items('300027')
 Out[2]:
 {'EPS': 0.15,
  'ManagingCosts': 257005115.85,
@@ -99,71 +145,46 @@ stock_sz_300027_20170930 operating profit calculating pass
 ```
 我的博客介绍[*fooltrader投资之财务指标*](https://foolcage.github.io/investing/fooltrader/2018/03/02/basic-finance-indicator.html)
 
-### 行情信息 ###
-K线数据
-```bash
-In [5]: from fooltrader.api import quote
-
-In [6]: quote.get_kdata('300027',start_date='20170630',end_date='20170715')
-#试一试
-#quote.get_kdata('300027',start_date='20170630',end_date='20170715',fuquan='qfq')
-#quote.get_kdata('300027',start_date='20170630',end_date='20170715',fuquan='hfq')
-Out[6]:
-             timestamp    code  name   low  open  close  high    volume      turnover       securityId  preClose  change  changePct  turnoverRate          tCap          mCap  factor
-timestamp                                                                                                                                                                            
-2017-06-30  2017-06-30  300027  华谊兄弟  8.03  8.11   8.09  8.11   9515735  7.684533e+07  stock_sz_300027      8.11   -0.02    -0.2466        0.3832  2.244575e+10  2.008766e+10  15.055
-2017-07-03  2017-07-03  300027  华谊兄弟  8.07  8.09   8.20  8.22  15577742  1.270549e+08  stock_sz_300027      8.09    0.11     1.3597        0.6274  2.275095e+10  2.036079e+10  15.055
-2017-07-04  2017-07-04  300027  华谊兄弟  8.12  8.20   8.15  8.22   8672705  7.068477e+07  stock_sz_300027      8.20   -0.05    -0.6098        0.3493  2.261222e+10  2.023664e+10  15.055
-2017-07-05  2017-07-05  300027  华谊兄弟  8.11  8.15   8.19  8.22  12458305  1.017991e+08  stock_sz_300027      8.15    0.04     0.4908        0.5017  2.272320e+10  2.033596e+10  15.055
-2017-07-06  2017-07-06  300027  华谊兄弟  8.17  8.20   8.20  8.29  18642574  1.533405e+08  stock_sz_300027      8.19    0.01     0.1221        0.7508  2.275095e+10  2.036079e+10  15.055
-2017-07-07  2017-07-07  300027  华谊兄弟  8.13  8.18   8.17  8.19   9414275  7.679682e+07  stock_sz_300027      8.20   -0.03    -0.3659        0.3791  2.266771e+10  2.028630e+10  15.055
-2017-07-10  2017-07-10  300027  华谊兄弟  8.08  8.18   8.09  8.19  12679949  1.029643e+08  stock_sz_300027      8.17   -0.08    -0.9792        0.5107  2.244575e+10  2.008766e+10  15.055
-2017-07-11  2017-07-11  300027  华谊兄弟  8.06  8.10   8.08  8.13  11412820  9.235337e+07  stock_sz_300027      8.09   -0.01    -0.1236        0.4596  2.241801e+10  2.006283e+10  15.055
-2017-07-12  2017-07-12  300027  华谊兄弟  7.93  8.07   8.03  8.10  13776145  1.104951e+08  stock_sz_300027      8.08   -0.05    -0.6188        0.5548  2.227928e+10  1.993868e+10  15.055
-2017-07-13  2017-07-13  300027  华谊兄弟  8.09  8.10   8.28  8.37  43554957  3.590739e+08  stock_sz_300027      8.03    0.25     3.1133        1.7541  2.297291e+10  2.055944e+10  15.055
-2017-07-14  2017-07-14  300027  华谊兄弟  8.23  8.25   8.41  8.55  37967053  3.193673e+08  stock_sz_300027      8.28    0.13     1.5700        1.5291  2.333359e+10  2.088223e+10  15.055
-```
-tick数据
-```bash
-In [7]: for tick in quote.get_ticks('300027',the_date='2017-07-03'):
-    ...:     print(tick)
-    ...:     
-    ...:     
-#试一试
-#quote.get_ticks('300027',start='2017-06-30',end='2017-07-10')
-                               timestamp  price  volume  turnover  direction    code       securityId
-timestamp                                                                                            
-2017-07-03 09:25:03  2017-07-03 09:25:03   8.09      41     33169          1  300027  stock_sz_300027
-2017-07-03 09:30:03  2017-07-03 09:30:03   8.09      10      8090          1  300027  stock_sz_300027
-...                                  ...    ...     ...       ...        ...     ...              ...
-2017-07-03 14:57:00  2017-07-03 14:57:00   8.19       4      3276         -1  300027  stock_sz_300027
-2017-07-03 14:57:03  2017-07-03 14:57:03   8.19       0         0         -1  300027  stock_sz_300027
-2017-07-03 15:00:03  2017-07-03 15:00:03   8.20    4394   3603079          1  300027  stock_sz_300027
-
-[2313 rows x 7 columns]
-
-```
 
 ### 事件(消息)数据 ###
 ```bash
-In [8]: from fooltrader.api import event
+In [12]: ft.get_finance_forecast_event('000002')
+             timestamp reportPeriod       securityId type                                        description  preEPS  changeStart  change                          id
+timestamp                                                                                                                                                            
+2004-04-02  2004-04-02   2004-03-31  stock_sz_000002   预增                   预计公司2004年第1季度净利润较去年同期增长幅度超过150%。     NaN          NaN    1.50  stock_sz_000002_2004-04-02
+2004-07-05  2004-07-05   2004-06-30  stock_sz_000002   预增                   预计公司2004年上半年度净利润较去年同期增长幅度将超过50%。     NaN          NaN    0.50  stock_sz_000002_2004-07-05
+2005-01-12  2005-01-12   2004-12-31  stock_sz_000002   预增                     预计本公司2004年全年净利润较去年增长50%－65%之间。     NaN          NaN    0.65  stock_sz_000002_2005-01-12
+2005-04-06  2005-04-06   2005-03-31  stock_sz_000002   预增                  预计本公司2005年1季度净利润较上年同期增长100%－150％。     NaN          NaN    1.50  stock_sz_000002_2005-04-06
+2005-04-25  2005-04-25   2005-06-30  stock_sz_000002   预增                   预计本公司2005年上半年净利润较去年同期增长150—200%。     NaN          NaN    2.00  stock_sz_000002_2005-04-25
+2005-08-01  2005-08-01   2005-09-30  stock_sz_000002   预增                预计2005年1～9月份可实现净利润将较去年同期增长110～130%。     NaN          NaN    1.30  stock_sz_000002_2005-08-01
+2006-01-06  2006-01-06   2005-12-31  stock_sz_000002   预增                        预计本公司2005年全年净利润较去年增幅将超过50%。     NaN          NaN    0.50  stock_sz_000002_2006-01-06
+2006-03-21  2006-03-21   2006-03-31  stock_sz_000002   预增               经初步测算，预计本公司2006年第1季度净利润较上年同期增长超过50%。     NaN          NaN    0.50  stock_sz_000002_2006-03-21
+2006-06-23  2006-06-23   2006-06-30  stock_sz_000002   预增                     预计本公司2006年半年度净利润较上年同期增长50%~60%     NaN          NaN    0.60  stock_sz_000002_2006-06-23
+2006-09-28  2006-09-28   2006-09-30  stock_sz_000002   预增                     预计2006年一至三季度净利润较上年同期增长50%-60%。     NaN          NaN    0.60  stock_sz_000002_2006-09-28
+2007-01-12  2007-01-12   2006-12-31  stock_sz_000002   预增                          预计2006年全年净利润较去年增长50%-65%。    0.26          NaN    0.65  stock_sz_000002_2007-01-12
+2007-04-04  2007-04-04   2007-03-31  stock_sz_000002   预增                    预计2007年第一季度净利润较上年同期增长幅度为50-60%。     NaN          NaN    0.60  stock_sz_000002_2007-04-04
+2007-10-30  2007-10-30   2007-12-31  stock_sz_000002   预增                      公司预计2007年全年净利润较去年增长100%-150%。     NaN          NaN    1.50  stock_sz_000002_2007-10-30
+2015-04-03  2015-04-03   2015-03-31  stock_sz_000002   预减  预计2015年1月1日-2015年3月31日归属于上市公司股东的净利润为盈利：60,000万...    0.14        -0.61   -0.54  stock_sz_000002_2015-04-03
 
-In [9]: for item in event.get_forecast_items('000338'):
-   ...:     print(item)
-   ...:     
-{'changeStart': None, 'reportDate': '2008-01-28', 'id': 'stock_sz_000338_2008-01-28', 'preEPS': None, 'securityId': 'stock_sz_000338', 'reportPeriod': '2007-12-31', 'description': '潍柴动力预计2007年1-12月净利润较2006年度备考合并净利润增长约140%左右。', 'change': 1.4, 'type': '预增'}
-{'changeStart': None, 'reportDate': '2008-07-24', 'id': 'stock_sz_000338_2008-07-24', 'preEPS': 1.87, 'securityId': 'stock_sz_000338', 'reportPeriod': '2008-06-30', 'description': '预计本公司2008年1-6月归属于母公司所有者净利润与2007年同期调整前及调整后的归属于母公司所有者净利润相比增长50%-100%之间。', 'change': 1.0, 'type': '预增'}
-{'changeStart': None, 'reportDate': '2009-08-19', 'id': 'stock_sz_000338_2009-08-19', 'preEPS': 3.19, 'securityId': 'stock_sz_000338', 'reportPeriod': '2009-06-30', 'description': '预计本公司2009年半年度营业收入约为人民币158亿元，营业利润约在人民币15-18亿元之间，利润总额约在人民币15-18亿元之间，归属于上市公司股东的净利润约在人民币10.0-12.5亿元之间。', 'change': 0.0, 'type': '预降'}
-...
-{'changeStart': 1.4, 'reportDate': '2017-04-14', 'id': 'stock_sz_000338_2017-04-14', 'preEPS': 0.11, 'securityId': 'stock_sz_000338', 'reportPeriod': '2017-03-31', 'description': '预计2017年1-3月归属于上市公司股东的净利润为：109,600.00万元至123,300.00万元，较上年同期相比变动幅度：140.00%至170.00%。', 'change': 1.7, 'type': '预增'}
-{'changeStart': 0.7, 'reportDate': '2017-04-28', 'id': 'stock_sz_000338_2017-04-28', 'preEPS': 0.26, 'securityId': 'stock_sz_000338', 'reportPeriod': '2017-06-30', 'description': '预计2017年1-6月归属于上市公司股东的净利润为：183,000.00万元至215,000.00万元，较上年同期相比变动幅度：70.00%至100.00%。', 'change': 1.0, 'type': '预增'}
-{'changeStart': 1.5, 'reportDate': '2017-08-31', 'id': 'stock_sz_000338_2017-08-31', 'preEPS': 0.38, 'securityId': 'stock_sz_000338', 'reportPeriod': '2017-09-30', 'description': '预计2017年1-9月归属于上市公司股东的净利润为：385,000.00万元至431,400.00万元，较上年同期相比变动幅度：150.00%至180.00%。', 'change': 1.8, 'type': '预增'}
+In [13]: ft.get_finance_report_event('600338')
+           reportPeriod       securityId   timestamp                  title                                                url                          id
+timestamp                                                                                                                                                 
+2010-02-12   2009-12-31  stock_sh_600338  2010-02-12  西藏珠峰工业股份有限公司2009年年度报告  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2010-02-12
+2011-04-27   2010-12-31  stock_sh_600338  2011-04-27                ST珠峰：年报  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2011-04-27
+2012-04-26   2011-12-31  stock_sh_600338  2012-04-26  西藏珠峰工业股份有限公司2011年年度报告  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2012-04-26
+2013-03-06   2012-12-31  stock_sh_600338  2013-03-06         西藏珠峰工业股份有限公司年报  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2013-03-06
+2014-04-30   2013-12-31  stock_sh_600338  2014-04-30  西藏珠峰工业股份有限公司2013年年度报告  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2014-04-30
+2015-04-30   2014-12-31  stock_sh_600338  2015-04-30         西藏珠峰工业股份有限公司年报  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2015-04-30
+2016-04-15   2015-12-31  stock_sh_600338  2016-04-15                 西藏珠峰年报  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2016-04-15
+2017-01-05   2015-12-31  stock_sh_600338  2017-01-05     西藏珠峰2015年年度报告（更正稿）  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2017-01-05
+2017-02-28   2016-12-31  stock_sh_600338  2017-02-28          西藏珠峰2016年年度报告  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2017-02-28
+2018-03-10   2017-12-31  stock_sh_600338  2018-03-10          西藏珠峰2017年年度报告  http://vip.stock.finance.sina.com.cn/corp/view...  stock_sh_600338_2018-03-10
+
 ```
 
 ### 技术指标 ###  
 ```bash
-In [10]: from fooltrader.api import technical
-In [11]: technical.macd('000778',start_date='20170101',end_date='20170301')
+In [11]: ft.macd('000778',start_date='20170101',end_date='20170301')
 Out[11]:
             close  close_ema12  close_ema26      diff       dea      macd
 timestamp                                                                
@@ -264,19 +285,6 @@ fooltrader是一个层次清晰的系统,你可以在不同的层次对其进行
 内存:>=8G  
 硬盘:越大越好  
 
-如果你想直接使用,只需要:
-```bash
-#在python3.5环境下,或者使用virtualenv
-pip install fooltrader
-```
-下载打包好的历史数据[*data.zip*](https://pan.baidu.com/s/1dmZaPo).  
-看一下[*数据协议*](./docs/contract.md),设置好FOOLTRADER_STORE_PATH,解压下载的文件到该目录.  
-然后使用[*定时脚本1*](./fooltrader/sched/sched_finance.py)和[*定时脚本2*](./fooltrader/sched/sched_quote.py)每天抓取增量数据.  
-该项目的目的之一是方便大家共享数据,不需要每个人都去抓历史数据而导致被屏蔽.  
-也可以用该[*脚本*](./fooltrader/datamanager/zipdata.py)对数据进行打包共享  
-
-*不过由于该项目还在快速更新中,最好还是按下面的步骤直接用源码来搞*  
-### 3.2 初始化python环境
 clone或者fork代码  
 ```bash
 $ git clone https://github.com/foolcage/fooltrader.git
@@ -291,51 +299,18 @@ Requirements installed.
 env ok
 ```
 那么恭喜你,你可以以各种姿势去玩耍了.
-### 3.3 抓取数据
-```bash
-$ source ve/bin/activate
-$ ./ve/bin/ipython
-In [1]: from fooltrader.datamanager import datamanager
-#抓取股票元数据
-In [2]: datamanager.crawl_stock_meta()
-#抓取指数数据
-In [3]: datamanager.crawl_index_quote()
-#抓取个股K线和tick数据
-In [4]: datamanager.crawl_stock_quote(start_code='002797',end_code='002798',crawl_tick=False)
-#抓取财务数据
-In [5]: datamanager.crawl_finance_data(start_code='002797',end_code='002798')
-```
+
+下载打包好的历史数据[*data.zip*](https://pan.baidu.com/s/1dmZaPo).  
+看一下[*数据协议*](./docs/contract.md),设置好FOOLTRADER_STORE_PATH,解压下载的文件到该目录.  
+然后使用使用[*定时脚本*](./fooltrader/sched)每天抓取增量数据.  
+该项目的目的之一是方便大家共享数据,不需要每个人都去抓历史数据而导致被屏蔽.  
+也可以用该[*脚本*](./fooltrader/datamanager/zipdata.py)对数据进行打包共享  
+
+这些脚本会定时去抓取"缺少"的数据,在历史数据完整性检查通过后,其实就是只是抓取当天的数据,这样我们就有了一个自动化自我维护的完整数据源.  
+
 这里把抓取数据作为一个单独的模块,而不是像某些开源项目那样api和爬虫耦合在一起,主要是为了:
 > 爬虫只干爬虫的事:专注抓取的速度,更好的数据分类,数据补全,防屏蔽等  
 > api设计只依赖[*数据协议*](./docs/contract.md),从而具有更好的速度和灵活性
-
-
-抓取每天的增量数据只需要:
-```bash
-$ ./sched_finance.sh
-```
-```bash
-$ ./sched_quote.sh
-```
-该脚本会定时去抓取"缺少"的数据,在历史数据完整性检查通过后,其实就是只是抓取当天的数据,这样我们就有了一个自动化自我维护的完整数据源.  
-可在sched_quote.py文件中进行对定时任务进行配置:  
-```python
-#每天17:00运行
-@sched.scheduled_job('cron', hour=17, minute=00)
-def scheduled_job1():
-    crawl_stock_quote('000001', '002999')
-    crawl_index_quote()
-
-
-@sched.scheduled_job('cron', hour=17, minute=20)
-def scheduled_job2():
-    crawl_stock_quote('300000', '300999')
-
-
-@sched.scheduled_job('cron', hour=17, minute=40)
-def scheduled_job3():
-    crawl_stock_quote('600000', '666666')
-```
 
 最后强调一下,数据抓下来了,怎么使用?请参考[*数据协议*](./docs/contract.md)  
 到这里,如果你不想使用elastic-search,也不想使用python,你就是想用java,mysql,或者你superset,redash,hadoop啥的玩得很熟,没问题,根据数据协议你应该很容易的把数据放到你需要的地方进行研究.
@@ -375,18 +350,19 @@ $ ./bin/kibana
 ```bash
 In [1]: from fooltrader.connector import es_connector
 #股票元信息->es
-In [2]: es_connector.stock_meta_to_es()
+In [2]: es_connector.security_meta_to_es()
 #指数数据->es
-In [3]: es_connector.index_kdata_to_es()
+In [3]: es_connector.kdata_to_es(security_type='index')
 #个股k线->es
-In [4]: es_connector.stock_kdata_to_es()
+In [4]: es_connector.kdata_to_es(security_type='stock')
 #你也可以多开几个窗口,指定范围,提高索引速度
-In [4]: es_connector.stock_kdata_to_es(start='002000',end='002999')
+In [4]: es_connector.kdata_to_es(start='002000',end='002999')
 #财务数据->es
-In [5]: es_connector.balance_sheet_to_es()
-In [5]: es_connector.income_statement_to_es()
-In [5]: es_connector.cash_flow_statement_to_es()
+In [5]: es_connector.finance_sheet_to_es('balance_sheet')
+In [5]: es_connector.finance_sheet_to_es('cash_flow_statement')
+In [5]: es_connector.finance_sheet_to_es('income_statement')
 ```
+更多功能可以直接查看es_connector的源码,也可以加到定时任务里面,所有索引函数都做了时间判断,只会添加没有添加的数据.
 
 然后,我们简单的来领略一下它的威力  
 查询2017年中报净利润top 5
@@ -475,7 +451,9 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
   * A股tick数据抓取  
   * A股日线数据抓取  
   * A股财务数据抓取  
-  * A股事件抓取  
+  * A股事件抓取
+  * 数字货币行情
+  * 期货数据  
 
 >数据的处理方式是,先定义[*数据协议*](./docs/contract.md),再寻找数据源,这样做的好处是:数据协议的稳定为整个系统的稳定打下坚实的基础,多数据源比较提高数据准确性,多数据源聚合提高数据完整性.
 
@@ -495,7 +473,6 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
 * WEB管理界面,向导式生成策略
 * 实时行情及kafka实时计算
 * 集成vnpy的交易接口
-* 期货数据抓取
 * 港股数据抓取
 
 # 联系方式  
