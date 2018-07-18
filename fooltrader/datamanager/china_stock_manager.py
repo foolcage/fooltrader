@@ -7,8 +7,8 @@ import os
 import pandas as pd
 
 from fooltrader import settings
-from fooltrader.api import event
-from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, get_cash_flow_statement_items
+from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, \
+    get_cash_flow_statement_items
 from fooltrader.api.technical import get_security_list, get_latest_download_trading_date, get_trading_dates, \
     get_available_tick_dates, get_kdata
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
@@ -62,10 +62,10 @@ def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
 
                 if current_report_period != current_items[-1]['reportPeriod']:
                     # 报告出来了
-                    df = event.get_finance_report_event(security_item, index='reportPeriod')
-                    if current_report_period in df.index:
-                        process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                                           "report_type": "balance_sheet"})
+                    # df = event.get_finance_report_event(security_item, index='reportPeriod')
+                    # if current_report_period in df.index:
+                    process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                       "report_type": "balance_sheet"})
 
             # 利润表
             path = get_income_statement_path(security_item)
@@ -77,10 +77,10 @@ def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
                 # 当前报告期还没抓取
                 if current_report_period != current_items[-1]['reportPeriod']:
                     # 报告出来了
-                    df = event.get_finance_report_event(security_item, index='reportPeriod')
-                    if current_report_period in df.index:
-                        process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                                           "report_type": "income_statement"})
+                    # df = event.get_finance_report_event(security_item, index='reportPeriod')
+                    # if current_report_period in df.index:
+                    process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                       "report_type": "income_statement"})
 
             # 现金流量表
             path = get_cash_flow_statement_path(security_item)
@@ -92,10 +92,10 @@ def crawl_finance_data(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE):
                 # 当前报告期还没抓取
                 if current_report_period != current_items[-1]['reportPeriod']:
                     # 报告出来了
-                    df = event.get_finance_report_event(security_item, index='reportPeriod')
-                    if current_report_period in df.index:
-                        process_crawl(StockFinanceSpider, {"security_item": security_item,
-                                                           "report_type": "cash_flow"})
+                    # df = event.get_finance_report_event(security_item, index='reportPeriod')
+                    # if current_report_period in df.index:
+                    process_crawl(StockFinanceSpider, {"security_item": security_item,
+                                                       "report_type": "cash_flow"})
         except Exception as e:
             logger.exception(e)
 
@@ -163,7 +163,8 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
                 logger.info("{} {} kdata from sina is ok".format(security_item['code'], fuquan))
 
         # 抓取tick
-        if crawl_tick:
+        # FIXME:新浪该服务已不可用
+        if crawl_tick and False:
             tick_dates = {x for x in base_dates if x >= settings.START_TICK_DATE}
             diff_dates = tick_dates - set(get_available_tick_dates(security_item))
 

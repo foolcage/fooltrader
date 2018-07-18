@@ -92,6 +92,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
         df = df_for_date_range(df, start_date=start_list_date)
 
         df = df.set_index(df['code'], drop=False)
+        df = df.sort_index()
 
         if codes:
             df = df.loc[codes]

@@ -37,7 +37,7 @@ def get_event(security_item, event_type='finance_forecast', start_date=None, end
     path = get_event_path(security_item, event_type)
 
     if os.path.exists(path):
-        df = pd_utils.pd_read_csv(path, index=index)
+        df = pd_utils.pd_read_csv(path, index=index, generate_id=True)
         df = df_for_date_range(df, start_date=start_date, end_date=end_date)
     else:
         df = pd.DataFrame()

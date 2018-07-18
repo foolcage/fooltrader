@@ -145,6 +145,10 @@ class StockKDataSinaSpider(scrapy.Spider):
         df1 = df1.sort_index()
 
         the_path = files_contract.get_kdata_path(security_item, source='sina', fuquan=fuquan)
+        if fuquan == 'hfq':
+            df1 = df1.loc[:, data_contract.KDATA_COLUMN_SINA_FQ]
+        else:
+            df1 = df1.loc[:, data_contract.KDATA_COLUMN_SINA]
         df1.to_csv(the_path, index=False)
 
     @staticmethod

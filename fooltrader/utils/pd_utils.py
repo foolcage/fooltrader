@@ -3,9 +3,6 @@ import logging
 
 import pandas as pd
 
-from fooltrader.settings import TIME_FORMAT_SEC
-from fooltrader.utils.utils import to_time_str
-
 logger = logging.getLogger(__name__)
 
 
@@ -52,9 +49,7 @@ def pd_read_csv(csv_path, converters=None, index='timestamp', generate_id=False)
     if not df.empty:
         # generate id if need
         if generate_id and 'id' not in df.columns and 'securityId' in df.columns and 'timestamp' in df.columns:
-            timestamp_str = df.timestamp.apply(lambda x: to_time_str(x, time_fmt=TIME_FORMAT_SEC))
-
-            df['id'] = df['securityId'] + '_' + timestamp_str
+            df['id'] = df['securityId'] + '_' + df['timestamp']
 
         df = df.set_index(df[index], drop=False)
 
