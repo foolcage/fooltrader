@@ -282,12 +282,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
             else:
                 return None
         else:
-            if not start_date and not pd.isna(security_item['listDate']):
-                start_date = security_item['listDate']
-            if not end_date:
-                end_date = datetime.datetime.today()
-
-            if start_date and end_date:
+            if start_date or end_date:
                 df = df_for_date_range(df, start_date=start_date, end_date=end_date)
 
         # 复权处理
