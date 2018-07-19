@@ -38,7 +38,6 @@ def init_log():
 
 
 def mkdir_for_stock(item):
-    print(item)
     finance_dir = get_finance_dir(item)
     if not os.path.exists(finance_dir):
         os.makedirs(finance_dir)
@@ -81,7 +80,7 @@ def init_env():
                 os.makedirs(exchange_cache_dir)
 
             exchange_cache_dir = get_exchange_cache_dir(security_type='future', exchange='shfe',
-                                                        the_year=datetime.today().year,
+                                                        the_year=datetime.datetime.today().year,
                                                         data_type="day_kdata")
             if not os.path.exists(exchange_cache_dir):
                 os.makedirs(exchange_cache_dir)
