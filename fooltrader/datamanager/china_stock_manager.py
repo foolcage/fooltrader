@@ -6,7 +6,7 @@ import os
 
 import pandas as pd
 
-from fooltrader import settings
+from fooltrader import settings, init_env
 from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, \
     get_cash_flow_statement_items
 from fooltrader.api.technical import get_security_list, get_latest_download_trading_date, get_trading_dates, \
@@ -34,6 +34,9 @@ def crawl_stock_meta():
     if True:
         logger.info('download stock list start')
         process_crawl(ChinaStockListSpider, {})
+
+        # FIXME:better way to handle
+        init_env()
         logger.info('download stock list finish')
 
 

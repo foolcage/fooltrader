@@ -94,7 +94,9 @@ def init_env():
 pd.set_option('expand_frame_repr', False)
 
 init_log()
-# init_env()
+
+init_env()
+
 logger = logging.getLogger(__name__)
 
 try:
