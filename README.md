@@ -311,9 +311,26 @@ env ok
 ```
 那么恭喜你,你可以以各种姿势去玩耍了.
 
-下载打包好的历史数据[*data.zip*](https://pan.baidu.com/s/1dmZaPo).  
+两种方式去下载历史数据(目前包含到2018-07-19的数据)
+* 百度网盘[*data.zip*](https://pan.baidu.com/s/1-s9ZdzXTCyTJUxhRMAd5Kw). 
+>直接解压可用
+* git clone https://gitee.com/null_071_4607/fooltrader-data
+>跟百度网盘是一样的数据，split过的，进入2018-07-19目录，cat data* > data.zip 后再解压
+* 股票tick数据：https://pan.baidu.com/s/10LR1Cy6ZGZMQiaZ8Lh4_QA#list/path=%2F
+> 这个数据太大，大概包含到2018年3月份的数据，split过的，
+> cat 000* > 000.zip 后再解压
+
 看一下[*数据协议*](./docs/contract.md),设置好FOOLTRADER_STORE_PATH,解压下载的文件到该目录.  
 然后使用使用[*定时脚本*](./fooltrader/sched)每天抓取增量数据.  
+```bash
+$ source ve/bin/activate
+抓股票列表
+$ python fooltrader/sched/sched_stock_meta.py
+抓行情
+$ python fooltrader/sched/sched_china_stock_quote.py
+抓财报
+$ python fooltrader/sched/sched_finance.py
+```
 该项目的目的之一是方便大家共享数据,不需要每个人都去抓历史数据而导致被屏蔽.  
 也可以用该[*脚本*](./fooltrader/datamanager/zipdata.py)对数据进行打包共享  
 
