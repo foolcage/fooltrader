@@ -113,18 +113,22 @@ def finance_sheet_to_es(sheet_type=None, start_code=None, end_code=None, force=F
         es_index_mapping(sheet_type, doc_type)
 
         for _, security_item in get_security_list(start_code=start_code, end_code=end_code).iterrows():
-            if sheet_type == 'balance_sheet':
-                items = get_balance_sheet_items(security_item)
-            elif sheet_type == 'income_statement':
-                items = get_income_statement_items(security_item)
-            elif sheet_type == 'cash_flow_statement':
-                items = get_cash_flow_statement_items(security_item)
+            try:
+                if sheet_type == 'balance_sheet':
+                    items = get_balance_sheet_items(security_item)
+                elif sheet_type == 'income_statement':
+                    items = get_income_statement_items(security_item)
+                elif sheet_type == 'cash_flow_statement':
+                    items = get_cash_flow_statement_items(security_item)
 
-            df = pd.DataFrame(items)
+                df = pd.DataFrame(items)
 
-            df = index_df_with_time(df, index='reportPeriod')
+                df = index_df_with_time(df, index='reportPeriod')
 
-            df_to_es(df, doc_type=doc_type, timestamp_filed='reportPeriod', security_item=security_item, force=force)
+                df_to_es(df, doc_type=doc_type, timestamp_filed='reportPeriod', security_item=security_item,
+                         force=force)
+            except Exception as e:
+                logger.exception("index {} {} failed".format(security_item['code'], sheet_type), e)
 
 
 def usa_stock_finance_to_es(force=False):
