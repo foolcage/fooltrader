@@ -65,7 +65,7 @@ def security_meta_to_es(security_type='stock'):
     elif security_type == 'index':
         doc_type = IndexMeta
 
-    df = get_security_list(security_type=security_type)
+    df = get_security_list(security_type=security_type, mode='es')
 
     df_to_es(df, doc_type, force=True)
 
