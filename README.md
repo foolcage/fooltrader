@@ -312,10 +312,13 @@ env ok
 那么恭喜你,你可以以各种姿势去玩耍了.
 
 两种方式去下载历史数据(目前包含到2018-07-19的数据)
-* 百度网盘[*data.zip*](https://pan.baidu.com/s/1-s9ZdzXTCyTJUxhRMAd5Kw). 
+* 百度网盘[*data.zip*](https://pan.baidu.com/s/1-s9ZdzXTCyTJUxhRMAd5Kw).
 >直接解压可用
-* git clone https://gitee.com/null_071_4607/fooltrader-data
->跟百度网盘是一样的数据，split过的，进入2018-07-19目录，cat data* > data.zip 后再解压
+* wget https://gitee.com/null_071_4607/fooltrader-data/raw/master/2018-07-19/dataa{a-j}
+> 讲a-j个文件下载(目前速度最快的方式),然后合并:cat data* > data.zip 后再解压
+* ~~git clone https://gitee.com/null_071_4607/fooltrader-data~~
+>~~跟百度网盘是一样的数据，split过的，进入2018-07-19目录，cat data* > data.zip 后再解压~~
+
 * 股票tick数据：https://pan.baidu.com/s/10LR1Cy6ZGZMQiaZ8Lh4_QA#list/path=%2F
 > 这个数据太大，大概包含到2018年3月份的数据，split过的，
 > cat 000* > 000.zip 后再解压
