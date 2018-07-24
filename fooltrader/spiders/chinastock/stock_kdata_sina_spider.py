@@ -35,9 +35,7 @@ class StockKDataSinaSpider(scrapy.Spider):
     # @random_proxy
     def yield_request(self, item, trading_dates=[], fuquan=None):
         the_quarters = []
-        force_download = False
         if trading_dates:
-            force_download = True
             for the_date in trading_dates:
                 the_quarters.append(get_year_quarter(the_date))
         else:
@@ -56,7 +54,7 @@ class StockKDataSinaSpider(scrapy.Spider):
                 data_path = get_kdata_path(item, source='sina', year=year, quarter=quarter, fuquan=fuquan)
                 data_exist = os.path.exists(data_path) or kdata_exist(item, year, quarter, fuquan, source='sina')
 
-                if not data_exist or force_download:
+                if not data_exist:
                     url = self.get_k_data_url(item['code'], year, quarter, fuquan)
                     yield Request(url=url, headers=DEFAULT_KDATA_HEADER,
                                   meta={'path': data_path, 'item': item, 'fuquan': fuquan},

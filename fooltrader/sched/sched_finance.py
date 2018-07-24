@@ -4,6 +4,7 @@ import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from fooltrader.connector import es_connector
 from fooltrader.datamanager import process_crawl
 from fooltrader.datamanager.china_stock_manager import crawl_finance_data
 from fooltrader.spiders.chinastock.stock_forecast_spider import StockForecastSpider
@@ -19,11 +20,14 @@ sched = BackgroundScheduler()
 @sched.scheduled_job('cron', hour=18, minute=00)
 def scheduled_job1():
     crawl_finance_data('000001', '666666')
+    es_connector.finance_sheet_to_es()
+    es_connector.finance_event_to_es(event_type='finance_report')
 
 
 @sched.scheduled_job('cron', hour=18, minute=10)
 def scheduled_job2():
     process_crawl(StockForecastSpider)
+    es_connector.finance_event_to_es(event_type='finance_forecast')
 
 
 if __name__ == '__main__':

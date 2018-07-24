@@ -4,6 +4,7 @@ import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from fooltrader.connector import es_connector
 from fooltrader.datamanager.china_stock_manager import crawl_stock_meta, craw_stock_category
 from fooltrader.utils.utils import init_process_log
 
@@ -22,6 +23,7 @@ def scheduled_job1():
 @sched.scheduled_job('cron', hour=00, minute=10)
 def scheduled_job2():
     craw_stock_category()
+    es_connector.security_meta_to_es()
 
 
 if __name__ == '__main__':

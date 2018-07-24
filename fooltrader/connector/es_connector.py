@@ -96,29 +96,35 @@ def kdata_to_es(security_type='stock', start_code=None, end_code=None, force=Fal
         df_to_es(df, doc_type=doc_type, index_name=index_name, security_item=security_item, force=force)
 
 
-def finance_sheet_to_es(sheet_type='balance_sheet', start_code=None, end_code=None, force=False):
-    if sheet_type == 'balance_sheet':
-        doc_type = BalanceSheet
-    elif sheet_type == 'income_statement':
-        doc_type = IncomeStatement
-    elif sheet_type == 'cash_flow_statement':
-        doc_type = CashFlowStatement
+def finance_sheet_to_es(sheet_type=None, start_code=None, end_code=None, force=False):
+    if sheet_type is None:
+        sheet_types = ['balance_sheet', 'income_statement', 'cash_flow_statement']
+    else:
+        sheet_types = [sheet_type]
 
-    es_index_mapping(sheet_type, doc_type)
-
-    for _, security_item in get_security_list(start_code=start_code, end_code=end_code).iterrows():
+    for sheet_type in sheet_types:
         if sheet_type == 'balance_sheet':
-            items = get_balance_sheet_items(security_item)
+            doc_type = BalanceSheet
         elif sheet_type == 'income_statement':
-            items = get_income_statement_items(security_item)
+            doc_type = IncomeStatement
         elif sheet_type == 'cash_flow_statement':
-            items = get_cash_flow_statement_items(security_item)
+            doc_type = CashFlowStatement
 
-        df = pd.DataFrame(items)
+        es_index_mapping(sheet_type, doc_type)
 
-        df = index_df_with_time(df, index='reportPeriod')
+        for _, security_item in get_security_list(start_code=start_code, end_code=end_code).iterrows():
+            if sheet_type == 'balance_sheet':
+                items = get_balance_sheet_items(security_item)
+            elif sheet_type == 'income_statement':
+                items = get_income_statement_items(security_item)
+            elif sheet_type == 'cash_flow_statement':
+                items = get_cash_flow_statement_items(security_item)
 
-        df_to_es(df, doc_type=doc_type, timestamp_filed='reportPeriod', security_item=security_item, force=force)
+            df = pd.DataFrame(items)
+
+            df = index_df_with_time(df, index='reportPeriod')
+
+            df_to_es(df, doc_type=doc_type, timestamp_filed='reportPeriod', security_item=security_item, force=force)
 
 
 def usa_stock_finance_to_es(force=False):
