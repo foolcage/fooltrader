@@ -8,10 +8,11 @@ from fooltrader.api.technical import to_security_item
 from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
     KDATA_COMMON_COL
 from fooltrader.contract.es_contract import get_es_kdata_index
+from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.utils import to_time_str
 
 
-def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, level='day', fields=None,
+def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, level='day', fields=None,
                  from_idx=0, size=10):
     """
     get kdata.
@@ -20,6 +21,8 @@ def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, l
     ----------
     security_item : SecurityItem or str
         the security item,id or code
+    exchange : str
+        the exchange,set this for cryptocurrency
     the_date : TimeStamp str or TimeStamp
         get the kdata for the exact date
     start_date : TimeStamp str or TimeStamp
@@ -40,7 +43,7 @@ def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, l
     JSON
 
     """
-    security_item = to_security_item(security_item)
+    security_item = to_security_item(security_item, exchange)
 
     index = get_es_kdata_index(security_type=security_item['type'], exchange=security_item['exchange'],
                                level=level)
@@ -67,7 +70,7 @@ def es_get_kdata(security_item, the_date=None, start_date=None, end_date=None, l
 
         resp = s[from_idx:from_idx + size].execute()
 
-        return resp['hits'].to_dict()
+        return es_resp_to_payload(resp)
 
 
 if __name__ == '__main__':

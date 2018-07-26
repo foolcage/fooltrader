@@ -3,12 +3,13 @@ import json
 import logging
 
 import pandas as pd
-from flask import request, Blueprint
+from flask import request
 from marshmallow import ValidationError
 
 from fooltrader import kafka_producer
 from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.domain.business.subscription_schema import PriceSubscriptionSchema
+from fooltrader.rest import app
 from fooltrader.rest.common import error, success
 from fooltrader.utils.utils import fill_doc_type
 
@@ -21,11 +22,8 @@ ERROR_INVALID_INPUT_JSON = {"code": 100002, "msg": "invalid input json,{0}"}
 
 price_subscription_shema = PriceSubscriptionSchema()
 
-subscription_rest = Blueprint('subscription', __name__,
-                              template_folder='templates')
 
-
-@subscription_rest.route('/subscription', methods=['GET'])
+@app.route('/subscription', methods=['GET'])
 def get_subscription():
     user_id = request.args.get('userId')
 
@@ -37,8 +35,8 @@ def get_subscription():
     return success(results['hits'].to_dict())
 
 
-@subscription_rest.route('/subscription', defaults={'id': None}, methods=['PUT'])
-@subscription_rest.route('/subscription/<id>', methods=['PUT'])
+@app.route('/subscription', defaults={'id': None}, methods=['PUT'])
+@app.route('/subscription/<id>', methods=['PUT'])
 def set_subscription(id):
     the_json = request.get_json()
 
