@@ -192,6 +192,9 @@ CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS"]
 CRYPTOCURRENCY_PAIR = [("{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
                       [("{}/{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
 
+CRYPTOCURRENCY_CODE = [("{}-{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
+                      [("{}-{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
+
 SECURITY_TYPE_MAP_EXCHANGES = {
     "stock": ['sh', 'sz'],
     "index": ['sh', 'sz'],

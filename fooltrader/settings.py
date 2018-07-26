@@ -127,7 +127,7 @@ TIME_FORMAT_SEC = '%Y-%m-%d %H:%M:%S'
 
 TIME_FORMAT_DAY = '%Y-%m-%d'
 
-ES_HOSTS = ['localhost:9200']
+ES_HOSTS = ['172.16.92.200:9200']
 # ES_HOSTS = ['localhost:9200']
 
 

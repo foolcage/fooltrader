@@ -95,7 +95,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
         df = df.sort_index()
 
         if codes:
-            df = df.loc[codes]
+            df = df[df["code"].isin(codes)]
         elif start_code and end_code:
             df = df[(df["code"] >= start_code) & (df["code"] <= end_code)]
 

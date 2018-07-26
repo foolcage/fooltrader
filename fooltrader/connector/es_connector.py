@@ -12,6 +12,7 @@ from fooltrader.api.fundamental import get_balance_sheet_items, get_income_state
     get_cash_flow_statement_items, \
     get_finance_summary_items
 from fooltrader.api.technical import get_security_list, get_kdata
+from fooltrader.consts import CRYPTOCURRENCY_CODE
 from fooltrader.contract.es_contract import get_es_kdata_index
 from fooltrader.domain.data.es_event import FinanceForecastEvent, FinanceReportEvent
 from fooltrader.domain.data.es_finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
@@ -80,15 +81,17 @@ def security_meta_to_es(security_type='stock'):
 
 
 def kdata_to_es(security_type='stock', start_code=None, end_code=None, force=False):
+    codes = None
     if security_type == 'stock':
         doc_type = StockKData
     elif security_type == 'index':
         doc_type = IndexKData
     elif security_type == 'cryptocurrency':
         doc_type = CryptoCurrencyKData
+        codes = CRYPTOCURRENCY_CODE
 
     for _, security_item in get_security_list(security_type=security_type, start_code=start_code,
-                                              end_code=end_code).iterrows():
+                                              end_code=end_code, codes=codes).iterrows():
         index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
 
         df = get_kdata(security_item, generate_id=True)
@@ -155,11 +158,12 @@ def finance_event_to_es(event_type='finance_forecast', start_code=None, end_code
 
 
 if __name__ == '__main__':
-    security_meta_to_es()
-    kdata_to_es(start_code='300027', end_code='300028', force=False)
-    kdata_to_es(security_type='index', force=True)
-    finance_sheet_to_es('balance_sheet', start_code='300027', end_code='300028', force=False)
-    finance_sheet_to_es('income_statement', start_code='300027', end_code='300028', force=False)
-    finance_sheet_to_es('cash_flow_statement', start_code='300027', end_code='300028', force=False)
-    finance_event_to_es(start_code='300027', end_code='300028', force=False)
-    finance_event_to_es(event_type='finance_report', start_code='300027', end_code='300028', force=False)
+    kdata_to_es(security_type='cryptocurrency')
+    # security_meta_to_es()
+    # kdata_to_es(start_code='300027', end_code='300028', force=False)
+    # kdata_to_es(security_type='index', force=True)
+    # finance_sheet_to_es('balance_sheet', start_code='300027', end_code='300028', force=False)
+    # finance_sheet_to_es('income_statement', start_code='300027', end_code='300028', force=False)
+    # finance_sheet_to_es('cash_flow_statement', start_code='300027', end_code='300028', force=False)
+    # finance_event_to_es(start_code='300027', end_code='300028', force=False)
+    # finance_event_to_es(event_type='finance_report', start_code='300027', end_code='300028', force=False)
