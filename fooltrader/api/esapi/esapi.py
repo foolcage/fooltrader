@@ -13,7 +13,7 @@ from fooltrader.utils.utils import to_time_str
 
 
 def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, level='day', fields=None,
-                 from_idx=0, size=10):
+                 from_idx=0, size=10, csv=False):
     """
     get kdata.
 
@@ -70,7 +70,7 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
 
         resp = s[from_idx:from_idx + size].execute()
 
-        return es_resp_to_payload(resp)
+        return es_resp_to_payload(resp, csv)
 
 
 if __name__ == '__main__':
