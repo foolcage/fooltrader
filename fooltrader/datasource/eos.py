@@ -51,6 +51,14 @@ def to_tick(item):
 
 
 def eos_ram_to_kafka():
+    ram_trade = db.ram_trade
+
+    logger.info("collection:{}", ram_trade)
+
+    one_record = ram_trade.find_one()
+
+    logger.info("one record:{}", one_record)
+
     security_id = 'cryptocurrency_contact_RAM-EOS'
 
     latest_timestamp, latest_order = get_latest_timestamp_order(security_id)
@@ -69,7 +77,9 @@ def eos_ram_to_kafka():
         else:
             condition = {"block_time": {"$gte": start_date, "$lt": end_date}}
 
-        for item in db.ram_trade.find(condition):
+        logger.info("start_date:{},end_date:{}", start_date, end_date)
+
+        for item in ram_trade.find(condition):
             tick = to_tick(item)
 
             record_meta = producer.send(topic,
