@@ -9,7 +9,7 @@ import pandas as pd
 
 from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
-from fooltrader.settings import TIME_FORMAT_DAY
+from fooltrader.settings import TIME_FORMAT_DAY, TIME_FORMAT_MICRO
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +232,10 @@ def to_timestamp(the_time):
 
 def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
     try:
-        return to_timestamp(the_time).strftime(time_fmt)
+        if time_fmt == TIME_FORMAT_MICRO:
+            return to_timestamp(the_time).strftime(time_fmt)[0:-3]
+        else:
+            return to_timestamp(the_time).strftime(time_fmt)
     except Exception as e:
         return the_time
 

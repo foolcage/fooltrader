@@ -32,3 +32,5 @@ Flask == 1.0
 marshmallow
 
 schedule
+
+pymongo
