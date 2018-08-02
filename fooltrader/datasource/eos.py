@@ -66,7 +66,7 @@ def eos_ram_to_kafka():
     topic = get_kafka_tick_topic(security_id)
 
     if not latest_timestamp:
-        latest_timestamp = to_timestamp('2018-06-09')
+        latest_timestamp = to_timestamp('2018-06-09 11:55:00')
 
     start_date, end_date = evaluate_time_range(latest_timestamp)
 
