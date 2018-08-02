@@ -157,4 +157,4 @@ if not WEIXIN_APP_SECRECT:
 EOS_MONGODB_URL = ""
 
 if not EOS_MONGODB_URL:
-    EOS_MONGODB_URL = os.environ.get("EOS_MONGODB_HOST")
+    EOS_MONGODB_URL = os.environ.get("EOS_MONGODB_URL")
