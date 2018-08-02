@@ -79,6 +79,8 @@ def eos_ram_to_kafka():
 
         logger.info("start_date:{},end_date:{}".format(start_date, end_date))
 
+        latest_timestamp = end_date
+
         for item in ram_trade.find(condition):
             tick = to_tick(item)
 
