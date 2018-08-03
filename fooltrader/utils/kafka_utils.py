@@ -11,8 +11,7 @@ from fooltrader.utils.utils import to_timestamp
 logger = logging.getLogger(__name__)
 
 
-def get_latest_timestamp_order(security_id):
-    topic = get_kafka_tick_topic(security_id)
+def get_latest_timestamp_order_from_topic(topic):
     consumer = KafkaConsumer(topic,
                              # client_id='fooltrader',
                              # group_id='fooltrader',
@@ -35,6 +34,11 @@ def get_latest_timestamp_order(security_id):
                 order = record.value['order']
             return timestamp, order
     return None, None
+
+
+def get_latest_timestamp_order(security_id):
+    topic = get_kafka_tick_topic(security_id)
+    return get_latest_timestamp_order_from_topic(topic)
 
 
 if __name__ == '__main__':
