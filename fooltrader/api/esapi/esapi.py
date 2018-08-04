@@ -8,12 +8,21 @@ from fooltrader.api.technical import to_security_item
 from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
     KDATA_COMMON_COL
 from fooltrader.contract.es_contract import get_es_kdata_index
+from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.utils import to_time_str
 
 
+def es_get_subscription(user_id, from_idx=0, size=500):
+    s = PriceSubscription.search()
+    s = s.filter('term', userId=user_id)
+    resp = s[from_idx:from_idx + size].execute()
+
+    return es_resp_to_payload(resp)
+
+
 def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, level='day', fields=None,
-                 from_idx=0, size=10, csv=False):
+                 from_idx=0, size=500, csv=False):
     """
     get kdata.
 

@@ -2,39 +2,28 @@
 from datetime import timedelta, datetime
 
 from fooltrader.api.technical import get_kdata
-from fooltrader.bot.actions import EmailAction, WeixinAction
-from fooltrader.bot.base_bot import BaseBot
+from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.datasource.ccxt_wrapper import fetch_kdata
 from fooltrader.domain.business.es_subscription import SubscriptionTriggered, PriceSubscription
 from fooltrader.utils.utils import is_same_date, to_timestamp, to_time_str
 
 
-class NotifyBot(BaseBot):
+class PriceNotifyBot(NotifyEventBot):
     def on_init(self):
-        # 设置为True会创建AccountService,可使用self.account_service进行买卖，系统会计算收益
-        # 设置为False,就没有账户信息
-        self.need_account = False
+        super().on_init()
+        self.notify_weixin = True
 
-        # 设置投资标的，会在on_event里面接收到该标的的行情
-        self.security_item = 'cryptocurrency_kraken_BCH-USD'
-        # 行情的级别
-        self.level = 'tick'
-
-        # bot运行的结束时间，设置为None将会一直运行
-        self.end_date = None
-
-        # 自定义字段放这里
+    def after_init(self):
+        # set your custom states here
         self.last_date = None
         self.last_close = None
 
-    def after_init(self):
         self.subscriptions = {}
         self.has_triggered = {}
 
         s = PriceSubscription.search()
 
-        s = s.filter('term', securityType=self.security_item['type']) \
-            .filter('term', exchange=self.security_item['exchange'])
+        s = s.filter('term', securityId=self.security_id)
         results = s.execute()
 
         for hit in results['hits']['hits']:

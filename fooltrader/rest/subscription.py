@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+from datetime import datetime
 
 import pandas as pd
 from flask import request
 from marshmallow import ValidationError
 
 from fooltrader import kafka_producer
-from fooltrader.domain.business.es_subscription import PriceSubscription
-from fooltrader.domain.business.subscription_schema import PriceSubscriptionSchema
+from fooltrader.api.esapi import esapi
+from fooltrader.domain.business.es_subscription import PriceSubscription, PriceSubscriptionSchema
 from fooltrader.rest import app
 from fooltrader.rest.common import error, success
-from fooltrader.utils.utils import fill_doc_type
+from fooltrader.rest.err_codes import ERROR_NO_INPUT_JSON_PROVIDED, ERROR_INVALID_INPUT_JSON, \
+    ERROR_SUBSCRIPTION_NOT_FOUND, ERROR_MISSING_REQUEST_PARAMS
+from fooltrader.settings import TIME_FORMAT_MICRO
+from fooltrader.utils.utils import fill_doc_type, get_security_id, to_time_str
 
 logger = logging.getLogger(__name__)
-
-ERROR_SUBSCRIPTION_NOT_FOUND = {"code": 200001, "msg": "subscription id:{0} not found"}
-
-ERROR_NO_INPUT_JSON_PROVIDED = {"code": 100001, "msg": "no input json provided"}
-ERROR_INVALID_INPUT_JSON = {"code": 100002, "msg": "invalid input json,{0}"}
 
 price_subscription_shema = PriceSubscriptionSchema()
 
@@ -27,17 +26,16 @@ price_subscription_shema = PriceSubscriptionSchema()
 def get_subscription():
     user_id = request.args.get('userId')
 
-    s = PriceSubscription.search()
-    s = s.filter('term', userId=user_id)
+    if not user_id:
+        return error(ERROR_MISSING_REQUEST_PARAMS, 'user_id')
 
-    results = s.execute()
+    result = esapi.es_get_subscription(user_id)
+    return success(result)
 
-    return success(results['hits'].to_dict())
 
-
-@app.route('/subscription', defaults={'id': None}, methods=['PUT'])
-@app.route('/subscription/<id>', methods=['PUT'])
-def set_subscription(id):
+@app.route('/subscription/<sub_type>', defaults={'id': None}, methods=['PUT'])
+@app.route('/subscription/<sub_type>/<id>', methods=['PUT'])
+def set_subscription(sub_type, id):
     the_json = request.get_json()
 
     if not the_json:
@@ -51,15 +49,22 @@ def set_subscription(id):
 
     # the update operation
     if id:
-        # FIXME:just check whether exist?
         sub_model = PriceSubscription.get(id=id, ignore=404)
+        sub_dict['id'] = id
         if not sub_model:
             logger.warning('could not find subscription:{}'.format(id))
             return error(ERROR_SUBSCRIPTION_NOT_FOUND, id)
     else:
-        sub_model = PriceSubscription()
+        # generate securityId
+        sub_dict['securityId'] = get_security_id(sub_dict['securityType'], sub_dict['exchange'], sub_dict['code'])
+        # generate subscription id
+        sub_dict['id'] = "{}_{}".format(sub_dict['userId'], sub_dict['securityId'])
 
-    fill_doc_type(sub_model, the_json)
+        sub_dict['timestamp'] = to_time_str(datetime.now(), time_fmt=TIME_FORMAT_MICRO)
+
+        sub_model = PriceSubscription(meta={'id': sub_dict['id']})
+
+    fill_doc_type(sub_model, sub_dict)
 
     sub_model.save(force=True)
 
@@ -68,9 +73,9 @@ def set_subscription(id):
     logger.info('subscription:{} saved'.format(result_json))
 
     resp = kafka_producer.send('subscription',
-                               bytes(json.dumps(result_json), encoding='utf8'),
-                               key=bytes(result_json['_id'], encoding='utf8'),
-                               timestamp_ms=int(pd.Timestamp.now().timestamp()))
+                               bytes(json.dumps(sub_dict), encoding='utf8'),
+                               key=bytes(sub_dict['id'], encoding='utf8'),
+                               timestamp_ms=int(pd.Timestamp.now().timestamp() * 1000))
     kafka_producer.flush()
 
     logger.info(resp)

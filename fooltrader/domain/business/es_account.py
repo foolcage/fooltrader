@@ -25,6 +25,7 @@ class Account(DocType):
         index = 'account'
         doc_type = 'doc'
         all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
 
 
 class Position(DocType):
@@ -86,3 +87,4 @@ class Order(DocType):
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
+        dynamic = MetaField('strict')

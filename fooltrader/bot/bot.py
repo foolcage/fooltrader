@@ -4,10 +4,11 @@ import json
 import logging
 import threading
 
+from fooltrader.bot.action.account_service import AccountService
 from kafka import KafkaConsumer
 from kafka import TopicPartition
 
-from fooltrader.bot.account_service import AccountService
+from fooltrader.bot.action.msg_action import WeixinAction, EmailAction
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
 from fooltrader.settings import KAFKA_HOST
 from fooltrader.utils.kafka_utils import get_latest_timestamp_order_from_topic
@@ -40,6 +41,7 @@ class EventBot(BaseBot):
         self.start_timestamp = None
         self.end_timestamp = None
 
+        # setup the user custom settings
         self.on_init()
 
         self._threads = []
@@ -126,15 +128,15 @@ class EventBot(BaseBot):
 
 
 class TradingEventBot(EventBot):
-    def on_init(self):
-        super().on_init()
+    def after_init(self):
+        pass
 
+    def __init__(self, security_id=None):
         self.base_capital = 1000000
         self.buy_cost = 0.001
         self.sell_cost = 0.001
         self.slippage = 0.001
 
-    def __init__(self, security_id=None):
         super().__init__(security_id)
 
         timestamp = self.start_timestamp
@@ -144,14 +146,22 @@ class TradingEventBot(EventBot):
                                               base_capital=self.base_capital, buy_cost=self.buy_cost,
                                               sell_cost=self.sell_cost, slippage=self.slippage)
 
+        self.after_init()
+
 
 class NotifyEventBot(EventBot):
-    def on_init(self):
-        super().on_init()
-
-        self.notify_weixin = True
-        self.notify_email = True
-        self.notify_sms = False
+    def after_init(self):
+        pass
 
     def __init__(self, security_id=None):
+        self.notify_weixin = False
+        self.notify_email = False
+
         super().__init__(security_id)
+
+        if self.notify_weixin:
+            self.weixin_action = WeixinAction()
+        if self.notify_email:
+            self.weixin_action = EmailAction()
+
+        self.after_init()

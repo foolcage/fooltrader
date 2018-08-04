@@ -228,15 +228,14 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
 ```
 curl -XPUT "localhost:5000/subscription" -H 'Content-Type: application/json' -d '{
             "userId": "oRvNP0XIb9G3g6a-2fAX9RHX5--Q",
-            "type": "price",
             "securityType": "cryptocurrency",
-            "exchange": "binance",
-            "code": "XRP-USDT",
+            "exchange": "contract",
+            "code": "RAM-EOS",
             "upPct": 0.02,
             "downPct": -0.02,
-            "up": 6500,
-            "down": 6700,
-            "actions": ["weixin", "email", "shortMsg"],
+            "upTo": 1000,
+            "downTo": 900,
+            "actions": ["weixin"],
             "repeat": false
         }'
 {

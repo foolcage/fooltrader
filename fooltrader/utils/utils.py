@@ -14,6 +14,10 @@ from fooltrader.settings import TIME_FORMAT_DAY, TIME_FORMAT_MICRO
 logger = logging.getLogger(__name__)
 
 
+def get_security_id(security_type, exchange, code):
+    return "{}_{}_{}".format(security_type, exchange, code)
+
+
 def init_process_log(file_name, log_dir=None):
     root_logger = logging.getLogger()
 
