@@ -78,8 +78,8 @@ class WeixinAction(Action):
         if resp.json() and resp.json()["errcode"] == 0:
             self.logger.info("send_price_notification to user:{} data:{} success".format(to_user, the_json))
 
-    def _format_price_notification(self, to_user, security_name, current_price, change, change_pct):
-        if change > 0:
+    def _format_price_notification(self, to_user, security_name, current_price, change_pct):
+        if change_pct > 0:
             title = '涨啦涨啦涨啦'
         else:
             title = '跌啦跌啦跌啦'
@@ -114,7 +114,7 @@ class WeixinAction(Action):
                     "color": "#173177"
                 },
                 "keyword3": {
-                    "value": change_pct,
+                    "value": '{:.2%}'.format(change_pct),
                     "color": "#173177"
                 },
                 "remark": {
@@ -134,4 +134,4 @@ if __name__ == '__main__':
 
     weixin_action = WeixinAction()
     weixin_action.send_price_notification(to_user='oRvNP0XIb9G3g6a-2fAX9RHX5--Q', security_name='BTC/USDT',
-                                          current_price=1000, change=5, change_pct='0.5%')
+                                          current_price=1000, change_pct='0.5%')

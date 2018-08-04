@@ -13,11 +13,14 @@ from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.utils import to_time_str
 
 
-def es_get_subscription(user_id, from_idx=0, size=500):
+def es_get_subscription(user_id=None, security_id=None, from_idx=0, size=500):
     s = PriceSubscription.search()
-    s = s.filter('term', userId=user_id)
-    resp = s[from_idx:from_idx + size].execute()
+    if user_id:
+        s = s.filter('term', userId=user_id)
+    if security_id:
+        s = s.filter('term', securityId=security_id)
 
+    resp = s[from_idx:from_idx + size].execute()
     return es_resp_to_payload(resp)
 
 

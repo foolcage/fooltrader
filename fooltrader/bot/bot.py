@@ -162,6 +162,6 @@ class NotifyEventBot(EventBot):
         if self.notify_weixin:
             self.weixin_action = WeixinAction()
         if self.notify_email:
-            self.weixin_action = EmailAction()
+            self.email_action = EmailAction()
 
         self.after_init()
