@@ -75,13 +75,10 @@ class PriceNotifyBot(NotifyEventBot):
         self.check_subscription(current_price=event_item['price'], change_pct=change_pct)
 
     def handle_trigger(self, trigger_flag, sub_id, subscription, current_price, change_pct, condition_type):
-        triggered = False
         if trigger_flag not in self.has_triggered:
             sub_triggerd = SubscriptionTriggered(sub_id=sub_id, timestamp=self.current_time,
                                                  conditionType=condition_type)
             sub_triggerd.save(index='subscription_triggered')
-
-            triggered = True
 
             self.logger.debug(
                 "send msg to user:{},price:{},change_pct:{}".format(subscription['userId'], current_price,
@@ -92,9 +89,8 @@ class PriceNotifyBot(NotifyEventBot):
                                                            security_name=self.security_item['name'],
                                                            current_price=current_price,
                                                            change_pct=change_pct)
-        if triggered:
-            self.has_triggered[trigger_flag] = sub_triggerd.to_dict()
-            self.logger.info("trigger:{} happen".format(trigger_flag))
+                self.has_triggered[trigger_flag] = sub_triggerd.to_dict()
+                self.logger.info("trigger:{} happen".format(trigger_flag))
 
     def check_subscription(self, current_price, change_pct):
 

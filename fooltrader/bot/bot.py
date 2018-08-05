@@ -4,10 +4,11 @@ import json
 import logging
 import threading
 
-from fooltrader.bot.action.account_service import AccountService
 from kafka import KafkaConsumer
 from kafka import TopicPartition
 
+from fooltrader.api.technical import to_security_item
+from fooltrader.bot.action.account_action import AccountService
 from fooltrader.bot.action.msg_action import WeixinAction, EmailAction
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
 from fooltrader.settings import KAFKA_HOST
@@ -35,6 +36,9 @@ class EventBot(BaseBot):
 
         assert security_id is not None
         self.security_id = security_id
+
+        self.security_item = to_security_item(self.security_item)
+        assert security_id is not None
 
         super.__init__()
 

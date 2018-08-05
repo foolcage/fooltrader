@@ -67,8 +67,8 @@ class WeixinAction(Action):
         else:
             self.logger.exception("could not refresh_token")
 
-    def send_price_notification(self, to_user, security_name, current_price, change, change_pct):
-        the_json = self._format_price_notification(to_user, security_name, current_price, change, change_pct)
+    def send_price_notification(self, to_user, security_name, current_price, change_pct):
+        the_json = self._format_price_notification(to_user, security_name, current_price, change_pct)
         the_data = json.dumps(the_json, ensure_ascii=False).encode('utf-8')
 
         resp = requests.post(self.SEND_MSG_URL.format(self.token), the_data)
