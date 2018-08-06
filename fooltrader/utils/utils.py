@@ -212,6 +212,10 @@ def is_same_date(one, two):
     return to_timestamp(one).date() == to_timestamp(two).date()
 
 
+def is_same_time(one, two):
+    return to_timestamp(one) == to_timestamp(two)
+
+
 def get_report_period(the_date=datetime.datetime.today().date()):
     if the_date.month >= 10:
         return "{}{}".format(the_date.year, '-09-30')

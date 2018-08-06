@@ -147,6 +147,7 @@ class CryptoCurrencyKData(BaseDocType):
 class CommonKData(BaseDocType):
     id = Keyword()
     timestamp = Date()
+    updateTimestamp = Date()
     securityId = Keyword()
     code = Keyword()
 
@@ -157,6 +158,45 @@ class CommonKData(BaseDocType):
     low = Float()
     volume = Float()
     turnover = Float()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
+
+
+class EosUserStatistic(BaseDocType):
+    id = Keyword()
+    timestamp = Date()
+    updateTimestamp = Date()
+    securityId = Keyword()
+    code = Keyword()
+    name = Keyword()
+
+    cash = Float()
+    total = Float()
+    averagePrice = Float()
+
+
+class CommonStatistic(BaseDocType):
+    id = Keyword()
+    timestamp = Date()
+    updateTimestamp = Date()
+    securityId = Keyword()
+    code = Keyword()
+    name = Keyword()
+
+    volume = Float()
+    turnover = Float()
+    flow = Float()
+    flowIn = Float()
+    flowOut = Float()
+    bigFlowIn = Float()
+    middleFlowIn = Float()
+    smallFlowIn = Float()
+    bigFlowOut = Float()
+    middleFlowOut = Float()
+    smallFlowOut = Float()
 
     class Meta:
         doc_type = 'doc'

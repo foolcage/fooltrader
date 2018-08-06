@@ -13,7 +13,7 @@ df = df.append(
         'timestamp': '2018-06-09',
         'exchange': 'contract',
         'type': 'cryptocurrency',
-        'id': "cryptocurrency_contract_ram-eos"
+        'id': "cryptocurrency_contract_RAM-EOS"
     }, ignore_index=True)
 
 if not df.empty:
