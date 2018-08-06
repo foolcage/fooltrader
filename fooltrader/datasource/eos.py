@@ -29,6 +29,10 @@ def to_tick(item):
         direction = -1
     else:
         direction = 0
+    if item.get('receiver'):
+        receiver = item['receiver']
+    else:
+        receiver = item['operator']
 
     return {
         'timestamp': to_time_str(item['block_time'], time_fmt=TIME_FORMAT_MICRO),
@@ -42,7 +46,7 @@ def to_tick(item):
         'order': item['global_seq'],
         'blockNumber': item['block_num'],
         'action': item['action'],
-        'receiver': item['receiver'],
+        'receiver': receiver,
         'trxId': item['trx_id'],
         'operator': item['operator'],
         'fee': item['fee']
