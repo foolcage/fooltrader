@@ -33,8 +33,8 @@ def _tick_to_kafka(security_item):
             the_json = tick_item.to_json(force_ascii=False)
             producer.send(get_kafka_tick_topic(security_item['id']),
                           bytes(the_json, encoding='utf8'),
-                          timestamp_ms=int(datetime.datetime.strptime(tick_item['timestamp'],
-                                                                      TIME_FORMAT_SEC).timestamp()))
+                          timestamp_ms=int(1000 * datetime.datetime.strptime(tick_item['timestamp'],
+                                                                             TIME_FORMAT_SEC).timestamp()))
             logger.debug("tick_to_kafka {}".format(the_json))
 
 

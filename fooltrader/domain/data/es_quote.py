@@ -133,9 +133,30 @@ class CryptoCurrencyKData(BaseDocType):
     high = Float()
     low = Float()
     volume = Float()
+    turnover = Float()
     preClose = Float()
     change = Float()
     changePct = Float()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
+
+
+class CommonKData(BaseDocType):
+    id = Keyword()
+    timestamp = Date()
+    securityId = Keyword()
+    code = Keyword()
+
+    name = Keyword()
+    open = Float()
+    close = Float()
+    high = Float()
+    low = Float()
+    volume = Float()
+    turnover = Float()
 
     class Meta:
         doc_type = 'doc'
@@ -168,3 +189,4 @@ class IndexKData(BaseDocType):
     class Meta:
         all = MetaField(enabled=False)
         doc_type = 'doc'
+        dynamic = MetaField('strict')

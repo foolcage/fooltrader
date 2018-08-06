@@ -32,21 +32,18 @@ class EventBot(BaseBot):
         self.logger.info("got event:{}".format(event_item))
 
     def __init__(self, security_id=None):
-        super.__init__()
-
-        assert security_id is not None
+        super().__init__()
         self.security_id = security_id
-
-        self.security_item = to_security_item(self.security_item)
-        assert security_id is not None
-
-        super.__init__()
-
         self.start_timestamp = None
         self.end_timestamp = None
 
         # setup the user custom settings
         self.on_init()
+
+        assert self.security_id is not None
+
+        self.security_item = to_security_item(self.security_id)
+        assert self.security_item is not None
 
         self._threads = []
 

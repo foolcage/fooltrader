@@ -32,7 +32,7 @@ def to_tick(item):
 
     return {
         'timestamp': to_time_str(item['block_time'], time_fmt=TIME_FORMAT_MICRO),
-        'securityId': 'cryptocurrency_contact_RAM-EOS',
+        'securityId': 'cryptocurrency_contract_RAM-EOS',
         'code': 'RAM-EOS',
         'price': item['bytes'] / item['price'],
         'direction': direction,
@@ -59,7 +59,7 @@ def eos_ram_to_kafka():
 
     logger.info("one record:{}".format(one_record))
 
-    security_id = 'cryptocurrency_contact_RAM-EOS'
+    security_id = 'cryptocurrency_contract_RAM-EOS'
 
     latest_timestamp, latest_order = get_latest_timestamp_order(security_id)
 

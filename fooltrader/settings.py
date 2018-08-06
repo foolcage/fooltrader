@@ -123,15 +123,14 @@ g_socks_proxy_items = []
 g_http_proxy_items = []
 g_socks2http_proxy_items = {}
 
-TIME_FORMAT_MICRO = '%Y-%m-%d %H:%M:%S.%f'
+TIME_FORMAT_MICRO = '%Y%m%dT%H%M%S.%f'
 
 TIME_FORMAT_SEC = '%Y-%m-%d %H:%M:%S'
 
 TIME_FORMAT_DAY = '%Y-%m-%d'
 
-ES_HOSTS = ['172.16.92.200:9200']
-# ES_HOSTS = ['localhost:9200']
-
+# ES_HOSTS = ['172.16.92.200:9200']
+ES_HOSTS = ['localhost:9200']
 
 # the action account settings
 SMTP_HOST = 'smtpdm.aliyun.com'
