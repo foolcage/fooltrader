@@ -77,7 +77,7 @@ def eos_ram_to_kafka():
         else:
             condition = {"block_time": {"$gte": start_date, "$lt": end_date}}
 
-        logger.info("start_date:{},end_date:{}".format(start_date, end_date))
+        logger.info("start_date:{},end_date:{},order:{}".format(start_date, end_date, latest_order))
 
         latest_timestamp = end_date
 
