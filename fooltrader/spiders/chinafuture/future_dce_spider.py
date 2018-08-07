@@ -8,7 +8,7 @@ import scrapy
 from scrapy import Request,FormRequest
 from scrapy import signals
 
-from fooltrader.api.quote import parse_shfe_data, parse_shfe_day_data
+from fooltrader.api.technical import parse_shfe_data, parse_shfe_day_data
 from fooltrader.contract.files_contract import get_exchange_cache_dir, get_exchange_cache_path
 from fooltrader.utils.utils import to_timestamp
 
