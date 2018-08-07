@@ -1,8 +1,8 @@
-id,reportDate,reportEventDate,securityId,title,url
-stock_sz_300550_2016-10-29_2016-09-30,2016-09-30,2016-10-29,stock_sz_300550,和仁科技：2016年第三季度报告全文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=2833511
-stock_sz_300550_2017-04-26_2017-03-31,2017-03-31,2017-04-26,stock_sz_300550,和仁科技：2017年第一季度报告全文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3318373
-stock_sz_300550_2017-04-26_2016-12-31,2016-12-31,2017-04-26,stock_sz_300550,和仁科技：2016年年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3318382
-stock_sz_300550_2017-06-05_2016-12-31,2016-12-31,2017-06-05,stock_sz_300550,和仁科技：2016年年度报告（更新后）,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3469621
-stock_sz_300550_2017-08-29_2017-06-30,2017-06-30,2017-08-29,stock_sz_300550,和仁科技：2017年半年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3704518
-stock_sz_300550_2017-08-30_2017-06-30,2017-06-30,2017-08-30,stock_sz_300550,和仁科技：2017年半年度报告（更新后）,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3723136
-stock_sz_300550_2017-10-28_2017-09-30,2017-09-30,2017-10-28,stock_sz_300550,和仁科技：2017年第三季度报告全文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3833696
+timestamp,reportPeriod,securityId,title,url
+2016-10-29,2016-09-30,stock_sz_300550,和仁科技：2016年第三季度报告全文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=2833511
+2017-04-26,2017-03-31,stock_sz_300550,和仁科技：2017年第一季度报告全文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3318373
+2017-04-26,2016-12-31,stock_sz_300550,和仁科技：2016年年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3318382
+2017-06-05,2016-12-31,stock_sz_300550,和仁科技：2016年年度报告（更新后）,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3469621
+2017-08-29,2017-06-30,stock_sz_300550,和仁科技：2017年半年度报告,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3704518
+2017-08-30,2017-06-30,stock_sz_300550,和仁科技：2017年半年度报告（更新后）,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3723136
+2017-10-28,2017-09-30,stock_sz_300550,和仁科技：2017年第三季度报告全文,http://vip.stock.finance.sina.com.cn/corp/view/vCB_AllBulletinDetail.php?stockid=300550&id=3833696

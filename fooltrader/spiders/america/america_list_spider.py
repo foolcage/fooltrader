@@ -53,6 +53,7 @@ class AmericaListSpider(scrapy.Spider):
             df['sinaIndustry'] = ''
             df['sinaConcept'] = ''
             df['sinaArea'] = ''
+            df['timestamp'] = df['listDate']
             df = df.set_index('code', drop=False)
 
             diff = set(df.index.tolist()) - set(df_current.index.tolist())

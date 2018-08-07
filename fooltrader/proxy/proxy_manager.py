@@ -106,7 +106,7 @@ def check_proxy(url):
                         df = pd.DataFrame()
 
             except Exception as e:
-                logger.error("{} using proxy:{} error:{}".format(url, item['url'], e))
+                logger.exception("{} using proxy:{} error:{}".format(url, item['url'], e))
 
 
 def merge_checked(remove_tmp=True):

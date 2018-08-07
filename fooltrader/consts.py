@@ -112,6 +112,7 @@ USA_STOCK_NASDAQ_INDEX = [
      'code': 'SP500',
      'name': 'SP500',
      'listDate': '1871-01-01',
+     'timestamp': '1871-01-01',
      'exchange': 'nasdaq',
      'type': 'index'}
 ]
@@ -120,18 +121,21 @@ CHINA_STOCK_SH_INDEX = [{'id': 'index_sh_000001',
                          'code': '000001',
                          'name': '上证指数',
                          'listDate': '1990-12-19',
+                         'timestamp': '1990-12-19',
                          'exchange': 'sh',
                          'type': 'index'},
                         {'id': 'index_sh_000016',
                          'code': '000016',
                          'name': '上证50',
                          'listDate': '2004-01-02',
+                         'timestamp': '2004-01-02',
                          'exchange': 'sh',
                          'type': 'index'},
                         {'id': 'index_sh_000905',
                          'code': '000905',
                          'name': '中证500',
                          'listDate': '2005-01-04',
+                         'timestamp': '2005-01-04',
                          'exchange': 'sh',
                          'type': 'index'}
                         ]
@@ -140,30 +144,60 @@ CHINA_STOCK_SZ_INDEX = [{'id': 'index_sz_399001',
                          'code': '399001',
                          'name': '深证成指',
                          'listDate': '1991-04-03',
+                         'timestamp': '1991-04-03',
                          'exchange': 'sz',
                          'type': 'index'},
                         {'id': 'index_sz_399106',
                          'code': '399106',
                          'name': '深证综指',
                          'listDate': '1991-04-03',
+                         'timestamp': '1991-04-03',
                          'exchange': 'sz',
                          'type': 'index'},
                         {'id': 'index_sz_399300',
                          'code': '399300',
                          'name': '沪深300',
                          'listDate': '2002-01-04',
+                         'timestamp': '2002-01-04',
                          'exchange': 'sz',
                          'type': 'index'},
                         {'id': 'index_sz_399005',
                          'code': '399005',
                          'name': '中小板指',
                          'listDate': '2006-01-24',
+                         'timestamp': '2006-01-24',
                          'exchange': 'sz',
                          'type': 'index'},
                         {'id': 'index_sz_399006',
                          'code': '399006',
                          'name': '创业板指',
                          'listDate': '2010-06-01',
+                         'timestamp': '2010-06-01',
                          'exchange': 'sz',
                          'type': 'index'}
                         ]
+
+SECURITY_TYPE_CRYPTO = 'cryptocurrency'
+
+# CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
+#                             "bitz", "bibox", "zb", "bitstamp"]
+
+CRYPTOCURRENCY_EXCHANGES = ["binance", "huobipro", "bitfinex"]
+
+# CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
+#                        "BNB", "ETC", "QTUM", "ONT"]
+
+CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS"]
+
+CRYPTOCURRENCY_PAIR = [("{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
+                      [("{}/{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
+
+CRYPTOCURRENCY_CODE = [("{}-{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
+                      [("{}-{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
+
+SECURITY_TYPE_MAP_EXCHANGES = {
+    "stock": ['sh', 'sz'],
+    "index": ['sh', 'sz'],
+    "future": ['shfe', 'dce', 'zce'],
+    "cryptocurrency": CRYPTOCURRENCY_EXCHANGES
+}
