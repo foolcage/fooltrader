@@ -94,7 +94,7 @@ AUTOTHROTTLE_DEBUG = False
 # 把这个改为你的data目录的绝对路劲,方便在任何地方使用python
 FOOLTRADER_STORE_PATH = os.environ.get('FOOLTRADER_STORE_PATH')
 if not FOOLTRADER_STORE_PATH:
-    FOOLTRADER_STORE_PATH = '/home/yang/D/china_stock_data'
+    FOOLTRADER_STORE_PATH = '/home/xuanqi/workspace/github/fooltrader/data'
 
 STOCK_START_CODE = '000001'
 STOCK_END_CODE = '666666'
