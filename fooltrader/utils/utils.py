@@ -3,14 +3,47 @@
 import datetime
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 import pandas as pd
 
-from fooltrader.contract.data_contract import TICK_COLUNM
+from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
+
+
+def init_process_log(file_name, log_dir=None):
+    root_logger = logging.getLogger()
+
+    # reset the handlers
+    root_logger.handlers = []
+
+    root_logger.setLevel(logging.INFO)
+
+    if log_dir:
+        file_name = os.path.join(log_dir, file_name)
+
+    fh = RotatingFileHandler(file_name, maxBytes=524288000, backupCount=10)
+
+    fh.setLevel(logging.INFO)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        "%(levelname)s  %(threadName)s  %(asctime)s  %(name)s:%(lineno)s  %(funcName)s  %(message)s")
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    # filter
+    # fh.addFilter(logging.Filter('fooltrader'))
+
+    # add the handlers to the logger
+    root_logger.addHandler(fh)
+    root_logger.addHandler(ch)
 
 
 def chrome_copy_header_to_dict(src):
@@ -155,7 +188,7 @@ def sina_tick_to_csv(security_item, the_content, the_date):
     csv_path = get_tick_path(security_item, the_date)
     df = read_csv(the_content, "GB2312", sep='\s+')
     df = df.loc[:, ['成交时间', '成交价', '成交量(手)', '成交额(元)', '性质']]
-    df.columns = TICK_COLUNM
+    df.columns = TICK_COL
     df['direction'] = df['direction'].apply(lambda x: direction_to_int(x))
     df.to_csv(csv_path, index=False)
 
@@ -172,21 +205,28 @@ def index_df_with_time(df, index='timestamp'):
 
 
 def is_same_date(one, two):
-    return pd.Timestamp(one).date() == pd.Timestamp(two).date()
+    return to_timestamp(one).date() == to_timestamp(two).date()
 
 
-def get_report_date(the_date=datetime.datetime.today().date()):
-    if the_date.month > 10:
-        return "{}{}".format(the_date.year, '0930')
-    elif the_date.month > 7:
-        return "{}{}".format(the_date.year, '0630')
-    elif the_date.month > 4:
-        return "{}{}".format(the_date.year, '0331')
+def get_report_period(the_date=datetime.datetime.today().date()):
+    if the_date.month >= 10:
+        return "{}{}".format(the_date.year, '-09-30')
+    elif the_date.month >= 7:
+        return "{}{}".format(the_date.year, '-06-30')
+    elif the_date.month >= 4:
+        return "{}{}".format(the_date.year, '-03-31')
     else:
-        return "{}{}".format(the_date.year - 1, '1231')
+        return "{}{}".format(the_date.year - 1, '-12-31')
 
 
+# ms(int) or second(float) or str
 def to_timestamp(the_time):
+    if type(the_time) == int:
+        the_time = the_time / 1000.0
+
+    if type(the_time) == float:
+        return pd.Timestamp.fromtimestamp(the_time)
+
     return pd.Timestamp(the_time)
 
 

@@ -1,0 +1,54 @@
+version: '3'
+services:
+  elasticsearch:
+    image: foolcage/elasticsearch:6.2.4
+    container_name: elasticsearch
+    environment:
+      - cluster.name=es-fooltrader
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms8g -Xmx8g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+      - es-config:/usr/share/elasticsearch/config
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - fooltrader
+    hostname: elasticsearch
+
+  kibana:
+    depends_on:
+      - elasticsearch
+    image: foolcage/kibana:6.2.4
+    container_name: kibana
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+      - kibana-config:/usr/share/kibana/config
+    ports:
+      - 5601:5601
+    networks:
+      - fooltrader
+    hostname: kibana
+
+volumes:
+  es-data:
+    driver: local
+  kibana-data:
+    driver: local
+  es-config:
+    driver: local
+  kibana-config:
+    driver: local
+
+networks:
+  fooltrader:
+      driver: bridge

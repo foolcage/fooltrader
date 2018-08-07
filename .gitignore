@@ -90,8 +90,9 @@ ENV/
 # Rope project settings
 .ropeproject
 
-full/
-data/
-*.zip
-ve/
+/tick
+/full
+/data/
+/*.zip
+/ve/
 .pytest_cache/

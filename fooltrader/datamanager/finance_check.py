@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from fooltrader.api.finance import get_income_statement_items, get_balance_sheet_items
+from fooltrader.api.fundamental import get_income_statement_items, get_balance_sheet_items
 
 
 def check_operating_profit(security_item):

@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 
-import logging
-import os
 from datetime import datetime
 
-import pandas as pd
+from elasticsearch_dsl import connections
+from kafka import KafkaProducer
 
-from fooltrader.api.quote import get_security_list
+from fooltrader.api.computing import *
+from fooltrader.api.event import *
+from fooltrader.api.fundamental import *
+from fooltrader.api.technical import *
+from fooltrader.api.technical import get_security_list
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir, \
     get_exchange_dir, get_exchange_cache_dir
-from fooltrader.settings import FOOLTRADER_STORE_PATH
+from fooltrader.settings import FOOLTRADER_STORE_PATH, ES_HOSTS, KAFKA_HOST
 
 
 def init_log():
@@ -24,7 +27,8 @@ def init_log():
     ch.setLevel(logging.INFO)
 
     # create formatter and add it to the handlers
-    formatter = logging.Formatter("%(levelname) -10s %(asctime)s %(module)s:%(lineno)s %(funcName)s %(message)s")
+    formatter = logging.Formatter(
+        "%(levelname)s  %(threadName)s  %(asctime)s  %(name)s:%(lineno)s  %(funcName)s  %(message)s")
     # fh.setFormatter(formatter)
     ch.setFormatter(formatter)
 
@@ -76,7 +80,7 @@ def init_env():
                 os.makedirs(exchange_cache_dir)
 
             exchange_cache_dir = get_exchange_cache_dir(security_type='future', exchange='shfe',
-                                                        the_year=datetime.today().year,
+                                                        the_year=datetime.datetime.today().year,
                                                         data_type="day_kdata")
             if not os.path.exists(exchange_cache_dir):
                 os.makedirs(exchange_cache_dir)
@@ -89,3 +93,17 @@ def init_env():
 pd.set_option('expand_frame_repr', False)
 
 init_log()
+
+init_env()
+
+logger = logging.getLogger(__name__)
+
+try:
+    es_client = connections.create_connection(hosts=ES_HOSTS)
+except Exception as e:
+    logger.exception(e)
+
+try:
+    kafka_producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
+except Exception as e:
+    logger.exception(e)

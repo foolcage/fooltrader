@@ -7,17 +7,6 @@ import fooltrader.utils.utils
 from fooltrader import settings
 
 
-def get_category_path(security_type='stock', classified='industry', source='sina', category_item=None):
-    if category_item:
-        return os.path.join(get_category_dir(security_type), '{}_{}_{}.csv'.format(source, classified, category_item))
-    else:
-        return os.path.join(get_category_dir(security_type), '{}_{}.csv'.format(source, classified))
-
-
-def get_category_dir(security_type='stock'):
-    return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, 'category')
-
-
 def get_exchange_dir(security_type='future', exchange='shfe'):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange)
 
@@ -47,11 +36,29 @@ def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, '{}.csv'.format(exchange))
 
 
-def get_security_dir(item):
-    return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
+def get_security_dir(item=None, security_type=None, exchange=None, code=None):
+    if security_type and exchange and code:
+        return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange, code)
+    else:
+        return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
+
+
+def get_security_meta_path(item=None, security_type=None, exchange=None, code=None):
+    return os.path.join(get_security_dir(item=item, security_type=security_type, exchange=exchange, code=code),
+                        "meta.json")
 
 
 # k线相关
+def adjust_source(security_item, source):
+    # 对于使用者，不需要指定source,系统会选择目前质量最好的source
+    if not source:
+        if security_item['type'] == 'future' or security_item['type'] == 'cryptocurrency':
+            source = 'exchange'
+        if security_item['type'] == 'stock' or security_item['type'] == 'index':
+            source = '163'
+    return source
+
+
 def get_kdata_dir(item, fuquan='bfq'):
     # 目前只有股票需要复权信息
     if item['type'] == 'stock':
@@ -60,7 +67,8 @@ def get_kdata_dir(item, fuquan='bfq'):
         return os.path.join(get_security_dir(item), 'kdata')
 
 
-def get_kdata_path(item, source='163', fuquan='bfq', year=None, quarter=None):
+def get_kdata_path(item, source=None, fuquan='bfq', year=None, quarter=None):
+    source = adjust_source(item, source)
     if source == 'sina':
         if not year and not quarter:
             return os.path.join(get_kdata_dir(item, fuquan), 'dayk.csv')
@@ -84,12 +92,16 @@ def get_event_dir(item):
     return os.path.join(get_security_dir(item), 'event')
 
 
-def get_forecast_event_path(item, event='forecast'):
-    return os.path.join(get_event_dir(item), '{}.json'.format(event))
+def get_event_path(item, event_type='finance_forecast'):
+    return os.path.join(get_event_dir(item), '{}.csv'.format(event_type))
 
 
-def get_event_path(item, event='finance_report'):
-    return os.path.join(get_event_dir(item), '{}.csv'.format(event))
+def get_finance_forecast_event_path(item):
+    return os.path.join(get_event_dir(item), 'finance_forecast.csv')
+
+
+def get_finance_report_event_path(item):
+    return os.path.join(get_event_dir(item), 'finance_report.csv')
 
 
 # 财务相关
