@@ -167,6 +167,7 @@ class CommonKData(BaseDocType):
 
 class EosUserStatistic(BaseDocType):
     id = Keyword()
+    userId = Keyword()
     timestamp = Date()
     updateTimestamp = Date()
     securityId = Keyword()
@@ -174,8 +175,18 @@ class EosUserStatistic(BaseDocType):
     name = Keyword()
 
     cash = Float()
-    total = Float()
+    volume = Float()
+    volumeIn = Float()
+    volumeOut = Float()
+    turnover = Float()
+    turnoverIn = Float()
+    turnoverOut = Float()
     averagePrice = Float()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
 
 
 class CommonStatistic(BaseDocType):

@@ -248,6 +248,10 @@ def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
         return the_time
 
 
+def to_epoch_millis(the_time):
+    return int(to_timestamp(the_time).timestamp() * 1000)
+
+
 def next_date(the_time):
     return to_timestamp(the_time) + datetime.timedelta(days=1)
 

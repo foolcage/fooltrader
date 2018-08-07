@@ -59,9 +59,10 @@ def eos_ram_to_kafka():
 
     logger.info("collection:{}".format(ram_trade))
 
-    one_record = ram_trade.find_one()
+    earliest_record = ram_trade.find_one({"$query": {}, "$orderby": {"global_seq": 1}})
+    latest_record = ram_trade.find_one({"$query": {}, "$orderby": {"global_seq": -1}})
 
-    logger.info("one record:{}".format(one_record))
+    logger.info("earliest_record:{},latest_record:{}".format(earliest_record, latest_record))
 
     security_id = 'cryptocurrency_contract_RAM-EOS'
 
@@ -70,16 +71,18 @@ def eos_ram_to_kafka():
     topic = get_kafka_tick_topic(security_id)
 
     if not latest_timestamp:
-        latest_timestamp = to_timestamp('2018-06-09 11:55:00')
+        latest_timestamp = earliest_record['block_time']
 
     start_date, end_date = evaluate_time_range(latest_timestamp)
 
     while True:
-        if latest_order:
+        if latest_order and start_date and end_date:
             condition = {"block_time": {"$gte": start_date, "$lt": end_date},
                          "global_seq": {"$gt": latest_order}}
-        else:
+        elif start_date and end_date:
             condition = {"block_time": {"$gte": start_date, "$lt": end_date}}
+        elif latest_order:
+            condition = {"global_seq": {"$gt": latest_order}}
 
         logger.info("start_date:{},end_date:{},order:{}".format(start_date, end_date, latest_order))
 
@@ -100,16 +103,19 @@ def eos_ram_to_kafka():
 
             logger.debug("tick_to_kafka {}".format(tick))
 
-        if datetime.now() - latest_timestamp < timedelta(seconds=2):
-            time.sleep(1)
+        if datetime.now() - latest_timestamp < timedelta(minutes=5):
+            time.sleep(2)
+            logger.info("record latest_timestamp:{},now is:{}".format(latest_timestamp, datetime.now()))
+            start_date = None
+            end_date = None
+        else:
+            start_date, end_date = evaluate_time_range(latest_timestamp)
 
-        start_date, end_date = evaluate_time_range(latest_timestamp)
 
-
-def evaluate_time_range(timestamp):
+def evaluate_time_range(timestamp, time_step=10):
     start_date = timestamp
 
-    end_date = start_date + timedelta(minutes=10)
+    end_date = start_date + timedelta(minutes=time_step)
 
     return start_date, end_date
 

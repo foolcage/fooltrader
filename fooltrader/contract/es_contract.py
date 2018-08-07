@@ -25,5 +25,9 @@ def get_es_statistic_index(security_type='stock', exchange='sh', level='day'):
         return '{}_{}_{}_statistic'.format(security_type, exchange, level)
 
 
-def get_cryptocurrency_user_statistic(main_chain='eos'):
+def get_cryptocurrency_daily_user_statistic_index(main_chain='eos'):
+    return '{}_daily_user_statistic'.format(main_chain)
+
+
+def get_cryptocurrency_user_statistic_index(main_chain='eos'):
     return '{}_user_statistic'.format(main_chain)
