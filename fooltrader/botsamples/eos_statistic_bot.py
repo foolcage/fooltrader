@@ -18,8 +18,8 @@ es_index_mapping(kdata_index_name, CommonKData)
 
 
 class EosStatisticBot(NotifyEventBot):
-    BIG_ORDER = 2000
-    MIDDLE_ORDER = 500
+    BIG_ORDER = 2000 * 10000
+    MIDDLE_ORDER = 500 * 10000
 
     def on_init(self):
         super().on_init()
@@ -132,19 +132,19 @@ class EosStatisticBot(NotifyEventBot):
         turnover = self.df['turnover'].sum()
         flow = (self.df['turnover'] * self.df['direction']).sum()
 
-        flowIn = self.df[self.df['direction'] == 1]['volume'].sum()
-        flowOut = self.df[self.df['direction'] == -1]['volume'].sum()
+        flowIn = self.df[self.df['direction'] == 1]['turnover'].sum()
+        flowOut = self.df[self.df['direction'] == -1]['turnover'].sum()
 
-        bigFlowIn = self.df[(self.df['direction'] == 1) & (self.df['volume'] >= self.BIG_ORDER)]['volume'].sum()
-        middleFlowIn = self.df[(self.df['direction'] == 1) & (self.df['volume'] >= self.MIDDLE_ORDER) & (
-                self.df['volume'] < self.BIG_ORDER)]['volume'].sum()
-        smallFlowIn = self.df[(self.df['direction'] == 1) & (self.df['volume'] < self.MIDDLE_ORDER)]['volume'].sum()
+        bigFlowIn = self.df[(self.df['direction'] == 1) & (self.df['turnover'] >= self.BIG_ORDER)]['turnover'].sum()
+        middleFlowIn = self.df[(self.df['direction'] == 1) & (self.df['turnover'] >= self.MIDDLE_ORDER) & (
+                self.df['turnover'] < self.BIG_ORDER)]['turnover'].sum()
+        smallFlowIn = self.df[(self.df['direction'] == 1) & (self.df['turnover'] < self.MIDDLE_ORDER)]['turnover'].sum()
 
-        bigFlowOut = self.df[(self.df['direction'] == -1) & (self.df['volume'] >= self.BIG_ORDER)]['volume'].sum()
-        middleFlowOut = self.df[(self.df['direction'] == -1) & (self.df['volume'] >= self.MIDDLE_ORDER) & (
-                self.df['volume'] < self.BIG_ORDER)]['volume'].sum()
-        smallFlowOut = self.df[(self.df['direction'] == -1) & (self.df['volume'] < self.MIDDLE_ORDER)][
-            'volume'].sum()
+        bigFlowOut = self.df[(self.df['direction'] == -1) & (self.df['turnover'] >= self.BIG_ORDER)]['turnover'].sum()
+        middleFlowOut = self.df[(self.df['direction'] == -1) & (self.df['turnover'] >= self.MIDDLE_ORDER) & (
+                self.df['turnover'] < self.BIG_ORDER)]['turnover'].sum()
+        smallFlowOut = self.df[(self.df['direction'] == -1) & (self.df['turnover'] < self.MIDDLE_ORDER)][
+            'turnover'].sum()
 
         self.update_statistic_doc(self.latest_statistic_record, {'volume': volume,
                                                                  'turnover': turnover,

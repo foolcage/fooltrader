@@ -168,8 +168,8 @@ class CommonKData(BaseDocType):
 class EosUserStatistic(BaseDocType):
     id = Keyword()
     userId = Keyword()
-    timestamp = Date()
-    updateTimestamp = Date()
+    timestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
+    updateTimestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
     securityId = Keyword()
     code = Keyword()
     name = Keyword()

@@ -8,7 +8,7 @@ from fooltrader.api.technical import to_security_item
 from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
     KDATA_COMMON_COL
 from fooltrader.contract.es_contract import get_es_kdata_index, get_cryptocurrency_user_statistic_index, \
-    get_cryptocurrency_daily_user_statistic_index
+    get_cryptocurrency_daily_user_statistic_index, get_es_statistic_index
 from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.utils import to_time_str
@@ -130,6 +130,27 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
         resp = s[from_idx:from_idx + size].execute()
 
         return es_resp_to_payload(resp, csv)
+
+
+def es_get_statistic(security_item, the_date=None, start_date=None, end_date=None, level='day',
+                     from_idx=0, size=500):
+    security_item = to_security_item(security_item)
+
+    index = get_es_statistic_index(security_type=security_item['type'], exchange=security_item['exchange'],
+                                   level=level)
+    # 单日的日k线直接按id获取
+    if level == 'day' and the_date:
+        doc_id = '{}_{}'.format(security_item['id'], to_time_str(the_date))
+        return es_client.get_source(index=index, doc_type='doc', id=doc_id)
+    elif start_date and end_date:
+        s = Search(using=es_client, index=index, doc_type='doc') \
+            .filter('term', code=security_item['code']) \
+            .filter('range', timestamp={'gte': start_date, 'lte': end_date}) \
+            .sort({"timestamp": {"order": "asc"}})
+
+        resp = s[from_idx:from_idx + size].execute()
+
+        return es_resp_to_payload(resp)
 
 
 if __name__ == '__main__':

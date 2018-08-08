@@ -123,7 +123,7 @@ g_socks_proxy_items = []
 g_http_proxy_items = []
 g_socks2http_proxy_items = {}
 
-TIME_FORMAT_MICRO = '%Y%m%dT%H%M%S.%f'
+TIME_FORMAT_MICRO = "%Y%m%d %H%M%S.%f"
 
 TIME_FORMAT_SEC = '%Y-%m-%d %H:%M:%S'
 

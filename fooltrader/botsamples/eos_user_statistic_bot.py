@@ -85,12 +85,12 @@ class EosUserStatisticBot(NotifyEventBot):
             self.df = pd.DataFrame(self.item_list)
 
             self.generate_user_statistic()
-            # print(self.es_actions[0:10])
-            # if self.es_actions:
-            #     resp = elasticsearch.helpers.bulk(es_client, self.es_actions)
-            #     self.logger.info("index success:{} failed:{}".format(resp[0], len(resp[1])))
-            #     if resp[1]:
-            #         self.logger.error("error:{}".format(resp[1]))
+
+            if self.es_actions:
+                resp = elasticsearch.helpers.bulk(es_client, self.es_actions)
+                self.logger.info("index success:{} failed:{}".format(resp[0], len(resp[1])))
+                if resp[1]:
+                    self.logger.error("error:{}".format(resp[1]))
 
             self.init_new_computing_interval(event_item['timestamp'])
             self.es_actions = []
@@ -112,9 +112,9 @@ class EosUserStatisticBot(NotifyEventBot):
                 statistic_doc[key] += float(the_value)
             else:
                 statistic_doc[key] = float(the_value)
-        statistic_doc['updateTimestamp'] = self.last_mirco_time_str
-        statistic_doc.save(force=True)
-        # self.es_actions.append(statistic_doc.to_dict(include_meta=True))
+        statistic_doc['updateTimestamp'] = updateTimestamp
+        # statistic_doc.save(force=True)
+        self.es_actions.append(statistic_doc.to_dict(include_meta=True))
 
     def update_daily_user_statistic(self, user_id, record, update_timestamp):
         latest_user_daily_statistic = self.user_map_latest_user_daily_statistic.get(user_id)
@@ -125,6 +125,7 @@ class EosUserStatisticBot(NotifyEventBot):
                 latest_user_daily_statistic = EosUserStatistic(
                     meta={'id': the_record['id'], 'index': daily_user_statistic_index_name},
                     **the_record)
+                self.user_map_latest_user_daily_statistic[user_id] = latest_user_daily_statistic
 
         # ignore the user statistic has computed before
         if latest_user_daily_statistic and self.kdata_timestamp <= to_timestamp(
@@ -138,11 +139,11 @@ class EosUserStatisticBot(NotifyEventBot):
                 meta={'id': doc_id, 'index': daily_user_statistic_index_name},
                 id=doc_id,
                 userId=user_id,
-                timestamp=to_time_str(self.last_day_time_str, time_fmt=TIME_FORMAT_MICRO),
+                timestamp=self.last_day_time_str,
                 securityId=self.security_id,
                 code=self.security_item['code'],
                 name=self.security_item['name'])
-        self.user_map_latest_user_daily_statistic[user_id] = latest_user_daily_statistic
+            self.user_map_latest_user_daily_statistic[user_id] = latest_user_daily_statistic
 
         # update user daily statistic
         self.update_statistic_doc(latest_user_daily_statistic, record, update_timestamp)
@@ -156,6 +157,7 @@ class EosUserStatisticBot(NotifyEventBot):
             if the_record:
                 latest_user_statistic = EosUserStatistic(meta={'id': doc_id, 'index': user_statistic_index_name},
                                                          **the_record)
+                self.user_map_latest_user_statistic[user_id] = latest_user_statistic
         # ignore the user statistic has computed before
         if latest_user_statistic and self.kdata_timestamp <= to_timestamp(
                 latest_user_statistic['updateTimestamp']):
@@ -165,11 +167,11 @@ class EosUserStatisticBot(NotifyEventBot):
             latest_user_statistic = EosUserStatistic(meta={'id': doc_id, 'index': user_statistic_index_name},
                                                      id=doc_id,
                                                      userId=user_id,
-                                                     timestamp=to_time_str(self.last_day_time_str, time_fmt=TIME_FORMAT_MICRO),
+                                                     timestamp=self.last_day_time_str,
                                                      securityId=self.security_id,
                                                      code=self.security_item['code'],
                                                      name=self.security_item['name'])
-        self.user_map_latest_user_statistic[user_id] = latest_user_statistic
+            self.user_map_latest_user_statistic[user_id] = latest_user_statistic
 
         # update user  statistic
         self.update_statistic_doc(latest_user_statistic, record, update_timestamp)
