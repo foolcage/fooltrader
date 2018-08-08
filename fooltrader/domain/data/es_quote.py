@@ -165,6 +165,16 @@ class CommonKData(BaseDocType):
         dynamic = MetaField('strict')
 
 
+class EosAccount(BaseDocType):
+    id = Keyword()
+    timestamp = Keyword()
+    userId = Keyword()
+    liquidEos = Float()
+    stackedEos = Float()
+    totalEos = Float()
+    unstackingEos = Float()
+
+
 class EosUserStatistic(BaseDocType):
     id = Keyword()
     userId = Keyword()

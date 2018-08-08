@@ -71,6 +71,18 @@ def es_get_user_statistic(main_chain='eos', security_id='cryptocurrency_contract
     return es_resp_to_payload(resp)
 
 
+def es_get_accounts(main_chain='eos', user_id=None,from_idx=0, size=100, order='total'):
+    index = get_cryptocurrency_user_statistic_index(main_chain=main_chain)
+
+    s = Search(using=es_client, index=index, doc_type='doc') \
+        .filter('term', securityId=security_id)
+
+    s = s.sort({order: {"order": "desc"}})
+
+    resp = s[from_idx:from_idx + size].execute()
+
+    return es_resp_to_payload(resp)
+
 def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, level='day', fields=None,
                  from_idx=0, size=500, csv=False):
     """
