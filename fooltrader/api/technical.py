@@ -340,7 +340,7 @@ def get_trading_dates(security_item, dtype='list', ignore_today=False, source='1
 
 def kdata_exist(security_item, year, quarter, fuquan=None, source='163'):
     df = get_kdata(security_item, fuquan=fuquan, source=source)
-    if "{}Q{}".format(year, quarter) in df.index:
+    if pd.Period("{}Q{}".format(year, quarter)).end_time < df.index.max():
         return True
     return False
 
