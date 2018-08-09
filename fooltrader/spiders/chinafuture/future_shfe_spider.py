@@ -2,6 +2,7 @@
 
 import os
 from datetime import datetime
+import pandas as pd
 
 import scrapy
 from scrapy import Request
@@ -27,6 +28,15 @@ class FutureShfeSpider(scrapy.Spider):
 
     def start_requests(self):
         self.trading_dates = self.settings.get("trading_dates")
+        if self.dataType or self.dataType=='inventory':
+            today = pd.Timestamp.today()
+            for date in pd.date_range(start=today.date()-pd.Timedelta(weeks=520),end=today):
+                the_dir=get_exchange_cache_path(security_type='future',exchange='shfe',the_date=to_timestamp(date),data_type='inventory')+'.json'
+                if date.dayofweek<5 and not os.path.exists(the_dir):
+                    yield Request(url=self.get_day_inventory_url(the_date=date.strftime('%Y%m%d')),
+                              meta={'the_date': date,
+                                    'the_path': the_dir},
+                              callback=self.download_shfe_data_by_date)
 
         if self.trading_dates:
             # 每天的数据
@@ -95,6 +105,9 @@ class FutureShfeSpider(scrapy.Spider):
 
     def get_day_kdata_url(self, the_date):
         return 'http://www.shfe.com.cn/data/dailydata/kx/kx{}.dat'.format(the_date)
+
+    def get_day_inventory_url(self, the_date):
+        return 'http://www.shfe.com.cn/data/dailydata/kx/pm{}.dat'.format(the_date)
 
     def get_trading_date_url(self):
         return 'http://www.shfe.com.cn/bourseService/businessdata/calendar/20171201all.dat'
