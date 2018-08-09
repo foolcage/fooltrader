@@ -167,7 +167,8 @@ class CommonKData(BaseDocType):
 
 class EosAccount(BaseDocType):
     id = Keyword()
-    timestamp = Keyword()
+    timestamp = Date()
+    updateTimestamp = Date()
     userId = Keyword()
     liquidEos = Float()
     stackedEos = Float()

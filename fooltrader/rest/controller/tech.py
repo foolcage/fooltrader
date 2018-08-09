@@ -58,3 +58,20 @@ def get_user_statistic(main_chain, user_id):
                                          end_date=end_date, from_idx=int(from_idx), size=int(size))
 
     return success(result)
+
+
+@app.route('/tech/account/<main_chain>', defaults={'user_id': None}, methods=['GET'])
+@app.route('/tech/account/<main_chain>/<user_id>', methods=['GET'])
+def get_accounts(main_chain, user_id):
+    start_vol = request.args.get('start_vol')
+    end_vol = request.args.get('end_vol')
+
+    from_idx = request.args.get('from_idx', 0)
+    size = request.args.get('size', 100)
+    order = request.args.get('order', 'totalEos')
+
+    result = esapi.es_get_accounts(main_chain=main_chain, user_id=user_id,
+                                         start_vol=int(start_vol),
+                                         end_vol=int(end_vol), from_idx=int(from_idx), size=int(size), order=order)
+
+    return success(result)

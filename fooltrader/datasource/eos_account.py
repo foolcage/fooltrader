@@ -21,6 +21,9 @@ db_rs = client['local']
 es_index_mapping("eos_account", EosAccount)
 
 
+def eos_acount_update_to_es():
+    pass
+
 def eos_account_to_es():
     account = db.accounts
     count = account.count()
@@ -54,7 +57,8 @@ def eos_account_to_es():
                 "stackedEos": stackedEos,
                 "totalEos": totalEos,
                 "unstackingEos": unstackingEos,
-                "timestamp": to_time_str(createTime)
+                "timestamp": to_time_str(createTime),
+                "updateTimestamp": to_time_str(datetime.now())
             }
             eos_account = EosAccount(meta={'id': json_item['id'], 'index': "eos_account"})
             fill_doc_type(eos_account, json_item)
