@@ -3,8 +3,8 @@ from datetime import timedelta, datetime
 
 from fooltrader.api.esapi import esapi
 from fooltrader.bot.bot import NotifyEventBot
-from fooltrader.datasource.ccxt_wrapper import fetch_kdata
 from fooltrader.domain.business.es_subscription import SubscriptionTriggered
+from fooltrader.settings import TIME_FORMAT_MICRO
 from fooltrader.utils.utils import to_timestamp, to_time_str, is_same_date
 
 
@@ -49,13 +49,12 @@ class PriceNotifyBot(NotifyEventBot):
     # 监听行情
     def on_event(self, event_item):
         self.logger.debug(event_item)
+
+        self.current_time = to_time_str(event_item['timestamp'], time_fmt=TIME_FORMAT_MICRO)
+
         if not self.last_date or not is_same_date(self.last_date, self.current_time):
             self.last_date = to_timestamp(event_item['timestamp']) - timedelta(days=1)
             self.last_kdata = esapi.es_get_kdata(self.security_item, the_date=to_time_str(self.last_date))
-
-            if self.last_kdata is None:
-                fetch_kdata(exchange_str=self.security_item['exchange'])
-                self.last_kdata = esapi.es_get_kdata(self.security_item, the_date=to_time_str(self.last_date))
 
             if self.last_kdata is not None:
                 self.last_close = self.last_kdata.loc[to_time_str(self.last_date), 'close']
