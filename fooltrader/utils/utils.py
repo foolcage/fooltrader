@@ -9,9 +9,13 @@ import pandas as pd
 
 from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
-from fooltrader.settings import TIME_FORMAT_DAY
+from fooltrader.settings import TIME_FORMAT_DAY, TIME_FORMAT_MICRO
 
 logger = logging.getLogger(__name__)
+
+
+def get_security_id(security_type, exchange, code):
+    return "{}_{}_{}".format(security_type, exchange, code)
 
 
 def init_process_log(file_name, log_dir=None):
@@ -208,6 +212,10 @@ def is_same_date(one, two):
     return to_timestamp(one).date() == to_timestamp(two).date()
 
 
+def is_same_time(one, two):
+    return to_timestamp(one) == to_timestamp(two)
+
+
 def get_report_period(the_date=datetime.datetime.today().date()):
     if the_date.month >= 10:
         return "{}{}".format(the_date.year, '-09-30')
@@ -232,9 +240,16 @@ def to_timestamp(the_time):
 
 def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
     try:
-        return to_timestamp(the_time).strftime(time_fmt)
+        if time_fmt == TIME_FORMAT_MICRO:
+            return to_timestamp(the_time).strftime(time_fmt)[0:-3]
+        else:
+            return to_timestamp(the_time).strftime(time_fmt)
     except Exception as e:
         return the_time
+
+
+def to_epoch_millis(the_time):
+    return int(to_timestamp(the_time).timestamp() * 1000)
 
 
 def next_date(the_time):

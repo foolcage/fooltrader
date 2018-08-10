@@ -14,3 +14,10 @@ def success(payload):
                     "msg": "success",
                     "payload": payload
                     })
+
+
+def get_request_params_as_list(request, key):
+    result = request.args.get(key)
+    if result:
+        return result.split(',')
+    return None

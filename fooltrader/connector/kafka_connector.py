@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import argparse
 import datetime
 import json
 import logging
@@ -34,8 +33,8 @@ def _tick_to_kafka(security_item):
             the_json = tick_item.to_json(force_ascii=False)
             producer.send(get_kafka_tick_topic(security_item['id']),
                           bytes(the_json, encoding='utf8'),
-                          timestamp_ms=int(datetime.datetime.strptime(tick_item['timestamp'],
-                                                                      TIME_FORMAT_SEC).timestamp()))
+                          timestamp_ms=int(1000 * datetime.datetime.strptime(tick_item['timestamp'],
+                                                                             TIME_FORMAT_SEC).timestamp()))
             logger.debug("tick_to_kafka {}".format(the_json))
 
 
@@ -94,16 +93,16 @@ def cryptocurrency_tick_to_kafka(exchange, pairs=None):
 
 if __name__ == '__main__':
     # kdata_to_kafka(security_item='300027', fuquan='hfq')
-    # tick_to_kafka(security_item='300027')
+    tick_to_kafka(security_item='300027')
     # cryptocurrency_tick_to_kafka('kraken')
-    parser = argparse.ArgumentParser()
-    parser.add_argument('security_type', help='the security type')
-    parser.add_argument('exchange', help='the exchange')
-    parser.add_argument('codes', nargs='+', help='the security code list')
-
-    args = parser.parse_args()
-
-    if args.security_type == 'cryptocurrency':
-        pairs = [code.replace('-', '/') for code in args.codes]
-
-        cryptocurrency_tick_to_kafka(exchange=args.exchange, pairs=pairs)
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('security_type', help='the security type')
+    # parser.add_argument('exchange', help='the exchange')
+    # parser.add_argument('codes', nargs='+', help='the security code list')
+    #
+    # args = parser.parse_args()
+    #
+    # if args.security_type == 'cryptocurrency':
+    #     pairs = [code.replace('-', '/') for code in args.codes]
+    #
+    #     cryptocurrency_tick_to_kafka(exchange=args.exchange, pairs=pairs)

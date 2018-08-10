@@ -15,6 +15,6 @@ app.debug = True
 app.config.from_object(Config(root_path=FOOLTRADER_STORE_PATH))
 app.config['JSON_AS_ASCII'] = False
 
-from fooltrader.rest.security import *
-from fooltrader.rest.subscription import *
-from fooltrader.rest.tech import *
+from fooltrader.rest.controller.security import *
+from fooltrader.rest.controller.subscription import *
+from fooltrader.rest.controller.tech import *

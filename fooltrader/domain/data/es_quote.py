@@ -133,9 +133,92 @@ class CryptoCurrencyKData(BaseDocType):
     high = Float()
     low = Float()
     volume = Float()
+    turnover = Float()
     preClose = Float()
     change = Float()
     changePct = Float()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
+
+
+class CommonKData(BaseDocType):
+    id = Keyword()
+    timestamp = Date()
+    updateTimestamp = Date()
+    securityId = Keyword()
+    code = Keyword()
+
+    name = Keyword()
+    open = Float()
+    close = Float()
+    high = Float()
+    low = Float()
+    volume = Float()
+    turnover = Float()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
+
+
+class EosAccount(BaseDocType):
+    id = Keyword()
+    timestamp = Date()
+    updateTimestamp = Date()
+    userId = Keyword()
+    liquidEos = Float()
+    stackedEos = Float()
+    totalEos = Float()
+    unstackingEos = Float()
+
+
+class EosUserStatistic(BaseDocType):
+    id = Keyword()
+    userId = Keyword()
+    timestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
+    updateTimestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
+    securityId = Keyword()
+    code = Keyword()
+    name = Keyword()
+
+    cash = Float()
+    volume = Float()
+    volumeIn = Float()
+    volumeOut = Float()
+    turnover = Float()
+    turnoverIn = Float()
+    turnoverOut = Float()
+    averagePrice = Float()
+
+    class Meta:
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
+
+
+class CommonStatistic(BaseDocType):
+    id = Keyword()
+    timestamp = Date()
+    updateTimestamp = Date()
+    securityId = Keyword()
+    code = Keyword()
+    name = Keyword()
+
+    volume = Float()
+    turnover = Float()
+    flow = Float()
+    flowIn = Float()
+    flowOut = Float()
+    bigFlowIn = Float()
+    middleFlowIn = Float()
+    smallFlowIn = Float()
+    bigFlowOut = Float()
+    middleFlowOut = Float()
+    smallFlowOut = Float()
 
     class Meta:
         doc_type = 'doc'
@@ -168,3 +251,4 @@ class IndexKData(BaseDocType):
     class Meta:
         all = MetaField(enabled=False)
         doc_type = 'doc'
+        dynamic = MetaField('strict')

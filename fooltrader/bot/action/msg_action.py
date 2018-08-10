@@ -23,11 +23,11 @@ class Action(object):
 class EmailAction(Action):
     def __init__(self) -> None:
         super().__init__()
-        self.client = smtplib.SMTP()
-        self.client.connect(SMTP_HOST, SMTP_PORT)
-        self.client.login(EMAIL_USER_NAME, EMAIL_PASSWORD)
 
     def send_message(self, to_user, title, body, **kwargs):
+        smtp_client = smtplib.SMTP()
+        smtp_client.connect(SMTP_HOST, SMTP_PORT)
+        smtp_client.login(EMAIL_USER_NAME, EMAIL_PASSWORD)
         msg = MIMEMultipart('alternative')
         msg['Subject'] = Header(title).encode()
         msg['From'] = "{} <{}>".format(Header('fooltrader').encode(), EMAIL_USER_NAME)
@@ -40,7 +40,7 @@ class EmailAction(Action):
         msg.attach(plain_text)
 
         try:
-            self.client.sendmail(EMAIL_USER_NAME, to_user, msg.as_string())
+            smtp_client.sendmail(EMAIL_USER_NAME, to_user, msg.as_string())
         except Exception as e:
             self.logger.exception('send email failed', e)
 
@@ -56,7 +56,6 @@ class WeixinAction(Action):
 
     def __init__(self) -> None:
         self.refresh_token()
-
         schedule.every(10).minutes.do(self.refresh_token)
 
     def refresh_token(self):
@@ -68,7 +67,23 @@ class WeixinAction(Action):
         else:
             self.logger.exception("could not refresh_token")
 
-    def send_message(self, to_user, title, body, **kv):
+    def send_price_notification(self, to_user, security_name, current_price, change_pct):
+        the_json = self._format_price_notification(to_user, security_name, current_price, change_pct)
+        the_data = json.dumps(the_json, ensure_ascii=False).encode('utf-8')
+
+        resp = requests.post(self.SEND_MSG_URL.format(self.token), the_data)
+
+        self.logger.info("send_price_notification resp:{}".format(resp.text))
+
+        if resp.json() and resp.json()["errcode"] == 0:
+            self.logger.info("send_price_notification to user:{} data:{} success".format(to_user, the_json))
+
+    def _format_price_notification(self, to_user, security_name, current_price, change_pct):
+        if change_pct > 0:
+            title = '涨啦涨啦涨啦'
+        else:
+            title = '跌啦跌啦跌啦'
+
         # 先固定一个template
 
         # {
@@ -91,29 +106,32 @@ class WeixinAction(Action):
                     "color": "#173177"
                 },
                 "keyword1": {
-                    "value": str(kv['name']),
+                    "value": security_name,
                     "color": "#173177"
                 },
                 "keyword2": {
-                    "value": str(kv['price']),
+                    "value": current_price,
                     "color": "#173177"
                 },
                 "keyword3": {
-                    "value": str(kv['change_pct']),
+                    "value": '{:.2%}'.format(change_pct),
                     "color": "#173177"
                 },
                 "remark": {
-                    "value": "你设置的提醒已触发",
+                    "value": "会所嫩模 Or 下海干活?",
                     "color": "#173177"
                 }
             }
         }
 
-        the_data = json.dumps(the_json, ensure_ascii=False).encode('utf-8')
+        return the_json
 
-        resp = requests.post(self.SEND_MSG_URL.format(self.token), the_data)
 
-        self.logger.info("send weixin resp:{}".format(resp.text))
+if __name__ == '__main__':
+    # email_action = EmailAction()
+    # for i in range(2):
+    #     email_action.send_message("5533061@qq.com", 'helo{}'.format(i), 'just a test')
 
-        if resp.json() and resp.json()["errcode"] == 0:
-            self.logger.info("send weixin to user:{} data:{} success".format(to_user, the_json))
+    weixin_action = WeixinAction()
+    weixin_action.send_price_notification(to_user='oRvNP0XIb9G3g6a-2fAX9RHX5--Q', security_name='BTC/USDT',
+                                          current_price=1000, change_pct='0.5%')

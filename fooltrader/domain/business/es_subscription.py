@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from elasticsearch_dsl import Keyword, MetaField, Boolean, Date, datetime, Float
+from elasticsearch_dsl import Keyword, MetaField, Boolean, Date, Float
+from marshmallow import Schema, fields
 
 from fooltrader.domain import BaseDocType
 
@@ -9,7 +10,6 @@ class PriceSubscription(BaseDocType):
         {
             "id": 123,
             "userId": 111,
-            "type": "price",
             "securityType": "cryptocurrency",
             "exchange": "binance",
             "code": "BTC-USDT",
@@ -22,15 +22,17 @@ class PriceSubscription(BaseDocType):
         }
     """
     id = Keyword()
+    timestamp = Date()
     userId = Keyword()
+    securityId = Keyword()
 
     securityType = Keyword()
     exchange = Keyword()
     code = Keyword()
     upPct = Float()
     downPct = Float()
-    up = Float()
-    down = Float()
+    upTo = Float()
+    downTo = Float()
 
     repeat = Boolean()
     actions = Keyword()
@@ -38,10 +40,28 @@ class PriceSubscription(BaseDocType):
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
+
+
+class PriceSubscriptionSchema(Schema):
+    id = fields.Str()
+    userId = fields.Str(required=True)
+
+    securityType = fields.Str(required=True)
+    exchange = fields.Str(required=True)
+    code = fields.Str(required=True)
+    upPct = fields.Float()
+    downPct = fields.Float()
+    upTo = fields.Float()
+    downTo = fields.Float()
+
+    repeat = fields.Boolean(missing=False)
+    actions = fields.List(fields.String)
 
 
 class CrossSubscription(BaseDocType):
     id = Keyword()
+    timestamp = Date()
     userId = Keyword()
 
     exchanges = Keyword()
@@ -53,22 +73,18 @@ class CrossSubscription(BaseDocType):
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
 
 
 class SubscriptionTriggered(BaseDocType):
     id = Keyword()
+    timestamp = Date()
+
     subId = Keyword()
     subType = Keyword()
     conditionType = Keyword()
-    timestamp = Date()
 
     class Meta:
         doc_type = 'doc'
         all = MetaField(enabled=False)
-
-    def save(self, using=None, index=None, validate=True, force=True, **kwargs):
-        # assign now if no timestamp given
-        if not self.timestamp:
-            self.timestamp = datetime.now()
-
-        return super().save(using, index, validate, force, **kwargs)
+        dynamic = MetaField('strict')
