@@ -3,7 +3,7 @@ from flask import request
 
 from fooltrader.api.esapi import esapi
 from fooltrader.rest import app
-from fooltrader.rest.common import success
+from fooltrader.rest.common import success, get_request_params_as_list
 
 
 @app.route('/tech/kdata/<securityid>', methods=['GET'])
@@ -70,8 +70,10 @@ def get_accounts(main_chain, user_id):
     size = request.args.get('size', 100)
     order = request.args.get('order', 'totalEos')
 
+    fields = get_request_params_as_list(request, 'fields')
+
     result = esapi.es_get_accounts(main_chain=main_chain, user_id=user_id,
-                                         start_vol=int(start_vol),
-                                         end_vol=int(end_vol), from_idx=int(from_idx), size=int(size), order=order)
+                                   start_vol=int(start_vol), fields=fields,
+                                   end_vol=int(end_vol), from_idx=int(from_idx), size=int(size), order=order)
 
     return success(result)

@@ -72,8 +72,12 @@ def es_get_user_statistic(main_chain='eos', security_id='cryptocurrency_contract
 
 
 def es_get_accounts(main_chain='eos', user_id=None, start_vol=None, end_vol=None, from_idx=0, size=100,
-                    order='totalEos'):
+                    order='totalEos', fields=None):
     index = '{}_account'.format(main_chain)
+
+    if not fields:
+        fields = ['id', 'timestamp', 'updateTimestamp', 'userId', 'totalEos', 'liquidEos', 'stackedEos',
+                  'unstackingEos']
 
     if user_id:
         s = Search(using=es_client, index=index, doc_type='doc') \
@@ -81,10 +85,11 @@ def es_get_accounts(main_chain='eos', user_id=None, start_vol=None, end_vol=None
     elif start_vol and end_vol:
         range = {order: {'gte': start_vol, 'lt': end_vol}}
         s = Search(using=es_client, index=index, doc_type='doc') \
+            .source(include=fields) \
             .filter('range', **range)
         s = s.sort({order: {"order": "desc"}})
     else:
-        s = Search(using=es_client, index=index, doc_type='doc')
+        s = Search(using=es_client, index=index, doc_type='doc').source(include=fields)
         s = s.sort({order: {"order": "desc"}})
 
     resp = s[from_idx:from_idx + size].execute()
