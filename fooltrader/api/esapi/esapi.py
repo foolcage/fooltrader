@@ -83,7 +83,7 @@ def es_get_accounts(main_chain='eos', user_id=None, start_vol=None, end_vol=None
         s = Search(using=es_client, index=index, doc_type='doc') \
             .filter('term', userId=user_id)
     elif start_vol and end_vol:
-        range = {order: {'gte': start_vol, 'lt': end_vol}}
+        range = {'totalEos': {'gte': start_vol, 'lt': end_vol}}
         s = Search(using=es_client, index=index, doc_type='doc') \
             .source(include=fields) \
             .filter('range', **range)

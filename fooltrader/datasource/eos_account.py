@@ -24,6 +24,7 @@ es_index_mapping("eos_account", EosAccount)
 def eos_acount_update_to_es():
     pass
 
+
 def eos_account_to_es():
     account = db.accounts
     count = account.count()
@@ -79,4 +80,11 @@ def eos_account_to_es():
 
 
 if __name__ == '__main__':
-    eos_account_to_es()
+    import schedule
+    import time
+
+    schedule.every(60).minutes.do(eos_account_to_es)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
