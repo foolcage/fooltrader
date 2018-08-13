@@ -83,6 +83,8 @@ if __name__ == '__main__':
     import schedule
     import time
 
+    eos_account_to_es()
+
     schedule.every(60).minutes.do(eos_account_to_es)
 
     while True:
