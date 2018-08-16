@@ -52,7 +52,7 @@ def get_security_meta_path(item=None, security_type=None, exchange=None, code=No
 def adjust_source(security_item, source):
     # 对于使用者，不需要指定source,系统会选择目前质量最好的source
     if not source:
-        if security_item['type'] == 'future' or security_item['type'] == 'cryptocurrency':
+        if security_item['type'] == 'future' or security_item['type'] == 'coin':
             source = 'exchange'
         if security_item['type'] == 'stock' or security_item['type'] == 'index':
             source = '163'

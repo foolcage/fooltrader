@@ -9,14 +9,19 @@ import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
 from fooltrader.api.technical import get_latest_download_trading_date
-from fooltrader.consts import CRYPTOCURRENCY_EXCHANGES, CRYPTOCURRENCY_PAIR, SECURITY_TYPE_CRYPTO
+from fooltrader.consts import COIN_EXCHANGES, COIN_PAIR, SECURITY_TYPE_COIN
 from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
+from fooltrader.datarecorder.base_recorder import BaseRecorder
 from fooltrader.utils.pd_utils import kdata_df_save
 from fooltrader.utils.utils import to_time_str, is_same_date
 
 logger = logging.getLogger(__name__)
+
+
+class CoinRecorder(BaseRecorder):
+    pass
 
 
 def generate_security_item(security_type, exchange, code, name, list_date=None):
@@ -31,9 +36,9 @@ def generate_security_item(security_type, exchange, code, name, list_date=None):
     }
 
 
-def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
+def init_markets(exchanges=COIN_EXCHANGES):
     for exchange_str in set(ccxt.exchanges) & set(exchanges):
-        exchange_dir = get_exchange_dir(security_type='cryptocurrency', exchange=exchange_str)
+        exchange_dir = get_exchange_dir(security_type='coin', exchange=exchange_str)
 
         # 创建交易所目录
         if not os.path.exists(exchange_dir):
@@ -59,7 +64,7 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
                     name = market['symbol']
                     code = name.replace('/', "-")
 
-                security_item = generate_security_item(security_type='cryptocurrency', exchange=exchange_str,
+                security_item = generate_security_item(security_type='coin', exchange=exchange_str,
                                                        code=code,
                                                        name=name, list_date=None)
 
@@ -80,13 +85,13 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
 
                 # 存储数字货币的meta信息
                 if security_info:
-                    with open(get_security_meta_path(security_type='cryptocurrency', exchange=exchange_str,
+                    with open(get_security_meta_path(security_type='coin', exchange=exchange_str,
                                                      code=code), "w") as f:
                         json.dump(security_info, f, ensure_ascii=False)
 
             # 存储该交易所的数字货币列表
             if not df.empty:
-                df.to_csv(get_security_list_path(security_type='cryptocurrency', exchange=exchange_str),
+                df.to_csv(get_security_list_path(security_type='coin', exchange=exchange_str),
                           index=False)
             logger.exception("init_markets for {} success".format(exchange_str))
         except Exception as e:
@@ -96,9 +101,9 @@ def init_markets(exchanges=CRYPTOCURRENCY_EXCHANGES):
 def fetch_kdata(exchange_str='bitstamp'):
     ccxt_exchange = eval("ccxt.{}()".format(exchange_str))
     if ccxt_exchange.has['fetchOHLCV']:
-        for _, security_item in get_security_list(security_type='cryptocurrency', exchanges=[exchange_str]).iterrows():
+        for _, security_item in get_security_list(security_type='coin', exchanges=[exchange_str]).iterrows():
             try:
-                if security_item['name'] not in CRYPTOCURRENCY_PAIR:
+                if security_item['name'] not in COIN_PAIR:
                     continue
 
                 start_date, df = get_latest_download_trading_date(security_item)
@@ -148,39 +153,6 @@ def fetch_kdata(exchange_str='bitstamp'):
         logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
 
 
-# not used
-def fetch_tickers(exchange_str):
-    exchange = eval("ccxt.{}()".format(exchange_str))
-    if exchange.has['fetchTickers']:
-        while True:
-            tickers = exchange.fetch_tickers()
-            pairs = set(tickers.keys()) & set(CRYPTOCURRENCY_PAIR)
-
-            if not pairs:
-                logger.warning("{} not support pair:{}".format(exchange_str, CRYPTOCURRENCY_PAIR))
-                break
-
-            for pair in pairs:
-                ticker = tickers[pair]
-                code = pair.replace('/', '-')
-                tick = {
-                    'timestamp': ticker['timestamp'],
-                    'securityId': "{}_{}_{}".format("cryptocurrency", exchange_str, code),
-                    'code': code,
-                    'name': pair,
-                    'price': ticker['last'],
-                    'preClose': ticker['previousClose'],
-                    'change': ticker['change'],
-                    'changePct': ticker['percentage']
-                }
-                yield tick
-
-            rate_limit = 5
-            time.sleep(rate_limit)
-
-            logger.info("fetch_tickers for {} sleep {}".format(exchange_str, rate_limit))
-
-
 def _check_fetch_trades(exchange, pair):
     try:
         exchange.fetch_trades(symbol=pair, limit=1)
@@ -189,12 +161,12 @@ def _check_fetch_trades(exchange, pair):
         return False
 
 
-def fetch_ticks(exchange_str, pairs=None):
+def record_tick(exchange_str, pairs=None):
     if not pairs:
-        df = get_security_list(security_type=SECURITY_TYPE_CRYPTO, exchanges=exchange_str)
-        pairs = set(df.loc[:, 'name'].tolist()) & set(CRYPTOCURRENCY_PAIR)
+        df = get_security_list(security_type=SECURITY_TYPE_COIN, exchanges=exchange_str)
+        pairs = set(df.loc[:, 'name'].tolist()) & set(COIN_PAIR)
         if not pairs:
-            logger.warning("{} not support pair:{}".format(exchange_str, CRYPTOCURRENCY_PAIR))
+            logger.warning("{} not support pair:{}".format(exchange_str, COIN_PAIR))
             return
         else:
             logger.info("{} get tick for paris:{}".format(exchange_str, pairs))
@@ -215,7 +187,7 @@ def fetch_ticks(exchange_str, pairs=None):
 
                 code = pair.replace('/', '-')
                 tick = {
-                    'securityId': "{}_{}_{}".format("cryptocurrency", exchange_str, code),
+                    'securityId': "{}_{}_{}".format("coin", exchange_str, code),
                     'code': code,
                     'name': pair,
                     'timestamp': int(trade['timestamp'] / 1000),

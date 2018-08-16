@@ -52,7 +52,7 @@ class IndexMeta(BaseDocType):
 
 
 # 数字货币元信息
-class CryptocurrencyMeta(BaseDocType):
+class CoinMeta(BaseDocType):
     id = Keyword()
     type = Keyword()
     exchange = Keyword()

@@ -177,27 +177,31 @@ CHINA_STOCK_SZ_INDEX = [{'id': 'index_sz_399001',
                          'type': 'index'}
                         ]
 
-SECURITY_TYPE_CRYPTO = 'cryptocurrency'
-
-# CRYPTOCURRENCY_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
+# COIN_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
 #                             "bitz", "bibox", "zb", "bitstamp"]
 
-CRYPTOCURRENCY_EXCHANGES = ["binance", "huobipro", "bitfinex", "eos_contract"]
+COIN_EXCHANGES = ["binance", "huobipro", "bitfinex", "eos_contract"]
 
-# CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
+# COIN_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
 #                        "BNB", "ETC", "QTUM", "ONT"]
 
-CRYPTOCURRENCY_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS"]
+COIN_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS"]
 
-CRYPTOCURRENCY_PAIR = [("{}/{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
-                      [("{}/{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
+COIN_PAIR = [("{}/{}".format(item, "USDT")) for item in COIN_BASE] + \
+            [("{}/{}".format(item, "USD")) for item in COIN_BASE]
 
-CRYPTOCURRENCY_CODE = [("{}-{}".format(item, "USDT")) for item in CRYPTOCURRENCY_BASE] + \
-                      [("{}-{}".format(item, "USD")) for item in CRYPTOCURRENCY_BASE]
+COIN_CODE = [("{}-{}".format(item, "USDT")) for item in COIN_BASE] + \
+            [("{}-{}".format(item, "USD")) for item in COIN_BASE]
 
 SECURITY_TYPE_MAP_EXCHANGES = {
     "stock": ['sh', 'sz'],
     "index": ['sh', 'sz'],
     "future": ['shfe', 'dce', 'zce'],
-    "cryptocurrency": CRYPTOCURRENCY_EXCHANGES
+    "coin": COIN_EXCHANGES
 }
+
+SECURITY_TYPE_STOCK = 'stock'
+SECURITY_TYPE_INDEX = 'index'
+SECURITY_TYPE_COIN = 'coin'
+SECURITY_TYPE_FUTURE = 'future'
+SECURITY_TYPE_MACRO = 'macro'

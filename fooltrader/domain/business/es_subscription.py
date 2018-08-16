@@ -10,7 +10,7 @@ class PriceSubscription(BaseDocType):
         {
             "id": 123,
             "userId": 111,
-            "securityType": "cryptocurrency",
+            "securityType": "coin",
             "exchange": "binance",
             "code": "BTC-USDT",
             "upPct": 1,

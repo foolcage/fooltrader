@@ -1,6 +1,6 @@
 ## 获取支持的数字货币
 ```
-curl 'http://localhost:5000/security?securityType=cryptocurrency'                 
+curl 'http://localhost:5000/security?securityType=coin'                 
 {
   "code": 0,
   "msg": "success",
@@ -15,7 +15,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "binance",
           "id": "cryptocurrency_binance_EOS-USDT",
           "name": "EOS/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -28,7 +28,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "bitfinex",
           "id": "cryptocurrency_bitfinex_BTC-USDT",
           "name": "BTC/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -41,7 +41,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "bitfinex",
           "id": "cryptocurrency_bitfinex_EOS-USDT",
           "name": "EOS/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -54,7 +54,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "bitfinex",
           "id": "cryptocurrency_bitfinex_BCH-USDT",
           "name": "BCH/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -67,7 +67,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "binance",
           "id": "cryptocurrency_binance_BTC-USDT",
           "name": "BTC/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -80,7 +80,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "huobipro",
           "id": "cryptocurrency_huobipro_EOS-USDT",
           "name": "EOS/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -93,7 +93,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "bitfinex",
           "id": "cryptocurrency_bitfinex_ETH-USDT",
           "name": "ETH/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -106,7 +106,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "binance",
           "id": "cryptocurrency_binance_ETH-USDT",
           "name": "ETH/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -119,7 +119,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "huobipro",
           "id": "cryptocurrency_huobipro_BCH-USDT",
           "name": "BCH/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -132,7 +132,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
           "exchange": "huobipro",
           "id": "cryptocurrency_huobipro_XRP-USDT",
           "name": "XRP/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       }
@@ -145,7 +145,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency'
 
 ## 指定交易所
 ```
-curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binance'
+curl 'http://localhost:5000/security?securityType=coin&exchange=binance'
 {
   "code": 0,
   "msg": "success",
@@ -160,7 +160,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
           "exchange": "binance",
           "id": "cryptocurrency_binance_EOS-USDT",
           "name": "EOS/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -173,7 +173,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
           "exchange": "binance",
           "id": "cryptocurrency_binance_BTC-USDT",
           "name": "BTC/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -186,7 +186,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
           "exchange": "binance",
           "id": "cryptocurrency_binance_ETH-USDT",
           "name": "ETH/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -199,7 +199,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
           "exchange": "binance",
           "id": "cryptocurrency_binance_BCH-USDT",
           "name": "BCH/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       },
@@ -212,7 +212,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
           "exchange": "binance",
           "id": "cryptocurrency_binance_XRP-USDT",
           "name": "XRP/USDT",
-          "type": "cryptocurrency"
+          "type": "coin"
         },
         "_type": "doc"
       }
@@ -228,7 +228,7 @@ curl 'http://localhost:5000/security?securityType=cryptocurrency&exchange=binanc
 ```
 curl -XPUT "localhost:5000/subscription" -H 'Content-Type: application/json' -d '{
             "userId": "oRvNP0XIb9G3g6a-2fAX9RHX5--Q",
-            "securityType": "cryptocurrency",
+            "securityType": "coin",
             "exchange": "contract",
             "code": "RAM-EOS",
             "upPct": 0.02,
@@ -255,7 +255,7 @@ curl -XPUT "localhost:5000/subscription" -H 'Content-Type: application/json' -d 
       "downPct": -0.02,
       "exchange": "binance",
       "repeat": false,
-      "securityType": "cryptocurrency",
+      "securityType": "coin",
       "type": "price",
       "up": 6500,
       "upPct": 0.02,
@@ -273,7 +273,7 @@ curl -XPUT "localhost:5000/subscription" -H 'Content-Type: application/json' -d 
 curl -XPUT "localhost:5000/subscription/FPWGfWQB7OYj2Pz1vY8U" -H 'Content-Type: application/json' -d '{
             "userId": "oRvNP0XIb9G3g6a-2fAX9RHX5--Q",
             "type": "price",
-            "securityType": "cryptocurrency",
+            "securityType": "coin",
             "exchange": "binance",
             "code": "XRP-USDT",
             "upPct": 0.05,
@@ -300,7 +300,7 @@ curl -XPUT "localhost:5000/subscription/FPWGfWQB7OYj2Pz1vY8U" -H 'Content-Type: 
       "downPct": -0.02,
       "exchange": "binance",
       "repeat": false,
-      "securityType": "cryptocurrency",
+      "securityType": "coin",
       "type": "price",
       "up": 6500,
       "upPct": 0.05,
@@ -334,7 +334,7 @@ curl -XGET "localhost:5000/subscription?userId=oRvNP0XIb9G3g6a-2fAX9RHX5--Q"
           "downPct": -0.02,
           "exchange": "binance",
           "repeat": false,
-          "securityType": "cryptocurrency",
+          "securityType": "coin",
           "type": "price",
           "up": 6500,
           "upPct": 0.05,
@@ -357,7 +357,7 @@ curl -XGET "localhost:5000/subscription?userId=oRvNP0XIb9G3g6a-2fAX9RHX5--Q"
           "downPct": -0.02,
           "exchange": "binance",
           "repeat": false,
-          "securityType": "cryptocurrency",
+          "securityType": "coin",
           "type": "price",
           "up": 6500,
           "upPct": 0.02,

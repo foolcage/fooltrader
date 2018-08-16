@@ -107,7 +107,7 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
     security_item : SecurityItem or str
         the security item,id or code
     exchange : str
-        the exchange,set this for cryptocurrency
+        the exchange,set this for coin
     the_date : TimeStamp str or TimeStamp
         get the kdata for the exact date
     start_date : TimeStamp str or TimeStamp

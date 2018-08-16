@@ -12,10 +12,10 @@ df = df.append(
         'listDate': '2018-06-09',
         'timestamp': '2018-06-09',
         'exchange': 'contract',
-        'type': 'cryptocurrency',
+        'type': 'coin',
         'id': "cryptocurrency_contract_RAM-EOS"
     }, ignore_index=True)
 
 if not df.empty:
-    df.to_csv(get_security_list_path(security_type='cryptocurrency', exchange='contract'),
+    df.to_csv(get_security_list_path(security_type='coin', exchange='contract'),
               index=False)

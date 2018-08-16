@@ -99,7 +99,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
         elif start_code and end_code:
             df = df[(df["code"] >= start_code) & (df["code"] <= end_code)]
 
-        if security_type != 'cryptocurrency':
+        if security_type != 'coin':
             df = df.drop_duplicates(subset='code', keep='last')
 
     return df
@@ -137,9 +137,9 @@ def _get_security_item(security_type, exchanges, code=None):
 def to_security_item(security_item, exchange=None):
     if type(security_item) == str:
         if exchange:
-            return _get_security_item('cryptocurrency', [exchange], security_item)
+            return _get_security_item('coin', [exchange], security_item)
 
-        id_match = re.match(r'(stock|index|future|cryptocurrency)_([a-z]{2,20})_([a-zA-Z0-9\-]+)',
+        id_match = re.match(r'(stock|index|future|coin)_([a-z]{2,20})_([a-zA-Z0-9\-]+)',
                             security_item)
         if id_match:
             return _get_security_item(security_type=id_match.group(1), exchanges=[id_match.group(2)],
@@ -234,7 +234,7 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
         the security item,id or code
 
     exchange : str
-        the exchange,set this for cryptocurrency
+        the exchange,set this for coin
 
     the_date : TimeStamp str or TimeStamp
         get the kdata for the exact date

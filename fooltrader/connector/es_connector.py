@@ -12,12 +12,12 @@ from fooltrader.api.fundamental import get_balance_sheet_items, get_income_state
     get_cash_flow_statement_items, \
     get_finance_summary_items
 from fooltrader.api.technical import get_security_list, get_kdata
-from fooltrader.consts import CRYPTOCURRENCY_CODE
+from fooltrader.consts import COIN_CODE
 from fooltrader.contract.es_contract import get_es_kdata_index
 from fooltrader.domain.data.es_event import FinanceForecastEvent, FinanceReportEvent
 from fooltrader.domain.data.es_finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
 from fooltrader.domain.data.es_quote import StockMeta, StockKData, IndexKData, CryptoCurrencyKData, IndexMeta, \
-    CryptocurrencyMeta
+    CoinMeta
 from fooltrader.settings import US_STOCK_CODES
 from fooltrader.utils.es_utils import es_index_mapping, es_get_latest_timestamp
 from fooltrader.utils.utils import fill_doc_type, index_df_with_time
@@ -70,8 +70,8 @@ def df_to_es(df, doc_type, index_name=None, timestamp_filed='timestamp', securit
 def security_meta_to_es(security_type='stock'):
     if security_type == 'stock':
         doc_type = StockMeta
-    elif security_type == 'cryptocurrency':
-        doc_type = CryptocurrencyMeta
+    elif security_type == 'coin':
+        doc_type = CoinMeta
     elif security_type == 'index':
         doc_type = IndexMeta
 
@@ -86,9 +86,9 @@ def kdata_to_es(security_type='stock', start_code=None, end_code=None, force=Fal
         doc_type = StockKData
     elif security_type == 'index':
         doc_type = IndexKData
-    elif security_type == 'cryptocurrency':
+    elif security_type == 'coin':
         doc_type = CryptoCurrencyKData
-        codes = CRYPTOCURRENCY_CODE
+        codes = COIN_CODE
 
     for _, security_item in get_security_list(security_type=security_type, start_code=start_code,
                                               end_code=end_code, codes=codes).iterrows():
@@ -158,7 +158,7 @@ def finance_event_to_es(event_type='finance_forecast', start_code=None, end_code
 
 
 if __name__ == '__main__':
-    kdata_to_es(security_type='cryptocurrency')
+    kdata_to_es(security_type='coin')
     # security_meta_to_es()
     # kdata_to_es(start_code='300027', end_code='300028', force=False)
     # kdata_to_es(security_type='index', force=True)

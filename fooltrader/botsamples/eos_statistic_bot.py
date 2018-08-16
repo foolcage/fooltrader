@@ -10,8 +10,8 @@ from fooltrader.settings import TIME_FORMAT_MICRO
 from fooltrader.utils.es_utils import es_get_latest_timestamp, es_get_latest_record, es_index_mapping
 from fooltrader.utils.utils import to_timestamp, to_time_str, fill_doc_type, is_same_date, is_same_time
 
-statistic_index_name = get_es_statistic_index(security_type='cryptocurrency', exchange='contract')
-kdata_index_name = get_es_kdata_index(security_type='cryptocurrency', exchange='contract', level='1min')
+statistic_index_name = get_es_statistic_index(security_type='coin', exchange='contract')
+kdata_index_name = get_es_kdata_index(security_type='coin', exchange='contract', level='1min')
 
 es_index_mapping(statistic_index_name, CommonStatistic)
 es_index_mapping(kdata_index_name, CommonKData)
