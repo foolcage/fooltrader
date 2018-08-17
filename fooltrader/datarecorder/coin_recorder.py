@@ -8,7 +8,7 @@ import ccxt
 import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
-from fooltrader.api.technical import get_latest_download_trading_timestamp
+from fooltrader.api.technical import get_latest_record_timestamp
 from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, SECURITY_TYPE_COIN
 from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
@@ -124,24 +124,16 @@ class CoinRecorder(Recorder):
                         continue
 
                     try:
-                        if level == 'day':
-                            start_date, df = get_latest_download_trading_timestamp(security_item)
+                        latest_timestamp, df = get_latest_record_timestamp(security_item, level)
+                        size = Recorder.evaluate_size_to_now(latest_timestamp, level=level)
 
-                            # 日K线只抓到昨天
-                            end_date = pd.Timestamp.today() - pd.DateOffset(1)
+                        if size == 0:
+                            logger.info("{} kdata is ok".format(security_item['code']))
+                            continue
 
-                            if start_date and (start_date > end_date):
-                                logger.info("{} kdata is ok".format(security_item['code']))
-                                continue
-
-                            try:
-                                kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'], timeframe='1d')
-                                # for rateLimit
-                                time.sleep(5)
-                            except Exception as e:
-                                logger.exception("fetch_kdata for {} {} failed".format(exchange_str, security_item['name']),
-                                                 e)
-                                continue
+                        kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
+                                                           timeframe=Recorder.level_to_timeframe(level),
+                                                           limit=size)
 
                         for kdata in kdatas:
                             timestamp = pd.Timestamp.fromtimestamp(int(kdata[0] / 1000))

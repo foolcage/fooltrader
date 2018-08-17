@@ -9,7 +9,7 @@ import pandas as pd
 from fooltrader import settings, init_env
 from fooltrader.api.fundamental import get_balance_sheet_items, get_income_statement_items, \
     get_cash_flow_statement_items
-from fooltrader.api.technical import get_security_list, get_latest_download_trading_timestamp, get_trading_dates, \
+from fooltrader.api.technical import get_security_list, get_latest_record_timestamp, get_trading_dates, \
     get_available_tick_dates, get_kdata
 from fooltrader.contract.files_contract import get_balance_sheet_path, get_income_statement_path, \
     get_cash_flow_statement_path
@@ -108,9 +108,9 @@ def crawl_index_quote():
         # 抓取日K线
         logger.info("{} get index kdata start".format(security_item['code']))
 
-        start_date, _ = get_latest_download_trading_timestamp(security_item, source='163')
+        start_date, _ = get_latest_record_timestamp(security_item, source='163')
         end_date = pd.Timestamp.today()
-        if start_date > end_date:
+        if start_date >= end_date:
             logger.info("{} kdata is ok".format(security_item['code']))
         else:
             process_crawl(StockKdata163Spider, {"security_item": security_item,
@@ -141,9 +141,9 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
         # 抓取日K线
         logger.info("{} get stock kdata start".format(security_item['code']))
 
-        start_date, _ = get_latest_download_trading_timestamp(security_item, source='163')
+        start_date, _ = get_latest_record_timestamp(security_item, source='163')
         end_date = pd.Timestamp.today()
-        if start_date > end_date:
+        if start_date >= end_date:
             logger.info("{} stock kdata is ok".format(security_item['code']))
         else:
             process_crawl(StockKdata163Spider, {"security_item": security_item,
