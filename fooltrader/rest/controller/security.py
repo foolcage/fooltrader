@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import request
 
-from fooltrader.consts import COIN_PAIR, SECURITY_TYPE_MAP_EXCHANGES
+from fooltrader.consts import COIN_PAIRS, SECURITY_TYPE_MAP_EXCHANGES
 from fooltrader.domain.data.es_quote import CoinMeta, StockMeta
 from fooltrader.rest import app
 from fooltrader.rest.common import success
@@ -20,7 +20,7 @@ def get_security():
     if security_type == 'coin':
         doc_type = CoinMeta
         s = doc_type().search()
-        s = s.filter('terms', exchange=exchange).filter('terms', name=COIN_PAIR)
+        s = s.filter('terms', exchange=exchange).filter('terms', name=COIN_PAIRS)
     else:
         doc_type = StockMeta
         s = doc_type().search()

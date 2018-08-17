@@ -307,8 +307,8 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
     return pd.DataFrame()
 
 
-def get_latest_download_trading_date(security_item, return_next=True, source=None):
-    df = get_kdata(security_item, source=source)
+def get_latest_download_trading_timestamp(security_item, return_next=True, source=None, level='day'):
+    df = get_kdata(security_item, source=source, level=level)
     if len(df) == 0:
         return pd.Timestamp(security_item['listDate']), df
     if return_next:

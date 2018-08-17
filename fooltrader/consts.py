@@ -187,8 +187,8 @@ COIN_EXCHANGES = ["binance", "huobipro", "bitfinex", "eos_contract"]
 
 COIN_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS"]
 
-COIN_PAIR = [("{}/{}".format(item, "USDT")) for item in COIN_BASE] + \
-            [("{}/{}".format(item, "USD")) for item in COIN_BASE]
+COIN_PAIRS = [("{}/{}".format(item, "USDT")) for item in COIN_BASE] + \
+             [("{}/{}".format(item, "USD")) for item in COIN_BASE]
 
 COIN_CODE = [("{}-{}".format(item, "USDT")) for item in COIN_BASE] + \
             [("{}-{}".format(item, "USD")) for item in COIN_BASE]

@@ -67,7 +67,7 @@ def get_kdata_dir(item, fuquan='bfq'):
         return os.path.join(get_security_dir(item), 'kdata')
 
 
-def get_kdata_path(item, source=None, fuquan='bfq', year=None, quarter=None):
+def get_kdata_path(item, source=None, fuquan='bfq', year=None, quarter=None, level='day'):
     source = adjust_source(item, source)
     if source == 'sina':
         if not year and not quarter:
@@ -75,7 +75,7 @@ def get_kdata_path(item, source=None, fuquan='bfq', year=None, quarter=None):
         else:
             return os.path.join(get_kdata_dir(item, fuquan), '{}Q{}.csv'.format(year, quarter))
     else:
-        return os.path.join(get_kdata_dir(item, fuquan), '{}_dayk.csv'.format(source))
+        return os.path.join(get_kdata_dir(item, fuquan), '{}_{}k.csv'.format(source, level))
 
 
 # tick相关
