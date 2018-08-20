@@ -2,8 +2,9 @@
 from flask import request
 
 from fooltrader.api.esapi import esapi
-from fooltrader.rest import app
+from fooltrader.rest import app, error
 from fooltrader.rest.common import success, get_request_params_as_list
+from fooltrader.rest.err_codes import ERROR_RESP
 
 
 @app.route('/tech/kdata/<securityid>', methods=['GET'])
@@ -72,8 +73,11 @@ def get_accounts(main_chain, user_id):
 
     fields = get_request_params_as_list(request, 'fields')
 
-    result = esapi.es_get_accounts(main_chain=main_chain, user_id=user_id,
-                                   start_vol=int(start_vol), fields=fields,
-                                   end_vol=int(end_vol), from_idx=int(from_idx), size=int(size), order=order)
+    try:
+        result = esapi.es_get_accounts(main_chain=main_chain, user_id=user_id,
+                                       start_vol=int(start_vol), fields=fields,
+                                       end_vol=int(end_vol), from_idx=int(from_idx), size=int(size), order=order)
 
-    return success(result)
+        return success(result)
+    except Exception as e:
+        return error(ERROR_RESP,e)
