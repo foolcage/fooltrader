@@ -307,12 +307,23 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
     return pd.DataFrame()
 
 
-def get_latest_record_timestamp(security_item, source=None, level='day'):
+def get_latest_kdata_timestamp(security_item, source=None, level='day'):
     df = get_kdata(security_item, source=source, level=level)
     if len(df) == 0:
         return pd.Timestamp(security_item['listDate']), df
 
     return df.index[-1], df
+
+
+def get_latest_tick_timestamp_order(security_item):
+    dates = get_available_tick_dates(security_item)
+    if dates:
+        dates = sorted(dates)
+        tick_path = files_contract.get_tick_path(security_item, dates[-1])
+        tick_df = _parse_tick(tick_path, security_item)
+        if 'order' in tick_df.columns:
+            return tick_df.index[-1], tick_df['order'][len(tick_df['order']) - 1]
+        return tick_df.index[-1], None
 
 
 def get_trading_calendar(security_type='future', exchange='shfe'):
@@ -595,4 +606,5 @@ def parse_shfe_data(force_parse=False):
 
 
 if __name__ == '__main__':
-    print(get_kdata('ag1801', source='exchange'))
+    # print(get_kdata('ag1801', source='exchange'))
+    print(get_latest_tick_timestamp_order(to_security_item('300027')))

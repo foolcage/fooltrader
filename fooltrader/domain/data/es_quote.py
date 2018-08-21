@@ -10,6 +10,9 @@ from fooltrader.domain import BaseDocType
 # meta related
 # ***********************************************************
 # 股票元信息
+from fooltrader.utils.es_utils import es_index_mapping
+
+
 class StockMeta(BaseDocType):
     id = Keyword()
     timestamp = Date()
@@ -146,7 +149,8 @@ class CryptoCurrencyKData(BaseDocType):
 
 class CommonKData(BaseDocType):
     id = Keyword()
-    timestamp = Date()
+    timestamp = Date(format="yyyyMMdd'T'HHmmss.SSSZ||yyyy-MM-dd||epoch_millis")
+    datetime = Date(format="yyyyMMdd'T'HHmmss.SSSZ||yyyy-MM-dd||epoch_millis")
     updateTimestamp = Date()
     securityId = Keyword()
     code = Keyword()
@@ -252,3 +256,6 @@ class IndexKData(BaseDocType):
         all = MetaField(enabled=False)
         doc_type = 'doc'
         dynamic = MetaField('strict')
+
+if __name__ == '__main__':
+    es_index_mapping('test_kdata', CommonKData)

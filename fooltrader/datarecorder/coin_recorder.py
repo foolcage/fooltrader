@@ -8,12 +8,13 @@ import ccxt
 import pandas as pd
 
 from fooltrader import get_exchange_dir, get_security_list
-from fooltrader.api.technical import get_latest_record_timestamp
+from fooltrader.api.technical import get_latest_kdata_timestamp
 from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, SECURITY_TYPE_COIN
 from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_kdata_dir
 from fooltrader.datarecorder.recorder import Recorder
+from fooltrader.settings import TIME_FORMAT_MICRO
 from fooltrader.utils.pd_utils import kdata_df_save
 from fooltrader.utils.utils import to_time_str, is_same_date, generate_security_item
 
@@ -35,19 +36,6 @@ class CoinRecorder(Recorder):
 
     def get_kdata_limit(self, exchange):
         return self.EXCHANGE_LIMIT[exchange]['kdata_limit']
-
-    def record_security(self):
-        super().record_security()
-
-    def record_tick(self):
-        super().record_tick()
-
-    def record_kdata(self):
-        super().record_kdata()
-
-    def get_ccxt_exchanges(self):
-        for exchange_str in self.exchanges:
-            yield
 
     def record_security(self):
         for exchange_str in self.exchanges:
@@ -124,8 +112,8 @@ class CoinRecorder(Recorder):
                         continue
 
                     try:
-                        latest_timestamp, df = get_latest_record_timestamp(security_item, level)
-                        size = Recorder.evaluate_size_to_now(latest_timestamp, level=level)
+                        latest_timestamp, df = get_latest_kdata_timestamp(security_item, level)
+                        size = Recorder.evaluate_kdata_size_to_now(latest_timestamp, level=level)
 
                         if size == 0:
                             logger.info("{} kdata is ok".format(security_item['code']))
@@ -136,11 +124,14 @@ class CoinRecorder(Recorder):
                                                            limit=size)
 
                         for kdata in kdatas:
-                            timestamp = pd.Timestamp.fromtimestamp(int(kdata[0] / 1000))
-                            if is_same_date(timestamp, pd.Timestamp.today()):
+                            timestamp = kdata[0]
+
+                            if level == 'day' and is_same_date(timestamp, pd.Timestamp.today()):
                                 continue
+
                             kdata_json = {
-                                'timestamp': to_time_str(timestamp),
+                                'timestamp': timestamp,
+                                'datetime': to_time_str(timestamp, time_fmt=TIME_FORMAT_MICRO),
                                 'code': security_item['code'],
                                 'name': security_item['name'],
                                 'open': kdata[1],
@@ -148,15 +139,12 @@ class CoinRecorder(Recorder):
                                 'low': kdata[3],
                                 'close': kdata[4],
                                 'volume': kdata[5],
-                                'securityId': security_item['id'],
-                                'preClose': None,
-                                'change': None,
-                                'changePct': None
+                                'securityId': security_item['id']
                             }
                             df = df.append(kdata_json, ignore_index=True)
                         if not df.empty:
                             df = df.loc[:, KDATA_COMMON_COL]
-                            kdata_df_save(df, get_kdata_path(security_item), calculate_change=True)
+                            kdata_df_save(df, get_kdata_path(security_item))
                             logger.info(
                                 "fetch_kdata for exchange:{} security:{} success".format(exchange_str,
                                                                                          security_item['name']))
