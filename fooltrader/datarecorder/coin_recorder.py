@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import json
 import logging
 import os
@@ -7,14 +8,14 @@ import time
 import ccxt
 import pandas as pd
 
-from fooltrader import get_exchange_dir, get_security_list
+from fooltrader import get_exchange_dir, get_latest_tick_timestamp
 from fooltrader.api.technical import get_latest_kdata_timestamp
-from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, SECURITY_TYPE_COIN
+from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, COIN_CODE
 from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
-    get_kdata_path, get_kdata_dir
+    get_kdata_path, get_kdata_dir, get_tick_path
 from fooltrader.datarecorder.recorder import Recorder
-from fooltrader.settings import TIME_FORMAT_MICRO
+from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.pd_utils import kdata_df_save
 from fooltrader.utils.utils import to_time_str, is_same_date, generate_security_item
 
@@ -22,14 +23,15 @@ logger = logging.getLogger(__name__)
 
 
 class CoinRecorder(Recorder):
-    security_type = 'coin'
-    exchanges = set(ccxt.exchanges) & set(COIN_EXCHANGES)
-
     # check the exchange api to set this
     EXCHANGE_LIMIT = {
         'huobipro': {'tick_limit': 2000,
                      'kdata_limit': 2000}
     }
+
+    def __init__(self, exchanges=None) -> None:
+        super().__init__('coin', exchanges, COIN_CODE)
+        self.exchanges = set(ccxt.exchanges) & set(COIN_EXCHANGES) & set(self.exchanges)
 
     def get_tick_limit(self, exchange):
         return self.EXCHANGE_LIMIT[exchange]['tick_limit']
@@ -37,7 +39,7 @@ class CoinRecorder(Recorder):
     def get_kdata_limit(self, exchange):
         return self.EXCHANGE_LIMIT[exchange]['kdata_limit']
 
-    def record_security(self):
+    def init_security_list(self):
         for exchange_str in self.exchanges:
             exchange_dir = get_exchange_dir(security_type=self.security_type, exchange=exchange_str)
 
@@ -102,58 +104,49 @@ class CoinRecorder(Recorder):
             except Exception as e:
                 logger.exception("init_markets for {} failed".format(exchange_str), e)
 
-    def record_kdata(self, level):
-        for exchange_str in self.exchanges:
-            ccxt_exchange = eval("ccxt.{}()".format(exchange_str))
+    def record_kdata(self, security_items, level):
+        for security_item in security_items:
+            ccxt_exchange = eval("ccxt.{}()".format(security_item['exchange']))
             if ccxt_exchange.has['fetchOHLCV']:
-                for _, security_item in get_security_list(security_type=self.security_type,
-                                                          exchanges=[exchange_str]).iterrows():
-                    if security_item['name'] not in COIN_PAIRS:
-                        continue
+                try:
+                    latest_timestamp, df = get_latest_kdata_timestamp(security_item, level)
+                    size = Recorder.evaluate_kdata_size_to_now(latest_timestamp, level=level)
 
-                    try:
-                        latest_timestamp, df = get_latest_kdata_timestamp(security_item, level)
-                        size = Recorder.evaluate_kdata_size_to_now(latest_timestamp, level=level)
+                    if size == 0:
+                        logger.info("{} kdata is ok".format(security_item['code']))
+                        return
 
-                        if size == 0:
-                            logger.info("{} kdata is ok".format(security_item['code']))
+                    kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
+                                                       timeframe=Recorder.level_to_timeframe(level),
+                                                       limit=size)
+
+                    for kdata in kdatas:
+                        timestamp = kdata[0]
+
+                        if level == 'day' and is_same_date(timestamp, pd.Timestamp.today()):
                             continue
 
-                        kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
-                                                           timeframe=Recorder.level_to_timeframe(level),
-                                                           limit=size)
-
-                        for kdata in kdatas:
-                            timestamp = kdata[0]
-
-                            if level == 'day' and is_same_date(timestamp, pd.Timestamp.today()):
-                                continue
-
-                            kdata_json = {
-                                'timestamp': timestamp,
-                                'datetime': to_time_str(timestamp, time_fmt=TIME_FORMAT_MICRO),
-                                'code': security_item['code'],
-                                'name': security_item['name'],
-                                'open': kdata[1],
-                                'high': kdata[2],
-                                'low': kdata[3],
-                                'close': kdata[4],
-                                'volume': kdata[5],
-                                'securityId': security_item['id']
-                            }
-                            df = df.append(kdata_json, ignore_index=True)
-                        if not df.empty:
-                            df = df.loc[:, KDATA_COMMON_COL]
-                            kdata_df_save(df, get_kdata_path(security_item))
-                            logger.info(
-                                "fetch_kdata for exchange:{} security:{} success".format(exchange_str,
-                                                                                         security_item['name']))
-                    except Exception as e:
+                        kdata_json = {
+                            'timestamp': to_time_str(timestamp, time_fmt=TIME_FORMAT_ISO8601),
+                            'code': security_item['code'],
+                            'name': security_item['name'],
+                            'open': kdata[1],
+                            'high': kdata[2],
+                            'low': kdata[3],
+                            'close': kdata[4],
+                            'volume': kdata[5],
+                            'securityId': security_item['id']
+                        }
+                        df = df.append(kdata_json, ignore_index=True)
+                    if not df.empty:
+                        df = df.loc[:, KDATA_COMMON_COL]
+                        kdata_df_save(df, get_kdata_path(security_item, level=level))
                         logger.info(
-                            "fetch_kdata for exchange:{} security:{} failed".format(exchange_str, security_item['name'],
-                                                                                    e))
+                            "fetch_kdata for security:{} level:{} success".format(security_item['id'], level))
+                except Exception as e:
+                    logger.exception("fetch_kdata for security:{} level:{} failed".format(security_item['id'], level))
             else:
-                logger.warning("exchange:{} not support fetchOHLCV".format(exchange_str))
+                logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
 
     def _check_fetch_trades(self, exchange, pair):
         try:
@@ -162,47 +155,75 @@ class CoinRecorder(Recorder):
         except Exception as e:
             return False
 
-    def record_tick(self, exchange_str, pairs=None):
-        if not pairs:
-            df = get_security_list(security_type=SECURITY_TYPE_COIN, exchanges=exchange_str)
-            pairs = set(df.loc[:, 'name'].tolist()) & set(COIN_PAIRS)
-            if not pairs:
-                logger.warning("{} not support pair:{}".format(exchange_str, COIN_PAIRS))
-                return
-            else:
-                logger.info("{} get tick for paris:{}".format(exchange_str, pairs))
+    def to_direction(side):
+        if side == 'sell':
+            return -1
+        if side == 'buy':
+            return 1
+        return 0
 
-        exchange = eval("ccxt.{}()".format(exchange_str))
-        if exchange.has['fetchTrades']:
-            # verify one trade at first
-            pairs = [pair for pair in pairs if self._check_fetch_trades(exchange, pair)]
+    def record_tick(self, security_item):
+        ccxt_exchange = eval("ccxt.{}()".format(security_item['exchange']))
+        if ccxt_exchange.has['fetchTrades']:
+            try:
+                latest_timestamp, df = get_latest_tick_timestamp(security_item)
 
-            logger.info("after check {} get tick for paris:{}".format(exchange_str, pairs))
+                if not is_same_date(latest_timestamp, pd.Timestamp.now()):
+                    df = pd.DataFrame()
+                    latest_timestamp = None
 
-            while True:
+                size = self.get_tick_limit(security_item['exchange'])
+                tick_list = []
 
-                for pair in pairs:
-                    trades = exchange.fetch_trades(symbol=pair)
+                while True:
+                    trades = ccxt_exchange.fetch_trades(symbol=security_item['name'], limit=size)
 
-                    trade = trades[-1]
+                    for trade in trades:
+                        tick = {
+                            'securityId': security_item['id'],
+                            'code': security_item['code'],
+                            'name': security_item['name'],
 
-                    code = pair.replace('/', '-')
-                    tick = {
-                        'securityId': "{}_{}_{}".format("coin", exchange_str, code),
-                        'code': code,
-                        'name': pair,
-                        'timestamp': int(trade['timestamp'] / 1000),
-                        'id': trade['id'],
-                        'price': trade['price'],
-                        'volume': trade['amount']
-                    }
-                    yield tick
+                            'id': trade['id'],
+                            'order'
+                            'timestamp': trade['timestamp'],
+                            'datetime': trade['datetime'],
+                            'price': trade['price'],
+                            'volume': trade['amount'],
+                            'direction': self.to_direction(trade['side']),
+                            'orderType': trade['type'],
+                            'turnover': trade['price'] * trade['amount']
+                        }
 
-                rate_limit = 5
-                time.sleep(rate_limit)
+                        if latest_timestamp and tick['timestamp'] <= latest_timestamp:
+                            continue
 
-                logger.info("fetch_tickers exchange:{} pairs:{} sleep:{}".format(exchange_str, pairs, rate_limit))
+                        latest_timestamp = tick['timestamp']
+
+                        if len(tick_list) >= 4000 or not is_same_date(tick['timestamp'], latest_timestamp):
+                            df = df.append(pd.DataFrame(tick_list), ignore_index=True)
+                            csv_path = get_tick_path(security_item, to_time_str(latest_timestamp))
+                            df.to_csv(csv_path, index=False)
+                            logger.info(
+                                "record_tick for security:{} count:{} success".format(security_item['id'], len(df)))
+
+                            tick_list = []
+
+                        tick_list.append(tick)
+
+                    time.sleep(ccxt_exchange.rateLimit / 1000)
+
+            except Exception as e:
+                logger.exception("record_tick for security:{} failed".format(security_item['id']))
+        else:
+            logger.warning("exchange:{} not support fetchTrades".format(security_item['exchange']))
 
 
 if __name__ == '__main__':
-    pass
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('exchange', help='the exchange you want to record')
+
+    # args = parser.parse_args()
+
+    recorder = CoinRecorder(exchanges=['kraken'])
+    recorder.run()

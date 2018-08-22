@@ -7,7 +7,7 @@ from pymongo import MongoClient
 
 from fooltrader import fill_doc_type, es_client
 from fooltrader.domain.data.es_quote import EosAccount
-from fooltrader.settings import EOS_MONGODB_URL, TIME_FORMAT_MICRO
+from fooltrader.settings import EOS_MONGODB_URL, TIME_FORMAT_ISO8601
 from fooltrader.utils.es_utils import es_index_mapping
 from fooltrader.utils.utils import to_time_str
 
@@ -58,8 +58,8 @@ def eos_account_to_es():
                 "stackedEos": stackedEos,
                 "totalEos": totalEos,
                 "unstackingEos": unstackingEos,
-                "timestamp": to_time_str(createTime, TIME_FORMAT_MICRO),
-                "updateTimestamp": to_time_str(datetime.now(), TIME_FORMAT_MICRO)
+                "timestamp": to_time_str(createTime, TIME_FORMAT_ISO8601),
+                "updateTimestamp": to_time_str(datetime.now(), TIME_FORMAT_ISO8601)
             }
             eos_account = EosAccount(meta={'id': json_item['id'], 'index': "eos_account"})
             fill_doc_type(eos_account, json_item)

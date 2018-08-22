@@ -13,7 +13,7 @@ STOCK_META_COL = ['code', 'name', 'timestamp', 'listDate', 'exchange', 'type', '
                   'sector', 'industry']
 
 # 通用k线
-KDATA_COMMON_COL = ['timestamp', 'datetime', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'securityId']
+KDATA_COMMON_COL = ['timestamp', 'code', 'name', 'low', 'open', 'close', 'high', 'volume', 'securityId']
 # tick
 TICK_COL = ['timestamp', 'price', 'volume', 'turnover', 'direction']
 

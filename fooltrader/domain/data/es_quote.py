@@ -10,7 +10,6 @@ from fooltrader.domain import BaseDocType
 # meta related
 # ***********************************************************
 # 股票元信息
-from fooltrader.utils.es_utils import es_index_mapping
 
 
 class StockMeta(BaseDocType):
@@ -149,8 +148,8 @@ class CryptoCurrencyKData(BaseDocType):
 
 class CommonKData(BaseDocType):
     id = Keyword()
-    timestamp = Date(format="yyyyMMdd'T'HHmmss.SSSZ||yyyy-MM-dd||epoch_millis")
-    datetime = Date(format="yyyyMMdd'T'HHmmss.SSSZ||yyyy-MM-dd||epoch_millis")
+    timestamp = Date()
+    datetime = Date()
     updateTimestamp = Date()
     securityId = Keyword()
     code = Keyword()
@@ -171,8 +170,8 @@ class CommonKData(BaseDocType):
 
 class EosAccount(BaseDocType):
     id = Keyword()
-    timestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
-    updateTimestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
+    timestamp = Date()
+    updateTimestamp = Date()
     userId = Keyword()
     liquidEos = Float()
     stackedEos = Float()
@@ -183,8 +182,8 @@ class EosAccount(BaseDocType):
 class EosUserStatistic(BaseDocType):
     id = Keyword()
     userId = Keyword()
-    timestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
-    updateTimestamp = Date(format="yyyyMMdd HHmmss.SSS||yyyy-MM-dd||epoch_millis")
+    timestamp = Date()
+    updateTimestamp = Date()
     securityId = Keyword()
     code = Keyword()
     name = Keyword()
@@ -256,6 +255,3 @@ class IndexKData(BaseDocType):
         all = MetaField(enabled=False)
         doc_type = 'doc'
         dynamic = MetaField('strict')
-
-if __name__ == '__main__':
-    es_index_mapping('test_kdata', CommonKData)

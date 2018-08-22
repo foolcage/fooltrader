@@ -9,7 +9,7 @@ from pymongo import MongoClient
 
 from fooltrader import to_time_str
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
-from fooltrader.settings import EOS_MONGODB_URL, KAFKA_HOST, TIME_FORMAT_MICRO
+from fooltrader.settings import EOS_MONGODB_URL, KAFKA_HOST, TIME_FORMAT_ISO8601
 from fooltrader.utils.kafka_utils import get_latest_timestamp_order
 from fooltrader.utils.utils import to_timestamp
 
@@ -35,7 +35,7 @@ def to_tick(item):
         receiver = item['operator']
 
     return {
-        'timestamp': to_time_str(item['block_time'], time_fmt=TIME_FORMAT_MICRO),
+        'timestamp': to_time_str(item['block_time'], time_fmt=TIME_FORMAT_ISO8601),
         'securityId': 'cryptocurrency_contract_RAM-EOS',
         'code': 'RAM-EOS',
         'price': item['bytes'] / item['price'],

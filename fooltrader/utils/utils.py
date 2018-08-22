@@ -5,11 +5,12 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
+import arrow
 import pandas as pd
 
 from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
-from fooltrader.settings import TIME_FORMAT_DAY, TIME_FORMAT_MICRO
+from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
 
@@ -240,10 +241,7 @@ def to_timestamp(the_time):
 
 def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
     try:
-        if time_fmt == TIME_FORMAT_MICRO:
-            return to_timestamp(the_time).strftime(time_fmt)[0:-3]
-        else:
-            return to_timestamp(the_time).strftime(time_fmt)
+        arrow.get(to_timestamp(the_time)).format(time_fmt)
     except Exception as e:
         return the_time
 

@@ -14,7 +14,7 @@ from fooltrader.rest import app
 from fooltrader.rest.common import error, success
 from fooltrader.rest.err_codes import ERROR_NO_INPUT_JSON_PROVIDED, ERROR_INVALID_INPUT_JSON, \
     ERROR_SUBSCRIPTION_NOT_FOUND, ERROR_MISSING_REQUEST_PARAMS
-from fooltrader.settings import TIME_FORMAT_MICRO
+from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.utils import fill_doc_type, get_security_id, to_time_str
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ def set_subscription(sub_type, id):
         # generate subscription id
         sub_dict['id'] = "{}_{}".format(sub_dict['userId'], sub_dict['securityId'])
 
-        sub_dict['timestamp'] = to_time_str(datetime.now(), time_fmt=TIME_FORMAT_MICRO)
+        sub_dict['timestamp'] = to_time_str(datetime.now(), time_fmt=TIME_FORMAT_ISO8601)
 
         sub_model = PriceSubscription(meta={'id': sub_dict['id']})
 

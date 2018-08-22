@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 from fooltrader.api.esapi import esapi
 from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.domain.business.es_subscription import SubscriptionTriggered
-from fooltrader.settings import TIME_FORMAT_MICRO
+from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.utils import to_timestamp, to_time_str, is_same_date
 
 
@@ -50,7 +50,7 @@ class PriceNotifyBot(NotifyEventBot):
     def on_event(self, event_item):
         self.logger.debug(event_item)
 
-        self.current_time = to_time_str(event_item['timestamp'], time_fmt=TIME_FORMAT_MICRO)
+        self.current_time = to_time_str(event_item['timestamp'], time_fmt=TIME_FORMAT_ISO8601)
 
         if not self.last_date or not is_same_date(self.last_date, self.current_time):
             self.last_date = to_timestamp(event_item['timestamp']) - timedelta(days=1)

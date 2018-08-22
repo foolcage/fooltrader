@@ -6,7 +6,7 @@ import pandas as pd
 from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_statistic_index
 from fooltrader.domain.data.es_quote import CommonKData, CommonStatistic
-from fooltrader.settings import TIME_FORMAT_MICRO
+from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.es_utils import es_get_latest_timestamp, es_get_latest_record, es_index_mapping
 from fooltrader.utils.utils import to_timestamp, to_time_str, fill_doc_type, is_same_date, is_same_time
 
@@ -72,7 +72,7 @@ class EosStatisticBot(NotifyEventBot):
                                                                microseconds=-self.last_timestamp.microsecond)
 
         self.last_day_time_str = to_time_str(self.kdata_timestamp)
-        self.last_mirco_time_str = to_time_str(self.kdata_timestamp, time_fmt=TIME_FORMAT_MICRO)
+        self.last_mirco_time_str = to_time_str(self.kdata_timestamp, time_fmt=TIME_FORMAT_ISO8601)
 
     def on_event(self, event_item):
         if not self.computing_start:

@@ -1,6 +1,8 @@
+import os
+
 import pandas as pd
 
-from fooltrader import get_security_list_path
+from fooltrader import get_security_list_path, get_exchange_dir
 
 df = pd.DataFrame()
 
@@ -17,5 +19,8 @@ df = df.append(
     }, ignore_index=True)
 
 if not df.empty:
+    the_dir = get_exchange_dir(security_type='coin', exchange='contract')
+    if not os.path.exists(the_dir):
+        os.makedirs(the_dir)
     df.to_csv(get_security_list_path(security_type='coin', exchange='contract'),
               index=False)

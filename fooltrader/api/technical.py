@@ -105,7 +105,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
     return df
 
 
-def _get_security_item(security_type, exchanges, code=None):
+def get_security_item(security_type, exchanges, code=None):
     """
     get the security item.
 
@@ -137,25 +137,25 @@ def _get_security_item(security_type, exchanges, code=None):
 def to_security_item(security_item, exchange=None):
     if type(security_item) == str:
         if exchange:
-            return _get_security_item('coin', [exchange], security_item)
+            return get_security_item('coin', [exchange], security_item)
 
         id_match = re.match(r'(stock|index|future|coin)_([a-z]{2,20})_([a-zA-Z0-9\-]+)',
                             security_item)
         if id_match:
-            return _get_security_item(security_type=id_match.group(1), exchanges=[id_match.group(2)],
-                                      code=id_match.group(3))
+            return get_security_item(security_type=id_match.group(1), exchanges=[id_match.group(2)],
+                                     code=id_match.group(3))
 
         # 中国期货
         if re.match(r'^[A-Za-z]{2}\d{4}', security_item):
-            return _get_security_item(code=security_item, security_type='future', exchanges=['shfe'])
+            return get_security_item(code=security_item, security_type='future', exchanges=['shfe'])
 
         # 中国股票
         if re.match(r'\d{6}', security_item):
-            return _get_security_item(code=security_item, security_type='stock', exchanges=['sh', 'sz'])
+            return get_security_item(code=security_item, security_type='stock', exchanges=['sh', 'sz'])
 
         # 美国股票
         if re.match(r'[A-Z]{2,20}', security_item):
-            return _get_security_item(code=security_item, security_type='stock', exchanges=['nasdaq'])
+            return get_security_item(code=security_item, security_type='stock', exchanges=['nasdaq'])
     return security_item
 
 
@@ -315,15 +315,13 @@ def get_latest_kdata_timestamp(security_item, source=None, level='day'):
     return df.index[-1], df
 
 
-def get_latest_tick_timestamp_order(security_item):
+def get_latest_tick_timestamp(security_item):
     dates = get_available_tick_dates(security_item)
     if dates:
         dates = sorted(dates)
         tick_path = files_contract.get_tick_path(security_item, dates[-1])
         tick_df = _parse_tick(tick_path, security_item)
-        if 'order' in tick_df.columns:
-            return tick_df.index[-1], tick_df['order'][len(tick_df['order']) - 1]
-        return tick_df.index[-1], None
+        return tick_df.index[-1], tick_df
 
 
 def get_trading_calendar(security_type='future', exchange='shfe'):
@@ -607,4 +605,4 @@ def parse_shfe_data(force_parse=False):
 
 if __name__ == '__main__':
     # print(get_kdata('ag1801', source='exchange'))
-    print(get_latest_tick_timestamp_order(to_security_item('300027')))
+    print(get_latest_tick_timestamp(to_security_item('300027')))
