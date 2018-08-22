@@ -180,7 +180,7 @@ CHINA_STOCK_SZ_INDEX = [{'id': 'index_sz_399001',
 # COIN_EXCHANGES = ["binance", "okex", "huobipro", "bitfinex", "bithumb", "gdax", "kraken", "hitbtc", "lbank",
 #                             "bitz", "bibox", "zb", "bitstamp"]
 
-COIN_EXCHANGES = ["binance", "huobipro", "bitfinex", "kraken", "eos_contract"]
+COIN_EXCHANGES = ["binance", "huobipro", "bitfinex", "gdax", "contract"]
 
 # COIN_BASE = ["BTC", "ETH", "XRP", "BCH", "EOS", "LTC", "XLM", "ADA", "IOTA", "TRX", "NEO", "DASH", "XMR",
 #                        "BNB", "ETC", "QTUM", "ONT"]

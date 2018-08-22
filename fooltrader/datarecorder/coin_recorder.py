@@ -225,5 +225,5 @@ if __name__ == '__main__':
 
     # args = parser.parse_args()
 
-    recorder = CoinRecorder(exchanges=['kraken'])
+    recorder = CoinRecorder(exchanges=['huobipro'])
     recorder.run()
