@@ -58,7 +58,7 @@ class Recorder(object):
         df = get_security_list(security_type=self.security_type, exchanges=self.exchanges,
                                codes=self.codes)
 
-        self.security_items = [row.to_json() for _, row in df.iterrows()]
+        self.security_items = [row.to_dict() for _, row in df.iterrows()]
 
         logger.info("record for security_items:{}".format(self.security_items))
 
@@ -67,8 +67,13 @@ class Recorder(object):
 
         ex = futures.ThreadPoolExecutor(max_workers=thread_size)
 
-        ex.submit(self.record_kdata, self.security_items, 'day')
+        wait_for = []
+
+        wait_for.append(ex.submit(self.record_kdata, self.security_items, 'day'))
 
         for security_item in self.security_items:
-            ex.submit(self.record_kdata, [security_item], '1m')
-            ex.submit(self.record_tick, security_item)
+            wait_for.append(ex.submit(self.record_kdata, [security_item], '1m'))
+            wait_for.append(ex.submit(self.record_tick, security_item))
+
+        for f in futures.as_completed(wait_for):
+            print('result: {}'.format(f.result()))
