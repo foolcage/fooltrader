@@ -262,9 +262,9 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
 
     # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
     if source == '163':
-        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan='bfq')
+        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan='bfq',level=level)
     else:
-        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan)
+        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan,level=level)
 
     if os.path.isfile(the_path):
         df = pd_utils.pd_read_csv(the_path, generate_id=generate_id)
@@ -309,7 +309,9 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
 
 def get_latest_kdata_timestamp(security_item, source=None, level='day'):
     df = get_kdata(security_item, source=source, level=level)
-    if len(df) == 0:
+    if df.empty:
+        if pd.isna(security_item['listDate']):
+            return None, df
         return pd.Timestamp(security_item['listDate']), df
 
     return df.index[-1], df
@@ -322,6 +324,7 @@ def get_latest_tick_timestamp(security_item):
         tick_path = files_contract.get_tick_path(security_item, dates[-1])
         tick_df = _parse_tick(tick_path, security_item)
         return tick_df.index[-1], tick_df
+    return None, None
 
 
 def get_trading_calendar(security_type='future', exchange='shfe'):

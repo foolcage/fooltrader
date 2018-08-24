@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
-def kdata_df_save(df, to_path, calculate_change=False):
+def kdata_df_save(df, to_path, calculate_change=False, append=False):
     df = df.drop_duplicates(subset='timestamp', keep='last')
     df = df.set_index(df['timestamp'], drop=False)
     df.index = pd.to_datetime(df.index)
@@ -28,7 +29,11 @@ def kdata_df_save(df, to_path, calculate_change=False):
             except  Exception as e:
                 logger.exception("pre_close:{},current:{}".format(pre_close, df.loc[index, :].to_dict()), e)
 
-    df.to_csv(to_path, index=False)
+    if append and os.path.exists(to_path):
+        with open(to_path, 'a') as f:
+            df.to_csv(f, header=False, index=False)
+    else:
+        df.to_csv(to_path, index=False)
 
 
 def df_for_date_range(df, start_date=None, end_date=None):

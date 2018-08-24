@@ -241,7 +241,10 @@ def to_timestamp(the_time):
 
 def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
     try:
-        arrow.get(to_timestamp(the_time)).format(time_fmt)
+        if type(the_time) == int:
+            the_time = the_time / 1000.0
+
+        return arrow.get(the_time).to('+08:00').format(time_fmt)
     except Exception as e:
         return the_time
 

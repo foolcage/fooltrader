@@ -13,11 +13,11 @@ from fooltrader.api.technical import get_latest_kdata_timestamp
 from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, COIN_CODE
 from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
-    get_kdata_path, get_kdata_dir, get_tick_path
+    get_kdata_path, get_tick_path
 from fooltrader.datarecorder.recorder import Recorder
 from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.pd_utils import kdata_df_save
-from fooltrader.utils.utils import to_time_str, is_same_date, generate_security_item
+from fooltrader.utils.utils import to_time_str, is_same_date, generate_security_item, to_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,13 @@ class CoinRecorder(Recorder):
     EXCHANGE_LIMIT = {
         'huobipro': {'tick_limit': 2000,
                      'kdata_limit': 2000}
+    }
+
+    EXCHANGE_AUTH = {
+        'huobipro': {
+            'apiKey': '',
+            'secret': ''
+        }
     }
 
     def __init__(self, exchanges=None) -> None:
@@ -39,6 +46,13 @@ class CoinRecorder(Recorder):
     def get_kdata_limit(self, exchange):
         return self.EXCHANGE_LIMIT[exchange]['kdata_limit']
 
+    def get_ccxt_exchange(self, exchange_str):
+        exchange = eval("ccxt.{}()".format(exchange_str))
+        exchange.apiKey = self.EXCHANGE_AUTH[exchange_str]['apiKey']
+        exchange.secret = self.EXCHANGE_AUTH[exchange_str]['secret']
+        exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
+        return exchange
+
     def init_security_list(self):
         for exchange_str in self.exchanges:
             exchange_dir = get_exchange_dir(security_type=self.security_type, exchange=exchange_str)
@@ -47,9 +61,9 @@ class CoinRecorder(Recorder):
             if not os.path.exists(exchange_dir):
                 os.makedirs(exchange_dir)
 
-            exchange = eval("ccxt.{}()".format(exchange_str))
+            ccxt_exchange = self.get_ccxt_exchange(exchange_str)
             try:
-                markets = exchange.fetch_markets()
+                markets = ccxt_exchange.fetch_markets()
                 df = pd.DataFrame()
 
                 # markets有些为key=symbol的dict,有些为list
@@ -75,10 +89,7 @@ class CoinRecorder(Recorder):
                                                            code=code,
                                                            name=name, list_date=None)
 
-                    kdata_dir = get_kdata_dir(security_item)
-
-                    if not os.path.exists(kdata_dir):
-                        os.makedirs(kdata_dir)
+                    Recorder.init_security_dir(security_item)
 
                     df = df.append(security_item, ignore_index=True)
 
@@ -104,58 +115,82 @@ class CoinRecorder(Recorder):
             except Exception as e:
                 logger.exception("init_markets for {} failed".format(exchange_str), e)
 
-    def record_kdata(self, security_items, level):
-        for security_item in security_items:
-            ccxt_exchange = eval("ccxt.{}()".format(security_item['exchange']))
-            if ccxt_exchange.has['fetchOHLCV']:
-                try:
-                    latest_timestamp, df = get_latest_kdata_timestamp(security_item, level)
-                    size = Recorder.evaluate_kdata_size_to_now(latest_timestamp, level=level)
+    def record_kdata(self, security_item, level):
+        ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
 
-                    if size == 0:
-                        logger.info("{} kdata is ok".format(security_item['code']))
-                        return
+        if ccxt_exchange.has['fetchOHLCV']:
+            latest_timestamp, _ = get_latest_kdata_timestamp(security_item, level=level)
 
-                    kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
-                                                       timeframe=Recorder.level_to_timeframe(level),
-                                                       limit=size)
+            if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
+                return
 
-                    for kdata in kdatas:
-                        timestamp = kdata[0]
+            limit = self.get_kdata_limit(security_item['exchange'])
 
-                        if level == 'day' and is_same_date(timestamp, pd.Timestamp.today()):
-                            continue
+            if latest_timestamp:
+                evaluate_size = Recorder.evaluate_kdata_size_to_now(latest_timestamp, level=level)
 
-                        kdata_json = {
-                            'timestamp': to_time_str(timestamp, time_fmt=TIME_FORMAT_ISO8601),
-                            'code': security_item['code'],
-                            'name': security_item['name'],
-                            'open': kdata[1],
-                            'high': kdata[2],
-                            'low': kdata[3],
-                            'close': kdata[4],
-                            'volume': kdata[5],
-                            'securityId': security_item['id']
-                        }
-                        df = df.append(kdata_json, ignore_index=True)
-                    if not df.empty:
-                        df = df.loc[:, KDATA_COMMON_COL]
-                        kdata_df_save(df, get_kdata_path(security_item, level=level))
-                        logger.info(
-                            "fetch_kdata for security:{} level:{} success".format(security_item['id'], level))
-                except Exception as e:
-                    logger.exception("fetch_kdata for security:{} level:{} failed".format(security_item['id'], level))
-            else:
-                logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
+                # add 10 to make sure get all kdata
+                if evaluate_size > limit:
+                    logger.warning("evaluate_size:{},limit:{}".format(evaluate_size, limit))
+                limit = min(evaluate_size + 10, limit)
 
-    def _check_fetch_trades(self, exchange, pair):
-        try:
-            exchange.fetch_trades(symbol=pair, limit=1)
-            return True
-        except Exception as e:
-            return False
+            kdata_list = []
 
-    def to_direction(side):
+            while True:
+                kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
+                                                   timeframe=Recorder.level_to_timeframe(level),
+                                                   limit=limit)
+
+                has_duplicate = False
+
+                for kdata in kdatas:
+                    current_timestamp = kdata[0]
+
+                    if to_timestamp(current_timestamp) <= to_timestamp(latest_timestamp):
+                        has_duplicate = True
+                        continue
+
+                    kdata_json = {
+                        'timestamp': to_time_str(current_timestamp, time_fmt=TIME_FORMAT_ISO8601),
+                        'code': security_item['code'],
+                        'name': security_item['name'],
+                        'open': kdata[1],
+                        'high': kdata[2],
+                        'low': kdata[3],
+                        'close': kdata[4],
+                        'volume': kdata[5],
+                        'securityId': security_item['id']
+                    }
+                    kdata_list.append(kdata_json)
+
+                if not has_duplicate:
+                    logger.warning(
+                        "{} level:{} gap between {} and {}".format(security_item['id'], level,
+                                                                   to_time_str(latest_timestamp,
+                                                                               time_fmt=TIME_FORMAT_ISO8601),
+                                                                   to_time_str(kdatas[0][0],
+                                                                               time_fmt=TIME_FORMAT_ISO8601)))
+                latest_timestamp = kdatas[-1][0]
+
+                if len(kdata_list) > 10 or (level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today())):
+                    df = pd.DataFrame(kdata_list)
+                    df = df.loc[:, KDATA_COMMON_COL]
+
+                    kdata_df_save(df, get_kdata_path(security_item, level=level), append=True)
+                    logger.info(
+                        "fetch_kdata for security:{} level:{} success".format(security_item['id'], level))
+                    kdata_list = []
+
+                if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
+                    return
+
+                limit = 10
+                time.sleep(30)
+
+        else:
+            logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
+
+    def to_direction(self, side):
         if side == 'sell':
             return -1
         if side == 'buy':
@@ -163,7 +198,7 @@ class CoinRecorder(Recorder):
         return 0
 
     def record_tick(self, security_item):
-        ccxt_exchange = eval("ccxt.{}()".format(security_item['exchange']))
+        ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
         if ccxt_exchange.has['fetchTrades']:
             try:
                 latest_timestamp, df = get_latest_tick_timestamp(security_item)
@@ -172,6 +207,7 @@ class CoinRecorder(Recorder):
                     df = pd.DataFrame()
                     latest_timestamp = None
 
+                # use the exchange limit first time
                 size = self.get_tick_limit(security_item['exchange'])
                 tick_list = []
 
@@ -185,7 +221,7 @@ class CoinRecorder(Recorder):
                             'name': security_item['name'],
 
                             'id': trade['id'],
-                            'order'
+                            'order': trade['order'],
                             'timestamp': trade['timestamp'],
                             'datetime': trade['datetime'],
                             'price': trade['price'],
