@@ -15,9 +15,9 @@ from fooltrader.contract.data_contract import KDATA_COMMON_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_tick_path
 from fooltrader.datarecorder.recorder import Recorder
-from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.pd_utils import kdata_df_save
-from fooltrader.utils.utils import to_time_str, is_same_date, generate_security_item, to_timestamp
+from fooltrader.utils.time_utils import is_same_date, to_timestamp, to_time_str, current_timestamp
+from fooltrader.utils.utils import generate_security_item
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,8 @@ class CoinRecorder(Recorder):
             'secret': ''
         }
     }
+
+    OVERLAPPING_SIZE = 10
 
     def __init__(self, exchanges=None) -> None:
         super().__init__('coin', exchanges, COIN_CODE)
@@ -132,60 +134,68 @@ class CoinRecorder(Recorder):
                 # add 10 to make sure get all kdata
                 if evaluate_size > limit:
                     logger.warning("evaluate_size:{},limit:{}".format(evaluate_size, limit))
-                limit = min(evaluate_size + 10, limit)
+                limit = min(evaluate_size + self.OVERLAPPING_SIZE, limit)
 
             kdata_list = []
 
             while True:
-                kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
-                                                   timeframe=Recorder.level_to_timeframe(level),
-                                                   limit=limit)
+                try:
+                    kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
+                                                       timeframe=Recorder.level_to_timeframe(level),
+                                                       limit=limit)
 
-                has_duplicate = False
+                    has_duplicate = False
 
-                for kdata in kdatas:
-                    current_timestamp = kdata[0]
+                    for kdata in kdatas:
+                        current_timestamp = kdata[0]
 
-                    if to_timestamp(current_timestamp) <= to_timestamp(latest_timestamp):
-                        has_duplicate = True
-                        continue
+                        if latest_timestamp and (to_timestamp(current_timestamp) <= to_timestamp(latest_timestamp)):
+                            has_duplicate = True
+                            continue
 
-                    kdata_json = {
-                        'timestamp': to_time_str(current_timestamp, time_fmt=TIME_FORMAT_ISO8601),
-                        'code': security_item['code'],
-                        'name': security_item['name'],
-                        'open': kdata[1],
-                        'high': kdata[2],
-                        'low': kdata[3],
-                        'close': kdata[4],
-                        'volume': kdata[5],
-                        'securityId': security_item['id']
-                    }
-                    kdata_list.append(kdata_json)
+                        if level == 'day' and is_same_date(current_timestamp, pd.Timestamp.today()):
+                            continue
 
-                if not has_duplicate:
-                    logger.warning(
-                        "{} level:{} gap between {} and {}".format(security_item['id'], level,
-                                                                   to_time_str(latest_timestamp,
-                                                                               time_fmt=TIME_FORMAT_ISO8601),
-                                                                   to_time_str(kdatas[0][0],
-                                                                               time_fmt=TIME_FORMAT_ISO8601)))
-                latest_timestamp = kdatas[-1][0]
+                        kdata_json = {
+                            'timestamp': to_time_str(current_timestamp),
+                            'code': security_item['code'],
+                            'name': security_item['name'],
+                            'open': kdata[1],
+                            'high': kdata[2],
+                            'low': kdata[3],
+                            'close': kdata[4],
+                            'volume': kdata[5],
+                            'securityId': security_item['id']
+                        }
+                        kdata_list.append(kdata_json)
 
-                if len(kdata_list) > 10 or (level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today())):
-                    df = pd.DataFrame(kdata_list)
-                    df = df.loc[:, KDATA_COMMON_COL]
+                    if latest_timestamp and not has_duplicate:
+                        logger.warning(
+                            "{} level:{} gap between {} and {}".format(security_item['id'], level,
+                                                                       to_time_str(latest_timestamp),
+                                                                       to_time_str(kdatas[0][0])))
+                    latest_timestamp = kdatas[-1][0]
 
-                    kdata_df_save(df, get_kdata_path(security_item, level=level), append=True)
-                    logger.info(
-                        "fetch_kdata for security:{} level:{} success".format(security_item['id'], level))
-                    kdata_list = []
+                    if len(kdata_list) > 10 or (
+                            level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today())):
+                        df = pd.DataFrame(kdata_list)
+                        df = df.loc[:, KDATA_COMMON_COL]
 
-                if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
-                    return
+                        kdata_df_save(df, get_kdata_path(security_item, level=level), append=True)
+                        logger.info(
+                            "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(
+                                security_item['id'], level,
+                                to_time_str(latest_timestamp)))
+                        kdata_list = []
 
-                limit = 10
-                time.sleep(30)
+                    if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
+                        return
+
+                    limit = 10
+                    time.sleep(self.SAFE_SLEEPING_TIME)
+
+                except Exception as e:
+                    logger.exception("record_kdata for security:{} failed".format(security_item['id']))
 
         else:
             logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
@@ -203,7 +213,7 @@ class CoinRecorder(Recorder):
             try:
                 latest_timestamp, df = get_latest_tick_timestamp(security_item)
 
-                if not is_same_date(latest_timestamp, pd.Timestamp.now()):
+                if not is_same_date(latest_timestamp, current_timestamp()):
                     df = pd.DataFrame()
                     latest_timestamp = None
 
@@ -253,6 +263,88 @@ class CoinRecorder(Recorder):
                 logger.exception("record_tick for security:{} failed".format(security_item['id']))
         else:
             logger.warning("exchange:{} not support fetchTrades".format(security_item['exchange']))
+
+    def record_tick(self, security_item, level):
+        ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
+
+        if ccxt_exchange.has['fetchTrades']:
+            latest_timestamp, df = get_latest_tick_timestamp(security_item)
+
+            if not is_same_date(latest_timestamp, pd.Timestamp.now()):
+                df = pd.DataFrame()
+                latest_timestamp = None
+
+            limit = self.get_tick_limit(security_item['exchange'])
+
+            tick_list = []
+
+            while True:
+                try:
+                    trades = ccxt_exchange.fetch_trades(security_item['name'], limit=limit)
+
+                    has_duplicate = False
+                    to_the_next_day = False
+
+                    for trade in trades:
+                        current_timestamp = tick['timestamp']
+
+                        if latest_timestamp and (to_timestamp(current_timestamp) <= to_timestamp(latest_timestamp)):
+                            has_duplicate = True
+                            continue
+
+                        # to the next date
+                        if not is_same_date(current_timestamp, latest_timestamp):
+                            to_the_next_day = True
+                            break
+
+                        latest_timestamp = current_timestamp
+
+                        tick = {
+                            'securityId': security_item['id'],
+                            'code': security_item['code'],
+                            'name': security_item['name'],
+
+                            'id': trade['id'],
+                            'order': trade['order'],
+                            'timestamp': trade['timestamp'],
+                            'datetime': trade['datetime'],
+                            'price': trade['price'],
+                            'volume': trade['amount'],
+                            'direction': self.to_direction(trade['side']),
+                            'orderType': trade['type'],
+                            'turnover': trade['price'] * trade['amount']
+                        }
+                        tick_list.append(tick)
+
+                    if latest_timestamp and not has_duplicate:
+                        logger.warning(
+                            "{} level:{} gap between {} and {}".format(security_item['id'], level,
+                                                                       to_time_str(latest_timestamp),
+                                                                       to_time_str(trades[0][0])))
+                    latest_timestamp = trades[-1]['timestamp']
+
+                    if len(tick_list) >= 4000 or to_the_next_day:
+                        df = pd.DataFrame(tick_list)
+                        df = df.loc[:, KDATA_COMMON_COL]
+
+                        kdata_df_save(df, get_kdata_path(security_item, level=level), append=True)
+                        logger.info(
+                            "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(
+                                security_item['id'], level,
+                                to_time_str(latest_timestamp)))
+                        tick_list = []
+
+                    if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
+                        return
+
+                    limit = 10
+                    time.sleep(self.SAFE_SLEEPING_TIME)
+
+                except Exception as e:
+                    logger.exception("record_kdata for security:{} failed".format(security_item['id']))
+
+        else:
+            logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
 
 
 if __name__ == '__main__':

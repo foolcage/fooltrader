@@ -25,7 +25,7 @@ apscheduler == 3.4.0
 
 requests == 2.18.4
 
-ccxt == 1.14.224
+ccxt == 1.17.191
 
 Flask == 1.0
 

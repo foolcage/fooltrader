@@ -13,7 +13,7 @@ from kafka import TopicPartition
 from fooltrader.api.technical import to_security_item
 from fooltrader.bot.action.account_action import AccountService
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
-from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY
+from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_DAY, CHINA_TZ
 from fooltrader.utils.utils import is_same_date
 from fooltrader.utils.utils import to_timestamp
 
@@ -139,7 +139,7 @@ class BaseBot(object):
             while True:
                 self.on_timer({"timestamp": self.current_time})
 
-                if is_same_date(self.current_time, pd.Timestamp.now()):
+                if is_same_date(self.current_time, pd.Timestamp.now(tz=CHINA_TZ)):
                     time.sleep(self.time_step.total_seconds())
 
                 self.current_time += self.time_step

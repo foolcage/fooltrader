@@ -10,7 +10,6 @@ import pandas as pd
 
 from fooltrader.contract.data_contract import TICK_COL
 from fooltrader.contract.files_contract import get_tick_path
-from fooltrader.settings import TIME_FORMAT_DAY
 
 logger = logging.getLogger(__name__)
 
@@ -118,32 +117,6 @@ def get_tick_item(path, the_date, security_item):
                    "turnover": turnover}
 
 
-def get_datetime(str):
-    return datetime.datetime.strptime(str, TIME_FORMAT_DAY)
-
-
-def get_year_quarter(time):
-    if type(time) == str:
-        time = get_datetime(time)
-    return time.year, ((time.month - 1) // 3) + 1
-
-
-def get_quarters(start, end=datetime.date.today()):
-    start_year_quarter = get_year_quarter(start)
-    current_year_quarter = get_year_quarter(end)
-    if current_year_quarter[0] == start_year_quarter[0]:
-        return [(current_year_quarter[0], x) for x in range(start_year_quarter[1], current_year_quarter[1] + 1)]
-    elif current_year_quarter[0] - start_year_quarter[0] == 1:
-        return [(start_year_quarter[0], x) for x in range(start_year_quarter[1], 5)] + \
-               [(current_year_quarter[0], x) for x in range(1, current_year_quarter[1] + 1)]
-    elif current_year_quarter[0] - start_year_quarter[0] > 1:
-        return [(start_year_quarter[0], x) for x in range(start_year_quarter[1], 5)] + \
-               [(x, y) for x in range(start_year_quarter[0] + 1, current_year_quarter[0]) for y in range(1, 5)] + \
-               [(current_year_quarter[0], x) for x in range(1, current_year_quarter[1] + 1)]
-    else:
-        raise Exception("wrong start time:{}".format(start))
-
-
 def fill_doc_type(doc_type, json_object):
     for key in json_object:
         doc_type[key] = json_object[key]
@@ -209,14 +182,6 @@ def index_df_with_time(df, index='timestamp'):
     return df
 
 
-def is_same_date(one, two):
-    return to_timestamp(one).date() == to_timestamp(two).date()
-
-
-def is_same_time(one, two):
-    return to_timestamp(one) == to_timestamp(two)
-
-
 def get_report_period(the_date=datetime.datetime.today().date()):
     if the_date.month >= 10:
         return "{}{}".format(the_date.year, '-09-30')
@@ -226,36 +191,6 @@ def get_report_period(the_date=datetime.datetime.today().date()):
         return "{}{}".format(the_date.year, '-03-31')
     else:
         return "{}{}".format(the_date.year - 1, '-12-31')
-
-
-# ms(int) or second(float) or str
-def to_timestamp(the_time):
-    if type(the_time) == int:
-        the_time = the_time / 1000.0
-
-    if type(the_time) == float:
-        return pd.Timestamp.fromtimestamp(the_time)
-
-    return pd.Timestamp(the_time)
-
-
-def to_time_str(the_time, time_fmt=TIME_FORMAT_DAY):
-    try:
-        if type(the_time) == int:
-            the_time = the_time / 1000.0
-
-        return arrow.get(the_time).to('+08:00').format(time_fmt)
-    except Exception as e:
-        return the_time
-
-
-def to_epoch_millis(the_time):
-    return int(to_timestamp(the_time).timestamp() * 1000)
-
-
-def next_date(the_time):
-    return to_timestamp(the_time) + datetime.timedelta(days=1)
-
 
 def drop_duplicate(the_list):
     return list(set(the_list))

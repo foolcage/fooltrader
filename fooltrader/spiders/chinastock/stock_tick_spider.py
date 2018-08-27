@@ -12,7 +12,8 @@ from fooltrader.api.technical import get_security_list, get_trading_dates, get_k
 from fooltrader.consts import DEFAULT_TICK_HEADER
 from fooltrader.contract.files_contract import get_tick_path
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
-from fooltrader.utils.utils import get_datetime, kdata_to_tick, sina_tick_to_csv
+from fooltrader.utils import time_utils
+from fooltrader.utils.utils import kdata_to_tick, sina_tick_to_csv
 
 
 class StockTickSpider(scrapy.Spider):
@@ -32,8 +33,9 @@ class StockTickSpider(scrapy.Spider):
             trading_dates = get_trading_dates(item)
 
         for trading_date in trading_dates:
-            if get_datetime(trading_date) < get_datetime(settings.START_TICK_DATE) or get_datetime(
-                    trading_date) < get_datetime(settings.AVAILABLE_TICK_DATE):
+            if time_utils.compare_timestamp(trading_date,
+                                            settings.START_TICK_DATE) == -1 or time_utils.compare_timestamp(
+                trading_date, settings.AVAILABLE_TICK_DATE) == -1:
                 continue
             path = get_tick_path(item, trading_date)
 

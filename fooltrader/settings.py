@@ -123,11 +123,6 @@ g_socks_proxy_items = []
 g_http_proxy_items = []
 g_socks2http_proxy_items = {}
 
-TIME_FORMAT_ISO8601 = "YYYY-MM-DDTHH:mm:ss.SSSZ"
-
-TIME_FORMAT_SEC = 'YYYY-MM-DD HH:mm:ss'
-
-TIME_FORMAT_DAY = 'YYYY-MM-DD'
 
 # ES_HOSTS = ['172.16.92.200:9200']
 ES_HOSTS = ['localhost:9200']
