@@ -82,7 +82,7 @@ class Recorder(object):
         logger.info("record for security_type:{} exchanges:{}".format(self.security_type, self.exchanges))
 
         # init security list
-        # self.init_security_list()
+        self.init_security_list()
 
         df = get_security_list(security_type=self.security_type, exchanges=self.exchanges,
                                codes=self.codes)
