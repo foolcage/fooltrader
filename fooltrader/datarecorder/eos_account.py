@@ -7,9 +7,9 @@ from pymongo import MongoClient
 
 from fooltrader import fill_doc_type, es_client
 from fooltrader.domain.data.es_quote import EosAccount
-from fooltrader.settings import EOS_MONGODB_URL, TIME_FORMAT_ISO8601
+from fooltrader.settings import EOS_MONGODB_URL
 from fooltrader.utils.es_utils import es_index_mapping
-from fooltrader.utils.utils import to_time_str
+from fooltrader.utils.time_utils import TIME_FORMAT_ISO8601, to_time_str
 
 logger = logging.getLogger(__name__)
 

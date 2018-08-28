@@ -8,15 +8,15 @@ import time
 import ccxt
 import pandas as pd
 
-from fooltrader import get_exchange_dir, get_latest_tick_timestamp
+from fooltrader import get_exchange_dir, get_latest_tick_timestamp_ids
 from fooltrader.api.technical import get_latest_kdata_timestamp
 from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, COIN_CODE
-from fooltrader.contract.data_contract import KDATA_COMMON_COL
+from fooltrader.contract.data_contract import KDATA_COMMON_COL, COIN_TICK_COL
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
     get_kdata_path, get_tick_path
 from fooltrader.datarecorder.recorder import Recorder
-from fooltrader.utils.pd_utils import kdata_df_save
-from fooltrader.utils.time_utils import is_same_date, to_timestamp, to_time_str, current_timestamp
+from fooltrader.utils.pd_utils import df_save_timeseries_data
+from fooltrader.utils.time_utils import is_same_date, to_pd_timestamp, to_time_str, TIME_FORMAT_ISO8601, next_date
 from fooltrader.utils.utils import generate_security_item
 
 logger = logging.getLogger(__name__)
@@ -123,7 +123,13 @@ class CoinRecorder(Recorder):
         if ccxt_exchange.has['fetchOHLCV']:
             latest_timestamp, _ = get_latest_kdata_timestamp(security_item, level=level)
 
-            if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
+            if level == 'day' and is_same_date(next_date(latest_timestamp), pd.Timestamp.today()):
+                logger.info(
+                    "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(security_item['id'],
+                                                                                              level,
+                                                                                              to_time_str(
+                                                                                                  latest_timestamp)))
+
                 return
 
             limit = self.get_kdata_limit(security_item['exchange'])
@@ -149,15 +155,21 @@ class CoinRecorder(Recorder):
                     for kdata in kdatas:
                         current_timestamp = kdata[0]
 
-                        if latest_timestamp and (to_timestamp(current_timestamp) <= to_timestamp(latest_timestamp)):
+                        if latest_timestamp and (
+                                to_pd_timestamp(current_timestamp) <= to_pd_timestamp(latest_timestamp)):
                             has_duplicate = True
                             continue
 
                         if level == 'day' and is_same_date(current_timestamp, pd.Timestamp.today()):
                             continue
 
+                        if level == 'day':
+                            timestamp = to_time_str(current_timestamp)
+                        else:
+                            timestamp = to_time_str(current_timestamp, fmt=TIME_FORMAT_ISO8601)
+
                         kdata_json = {
-                            'timestamp': to_time_str(current_timestamp),
+                            'timestamp': timestamp,
                             'code': security_item['code'],
                             'name': security_item['name'],
                             'open': kdata[1],
@@ -176,16 +188,15 @@ class CoinRecorder(Recorder):
                                                                        to_time_str(kdatas[0][0])))
                     latest_timestamp = kdatas[-1][0]
 
-                    if len(kdata_list) > 10 or (
-                            level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today())):
+                    if kdata_list:
                         df = pd.DataFrame(kdata_list)
                         df = df.loc[:, KDATA_COMMON_COL]
 
-                        kdata_df_save(df, get_kdata_path(security_item, level=level), append=True)
+                        df_save_timeseries_data(df, get_kdata_path(security_item, level=level), append=True)
                         logger.info(
                             "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(
                                 security_item['id'], level,
-                                to_time_str(latest_timestamp)))
+                                to_time_str(latest_timestamp, fmt=TIME_FORMAT_ISO8601)))
                         kdata_list = []
 
                     if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
@@ -209,105 +220,51 @@ class CoinRecorder(Recorder):
 
     def record_tick(self, security_item):
         ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
-        if ccxt_exchange.has['fetchTrades']:
-            try:
-                latest_timestamp, df = get_latest_tick_timestamp(security_item)
-
-                if not is_same_date(latest_timestamp, current_timestamp()):
-                    df = pd.DataFrame()
-                    latest_timestamp = None
-
-                # use the exchange limit first time
-                size = self.get_tick_limit(security_item['exchange'])
-                tick_list = []
-
-                while True:
-                    trades = ccxt_exchange.fetch_trades(symbol=security_item['name'], limit=size)
-
-                    for trade in trades:
-                        tick = {
-                            'securityId': security_item['id'],
-                            'code': security_item['code'],
-                            'name': security_item['name'],
-
-                            'id': trade['id'],
-                            'order': trade['order'],
-                            'timestamp': trade['timestamp'],
-                            'datetime': trade['datetime'],
-                            'price': trade['price'],
-                            'volume': trade['amount'],
-                            'direction': self.to_direction(trade['side']),
-                            'orderType': trade['type'],
-                            'turnover': trade['price'] * trade['amount']
-                        }
-
-                        if latest_timestamp and tick['timestamp'] <= latest_timestamp:
-                            continue
-
-                        latest_timestamp = tick['timestamp']
-
-                        if len(tick_list) >= 4000 or not is_same_date(tick['timestamp'], latest_timestamp):
-                            df = df.append(pd.DataFrame(tick_list), ignore_index=True)
-                            csv_path = get_tick_path(security_item, to_time_str(latest_timestamp))
-                            df.to_csv(csv_path, index=False)
-                            logger.info(
-                                "record_tick for security:{} count:{} success".format(security_item['id'], len(df)))
-
-                            tick_list = []
-
-                        tick_list.append(tick)
-
-                    time.sleep(ccxt_exchange.rateLimit / 1000)
-
-            except Exception as e:
-                logger.exception("record_tick for security:{} failed".format(security_item['id']))
-        else:
-            logger.warning("exchange:{} not support fetchTrades".format(security_item['exchange']))
-
-    def record_tick(self, security_item, level):
-        ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
 
         if ccxt_exchange.has['fetchTrades']:
-            latest_timestamp, df = get_latest_tick_timestamp(security_item)
-
-            if not is_same_date(latest_timestamp, pd.Timestamp.now()):
-                df = pd.DataFrame()
-                latest_timestamp = None
+            latest_timestamp, latest_ids, _ = get_latest_tick_timestamp_ids(security_item)
 
             limit = self.get_tick_limit(security_item['exchange'])
 
             tick_list = []
+            to_the_next_day = False
 
             while True:
                 try:
                     trades = ccxt_exchange.fetch_trades(security_item['name'], limit=limit)
 
                     has_duplicate = False
-                    to_the_next_day = False
 
                     for trade in trades:
-                        current_timestamp = tick['timestamp']
+                        current_timestamp = trade['timestamp']
+                        current_id = trade['id']
 
-                        if latest_timestamp and (to_timestamp(current_timestamp) <= to_timestamp(latest_timestamp)):
+                        if latest_ids and (current_id in latest_ids):
+                            has_duplicate = True
+                            continue
+
+                        if latest_timestamp and (
+                                to_pd_timestamp(current_timestamp) < to_pd_timestamp(latest_timestamp)):
                             has_duplicate = True
                             continue
 
                         # to the next date
-                        if not is_same_date(current_timestamp, latest_timestamp):
+                        if latest_timestamp and not is_same_date(current_timestamp, latest_timestamp):
                             to_the_next_day = True
                             break
 
-                        latest_timestamp = current_timestamp
+                        if not latest_ids:
+                            latest_ids = []
+
+                        if current_id:
+                            latest_ids.append(current_id)
 
                         tick = {
                             'securityId': security_item['id'],
-                            'code': security_item['code'],
-                            'name': security_item['name'],
-
                             'id': trade['id'],
                             'order': trade['order'],
-                            'timestamp': trade['timestamp'],
-                            'datetime': trade['datetime'],
+                            'timestamp': to_time_str(trade['timestamp'], TIME_FORMAT_ISO8601),
+                            'datetime': trade['timestamp'],
                             'price': trade['price'],
                             'volume': trade['amount'],
                             'direction': self.to_direction(trade['side']),
@@ -318,33 +275,38 @@ class CoinRecorder(Recorder):
 
                     if latest_timestamp and not has_duplicate:
                         logger.warning(
-                            "{} level:{} gap between {} and {}".format(security_item['id'], level,
-                                                                       to_time_str(latest_timestamp),
-                                                                       to_time_str(trades[0][0])))
+                            "{} level:{} gap between {} and {}".format(security_item['id'],
+                                                                       to_time_str(latest_timestamp,
+                                                                                   TIME_FORMAT_ISO8601),
+                                                                       to_time_str(trades[0]['timestamp'],
+                                                                                   TIME_FORMAT_ISO8601)))
+
                     latest_timestamp = trades[-1]['timestamp']
 
-                    if len(tick_list) >= 4000 or to_the_next_day:
+                    if len(tick_list) >= 500 or to_the_next_day:
                         df = pd.DataFrame(tick_list)
-                        df = df.loc[:, KDATA_COMMON_COL]
+                        df = df.loc[:, COIN_TICK_COL]
 
-                        kdata_df_save(df, get_kdata_path(security_item, level=level), append=True)
+                        csv_path = get_tick_path(security_item, to_time_str(latest_timestamp))
+
+                        df_save_timeseries_data(df, csv_path, append=True)
                         logger.info(
-                            "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(
-                                security_item['id'], level,
-                                to_time_str(latest_timestamp)))
+                            "record_tick for security:{} latest_timestamp:{} success".format(
+                                security_item['id'], to_time_str(latest_timestamp, fmt=TIME_FORMAT_ISO8601)))
+
                         tick_list = []
+                        to_the_next_day = False
+                        latest_timestamp = None
+                        latest_ids = []
 
-                    if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
-                        return
-
-                    limit = 10
-                    time.sleep(self.SAFE_SLEEPING_TIME)
+                    limit = 500
+                    time.sleep(10)
 
                 except Exception as e:
-                    logger.exception("record_kdata for security:{} failed".format(security_item['id']))
+                    logger.exception("record_tick for security:{} failed".format(security_item['id']))
 
         else:
-            logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
+            logger.warning("exchange:{} not support fetchTrades".format(security_item['exchange']))
 
 
 if __name__ == '__main__':

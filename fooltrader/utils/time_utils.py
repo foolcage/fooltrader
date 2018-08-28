@@ -6,58 +6,47 @@ import pandas as pd
 
 CHINA_TZ = 'Asia/Shanghai'
 
-TIME_FORMAT_ISO8601 = "YYYY-MM-DDTHH:mm:ss.SSSZ"
-
-TIME_FORMAT_SEC = 'YYYY-MM-DD HH:mm:ss'
+TIME_FORMAT_ISO8601 = "YYYY-MM-DDTHH:mm:ss.SSS"
 
 TIME_FORMAT_DAY = 'YYYY-MM-DD'
 
 
 # ms(int) or second(float) or str
-def to_timestamp(the_time, tz=CHINA_TZ):
+def to_pd_timestamp(the_time):
     if type(the_time) == int:
-        return pd.Timestamp(the_time, unit='ms', tz=tz)
+        return pd.Timestamp.fromtimestamp(the_time / 1000)
 
     if type(the_time) == float:
-        return pd.Timestamp(the_time, unit='s', tz=tz)
+        return pd.Timestamp.fromtimestamp(the_time)
 
-    return pd.Timestamp(the_time, tz=tz)
+    return pd.Timestamp(the_time)
 
 
-def to_time_str(the_time, time_fmt=TIME_FORMAT_ISO8601):
+def to_timestamp(the_time):
+    return int(to_pd_timestamp(the_time).timestamp() * 1000)
+
+
+def to_time_str(the_time, fmt=TIME_FORMAT_DAY):
     try:
-        return arrow.get(to_timestamp(the_time)).format(time_fmt)
+        return arrow.get(to_pd_timestamp(the_time)).format(fmt)
     except Exception as e:
         return the_time
 
 
-def current_timestamp(tz=CHINA_TZ):
-    return pd.Timestamp.now(tz=tz)
-
-
 def next_date(the_time):
-    return to_timestamp(the_time) + datetime.timedelta(days=1)
+    return to_pd_timestamp(the_time) + datetime.timedelta(days=1)
 
 
 def is_same_date(one, two):
-    return to_timestamp(one).date() == to_timestamp(two).date()
-
-
-def compare_timestamp(one, two):
-    if to_timestamp(one) > to_timestamp(two):
-        return 1
-    if to_timestamp(one) == to_timestamp(two):
-        return 0
-    if to_timestamp(one) < to_timestamp(two):
-        return -1
+    return to_pd_timestamp(one).date() == to_pd_timestamp(two).date()
 
 
 def get_year_quarter(time):
-    time = to_timestamp(time)
+    time = to_pd_timestamp(time)
     return time.year, ((time.month - 1) // 3) + 1
 
 
-def get_quarters(start, end=current_timestamp()):
+def get_quarters(start, end=pd.Timestamp.now()):
     start_year_quarter = get_year_quarter(start)
     current_year_quarter = get_year_quarter(end)
     if current_year_quarter[0] == start_year_quarter[0]:

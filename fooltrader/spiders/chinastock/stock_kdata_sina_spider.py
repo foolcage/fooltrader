@@ -14,7 +14,7 @@ from fooltrader.contract import data_contract, files_contract
 from fooltrader.contract.files_contract import get_kdata_path, get_kdata_dir
 from fooltrader.settings import STOCK_START_CODE, STOCK_END_CODE
 from fooltrader.utils.pd_utils import pd_read_csv
-from fooltrader.utils.utils import get_quarters, get_year_quarter
+from fooltrader.utils.time_utils import get_year_quarter, get_quarters
 
 logger = logging.getLogger(__name__)
 

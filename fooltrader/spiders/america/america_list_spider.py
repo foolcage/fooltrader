@@ -8,9 +8,9 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
+from fooltrader import to_time_str
 from fooltrader.contract import files_contract
 from fooltrader.contract.data_contract import STOCK_META_COL
-from fooltrader.utils.utils import to_time_str
 
 
 class AmericaListSpider(scrapy.Spider):

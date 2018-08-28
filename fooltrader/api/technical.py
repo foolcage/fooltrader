@@ -17,8 +17,9 @@ from fooltrader.contract.files_contract import get_kdata_dir, get_kdata_path, ge
     get_security_list_path, get_exchange_trading_calendar_path, adjust_source
 from fooltrader.datamanager.zipdata import unzip
 from fooltrader.utils import pd_utils
-from fooltrader.utils.pd_utils import kdata_df_save, df_for_date_range
-from fooltrader.utils.utils import get_file_name, to_time_str, drop_duplicate
+from fooltrader.utils.pd_utils import df_save_timeseries_data, df_for_date_range
+from fooltrader.utils.time_utils import to_time_str
+from fooltrader.utils.utils import get_file_name, drop_duplicate
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +70,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
         exchanges = SECURITY_TYPE_MAP_EXCHANGES[security_type]
 
     if security_type == 'index':
-        df = df.append(pd.DataFrame(CHINA_STOCK_SH_INDEX), ignore_index=True)
-        df = df.append(pd.DataFrame(CHINA_STOCK_SZ_INDEX), ignore_index=True)
-        df = df.append(pd.DataFrame(USA_STOCK_NASDAQ_INDEX), ignore_index=True)
+        df = pd.DataFrame(CHINA_STOCK_SH_INDEX + CHINA_STOCK_SZ_INDEX + USA_STOCK_NASDAQ_INDEX)
     else:
         for exchange in exchanges:
             the_path = get_security_list_path(security_type, exchange)
@@ -98,9 +97,6 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
             df = df[df["code"].isin(codes)]
         elif start_code and end_code:
             df = df[(df["code"] >= start_code) & (df["code"] <= end_code)]
-
-        if security_type != 'coin':
-            df = df.drop_duplicates(subset='code', keep='last')
 
     return df
 
@@ -208,7 +204,10 @@ def get_ticks(security_item, the_date=None, start_date=None, end_date=None):
 def _parse_tick(tick_path, security_item):
     if os.path.isfile(tick_path):
         df = pd.read_csv(tick_path)
-        df['timestamp'] = get_file_name(tick_path) + " " + df['timestamp']
+        if security_item['type'] == 'stock':
+            df['timestamp'] = get_file_name(tick_path) + " " + df['timestamp']
+        else:
+            df['timestamp'] = df['timestamp']
         df = df.set_index(df['timestamp'], drop=False)
         df.index = pd.to_datetime(df.index)
         df = df.sort_index()
@@ -262,9 +261,9 @@ def get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_
 
     # 163的数据是合并过的,有复权因子,都存在'bfq'目录下,只需从一个地方取数据,并做相应转换
     if source == '163':
-        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan='bfq',level=level)
+        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan='bfq', level=level)
     else:
-        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan,level=level)
+        the_path = files_contract.get_kdata_path(security_item, source=source, fuquan=fuquan, level=level)
 
     if os.path.isfile(the_path):
         df = pd_utils.pd_read_csv(the_path, generate_id=generate_id)
@@ -317,14 +316,21 @@ def get_latest_kdata_timestamp(security_item, source=None, level='day'):
     return df.index[-1], df
 
 
-def get_latest_tick_timestamp(security_item):
+def get_latest_tick_timestamp_ids(security_item):
     dates = get_available_tick_dates(security_item)
     if dates:
         dates = sorted(dates)
         tick_path = files_contract.get_tick_path(security_item, dates[-1])
         tick_df = _parse_tick(tick_path, security_item)
-        return tick_df.index[-1], tick_df
-    return None, None
+
+        latest_timestamp = tick_df.index[-1]
+
+        if 'id' in tick_df.columns:
+            # same time different id
+            df = tick_df.loc[latest_timestamp:latest_timestamp, ['id']]
+            return latest_timestamp, list(df.values), tick_df
+        return latest_timestamp, None, tick_df
+    return None, None, None
 
 
 def get_trading_calendar(security_type='future', exchange='shfe'):
@@ -601,11 +607,11 @@ def parse_shfe_data(force_parse=False):
             saved_df = saved_df.loc[:, KDATA_FUTURE_COL]
 
             if not saved_df.empty:
-                kdata_df_save(saved_df, kdata_path)
+                df_save_timeseries_data(saved_df, kdata_path)
 
             logger.info("end handling {} in {}".format(the_contract, the_file))
 
 
 if __name__ == '__main__':
     # print(get_kdata('ag1801', source='exchange'))
-    print(get_latest_tick_timestamp(to_security_item('300027')))
+    print(get_latest_tick_timestamp_ids(to_security_item('300027')))

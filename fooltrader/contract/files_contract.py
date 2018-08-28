@@ -3,8 +3,8 @@
 import os
 from datetime import datetime
 
-import fooltrader.utils.utils
 from fooltrader import settings
+from fooltrader.utils.time_utils import to_time_str
 
 
 def get_exchange_dir(security_type='future', exchange='shfe'):
@@ -28,7 +28,7 @@ def get_exchange_cache_path(security_type='future', exchange='shfe', the_date=da
                                      data_type=data_type)
     if not os.path.exists(the_dir):
         os.makedirs(the_dir)
-    return os.path.join(the_dir, fooltrader.utils.utils.to_time_str(the_time=the_date, time_fmt='%Y%m%d'))
+    return os.path.join(the_dir, to_time_str(the_time=the_date))
 
 
 # 标的相关

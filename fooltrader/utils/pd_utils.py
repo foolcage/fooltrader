@@ -4,32 +4,16 @@ import os
 
 import pandas as pd
 
-from fooltrader.settings import CHINA_TZ
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 logger = logging.getLogger(__name__)
 
 
-def kdata_df_save(df, to_path, calculate_change=False, append=False):
+def df_save_timeseries_data(df, to_path, append=False):
     df = df.drop_duplicates(subset='timestamp', keep='last')
     df = df.set_index(df['timestamp'], drop=False)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
-
-    if calculate_change:
-        pre_close = None
-        for index in df.index:
-            try:
-                if pd.notna(df.loc[index, ['preClose', 'change', 'changePct']]).all():
-                    continue
-                current_close = df.loc[index, 'close']
-                if pre_close:
-                    df.loc[index, 'preClose'] = pre_close
-                    change = current_close - pre_close
-                    df.loc[index, 'change'] = change
-                    df.loc[index, 'changePct'] = change / current_close
-                pre_close = df.loc[index, 'close']
-            except  Exception as e:
-                logger.exception("pre_close:{},current:{}".format(pre_close, df.loc[index, :].to_dict()), e)
 
     if append and os.path.exists(to_path):
         with open(to_path, 'a') as f:
@@ -40,9 +24,9 @@ def kdata_df_save(df, to_path, calculate_change=False, append=False):
 
 def df_for_date_range(df, start_date=None, end_date=None):
     if start_date:
-        df = df[df.index >= pd.Timestamp(start_date)]
+        df = df[df.index >= to_pd_timestamp(start_date)]
     if end_date:
-        df = df[df.index <= pd.Timestamp(end_date)]
+        df = df[df.index <= to_pd_timestamp(end_date)]
     return df
 
 
@@ -61,6 +45,6 @@ def pd_read_csv(csv_path, converters=None, index='timestamp', generate_id=False)
         df = df.set_index(df[index], drop=False)
 
         if index == 'timestamp' or index == 'reportPeriod':
-            df.index = pd.to_datetime(df.index, utc=True).tz_convert(CHINA_TZ)
+            df.index = pd.to_datetime(df.index)
             df = df.sort_index()
     return df

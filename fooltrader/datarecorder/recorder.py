@@ -5,10 +5,10 @@ import os
 import time
 from concurrent import futures
 
+import pandas as pd
 import schedule
 
 from fooltrader import get_security_list, get_kdata_dir, get_tick_dir
-from fooltrader.utils.time_utils import current_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class Recorder(object):
 
     @staticmethod
     def evaluate_kdata_size_to_now(latest_record_timestamp, level='day'):
-        time_delta = current_timestamp() - latest_record_timestamp
+        time_delta = pd.Timestamp.now() - latest_record_timestamp
 
         if level == 'day':
             return time_delta.days - 1
@@ -82,7 +82,7 @@ class Recorder(object):
         logger.info("record for security_type:{} exchanges:{}".format(self.security_type, self.exchanges))
 
         # init security list
-        self.init_security_list()
+        # self.init_security_list()
 
         df = get_security_list(security_type=self.security_type, exchanges=self.exchanges,
                                codes=self.codes)
@@ -101,13 +101,17 @@ class Recorder(object):
         wait_for = []
 
         # one thread for schedule recording day kdata
-        wait_for.append(ex.submit(self.record_day_kdata))
+        # wait_for.append(ex.submit(self.record_day_kdata))
 
-        for security_item in self.security_items:
-            time.sleep(self.SAFE_SLEEPING_TIME)
-            wait_for.append(ex.submit(self.record_kdata, security_item, '1m'))
-            time.sleep(self.SAFE_SLEEPING_TIME)
-            wait_for.append(ex.submit(self.record_tick, security_item))
+        # for security_item in self.security_items:
+        #     time.sleep(self.SAFE_SLEEPING_TIME)
+        #     wait_for.append(ex.submit(self.record_kdata, security_item, '1m'))
+        #     time.sleep(self.SAFE_SLEEPING_TIME)
+        #     wait_for.append(ex.submit(self.record_tick, security_item))
 
-        for f in futures.as_completed(wait_for):
-            print('result: {}'.format(f.result()))
+        # for f in futures.as_completed(wait_for):
+        #     print('result: {}'.format(f.result()))
+
+        # self.record_kdata(self.security_items[0], level='day')
+        # self.record_kdata(self.security_items[0], level='1m')
+        self.record_tick(self.security_items[0])

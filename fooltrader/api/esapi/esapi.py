@@ -3,7 +3,7 @@ import math
 
 from elasticsearch_dsl import Search
 
-from fooltrader import es_client
+from fooltrader import es_client, to_time_str
 from fooltrader.api.technical import to_security_item
 from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
     KDATA_COMMON_COL
@@ -11,7 +11,6 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_cryptocurren
     get_cryptocurrency_daily_user_statistic_index, get_es_statistic_index
 from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.utils.es_utils import es_resp_to_payload
-from fooltrader.utils.utils import to_time_str
 
 
 def es_get_subscription(user_id=None, security_id=None, from_idx=0, size=500):

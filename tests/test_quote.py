@@ -73,7 +73,7 @@ def test_to_security_item():
 
     item = technical.to_security_item('BTC-USD', exchange='gdax')
 
-    assert item.id == 'cryptocurrency_gdax_BTC-USD'
+    assert item.id == 'coin_gdax_BTC-USD'
     assert item.code == 'BTC-USD'
 
 

@@ -6,8 +6,9 @@ from scrapy import Request
 from scrapy import Selector
 from scrapy import signals
 
+from fooltrader import to_time_str
 from fooltrader.contract.files_contract import get_kdata_path
-from fooltrader.utils.utils import index_df_with_time, to_time_str, to_float
+from fooltrader.utils.utils import index_df_with_time, to_float
 
 
 class Sp500Spider(scrapy.Spider):

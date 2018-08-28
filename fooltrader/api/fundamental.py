@@ -11,7 +11,8 @@ from fooltrader.contract.files_contract import get_balance_sheet_path, get_incom
     get_cash_flow_statement_path, get_finance_path
 from fooltrader.domain.data.es_finance import IncomeStatement, BalanceSheet, CashFlowStatement
 from fooltrader.items import SecurityItem
-from fooltrader.utils.utils import to_float, to_time_str, is_same_date, fill_doc_type
+from fooltrader.utils.time_utils import is_same_date, to_time_str
+from fooltrader.utils.utils import to_float, fill_doc_type
 
 logger = logging.getLogger(__name__)
 

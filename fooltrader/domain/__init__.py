@@ -3,8 +3,7 @@ from datetime import datetime
 
 from elasticsearch_dsl import DocType
 
-from fooltrader.settings import TIME_FORMAT_ISO8601
-from fooltrader.utils.utils import to_time_str
+from fooltrader.utils.time_utils import to_time_str, TIME_FORMAT_ISO8601
 
 logger = logging.getLogger(__name__)
 

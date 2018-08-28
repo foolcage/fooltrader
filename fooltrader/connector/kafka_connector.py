@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import datetime
-import json
 import logging
 from subprocess import Popen, PIPE, CalledProcessError
 
@@ -9,8 +7,8 @@ from kafka import KafkaProducer
 
 from fooltrader.api.technical import get_security_list, get_ticks, get_kdata, to_security_item
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic, get_kafka_kdata_topic
-from fooltrader.datarecorder.ccxt_wrapper import fetch_ticks
-from fooltrader.settings import KAFKA_HOST, TIME_FORMAT_SEC, TIME_FORMAT_DAY, KAFKA_PATH, ZK_KAFKA_HOST
+from fooltrader.settings import KAFKA_HOST, KAFKA_PATH, ZK_KAFKA_HOST
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 producer = KafkaProducer(bootstrap_servers=KAFKA_HOST)
 
@@ -33,8 +31,7 @@ def _tick_to_kafka(security_item):
             the_json = tick_item.to_json(force_ascii=False)
             producer.send(get_kafka_tick_topic(security_item['id']),
                           bytes(the_json, encoding='utf8'),
-                          timestamp_ms=int(1000 * datetime.datetime.strptime(tick_item['timestamp'],
-                                                                             TIME_FORMAT_SEC).timestamp()))
+                          timestamp_ms=1000 * to_pd_timestamp(tick_item['timestamp']).timestamp())
             logger.debug("tick_to_kafka {}".format(the_json))
 
 
@@ -53,8 +50,7 @@ def _kdata_to_kafka(security_item, fuquan='hfq'):
         the_json = kdata_item.to_json(force_ascii=False)
         producer.send(get_kafka_kdata_topic(security_item['id'], fuquan),
                       bytes(the_json, encoding='utf8'),
-                      timestamp_ms=int(datetime.datetime.strptime(kdata_item['timestamp'],
-                                                                  TIME_FORMAT_DAY).timestamp()))
+                      timestamp_ms=1000 * to_pd_timestamp(kdata_item['timestamp']).timestamp())
         logger.debug("kdata_to_kafka {}".format(the_json))
 
 
@@ -80,15 +76,6 @@ def list_topics():
 def delete_all_topics():
     for topic in list_topics():
         delete_topic(topic)
-
-
-def cryptocurrency_tick_to_kafka(exchange, pairs=None):
-    for tick in fetch_ticks(exchange, pairs=pairs):
-        producer.send(get_kafka_tick_topic(tick['securityId']),
-                      bytes(json.dumps(tick), encoding='utf8'),
-                      timestamp_ms=tick['timestamp'])
-
-        logger.debug("tick_to_kafka {}".format(tick))
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from fooltrader.utils.utils import to_time_str
+from fooltrader import to_time_str
 
 
 def get_kafka_tick_topic(security_id):
