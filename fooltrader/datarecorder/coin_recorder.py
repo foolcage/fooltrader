@@ -222,42 +222,37 @@ class CoinRecorder(Recorder):
         ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
 
         if ccxt_exchange.has['fetchTrades']:
-            latest_timestamp, latest_ids, _ = get_latest_tick_timestamp_ids(security_item)
+            latest_saved_timestamp, latest_saved_ids, _ = get_latest_tick_timestamp_ids(security_item)
 
             limit = self.get_tick_limit(security_item['exchange'])
-
-            tick_list = []
-            to_the_next_day = False
 
             while True:
                 try:
                     trades = ccxt_exchange.fetch_trades(security_item['name'], limit=limit)
 
-                    has_duplicate = False
+                    tick_list = []
+                    current_timestamp = None
+
+                    len1 = len(trades)
+
+                    if latest_saved_timestamp:
+                        trades = [trade for trade in trades if (trade['id'] not in latest_saved_ids) and (
+                                to_pd_timestamp(trade['timestamp']) >= to_pd_timestamp(latest_saved_timestamp))]
+
+                        if len1 == len(trades):
+                            logger.warning(
+                                "{} level:{} gap between {} and {}".format(security_item['id'],
+                                                                           to_time_str(latest_saved_timestamp,
+                                                                                       TIME_FORMAT_ISO8601),
+                                                                           to_time_str(trades[0]['timestamp'],
+                                                                                       TIME_FORMAT_ISO8601)))
 
                     for trade in trades:
-                        current_timestamp = trade['timestamp']
-                        current_id = trade['id']
-
-                        if latest_ids and (current_id in latest_ids):
-                            has_duplicate = True
-                            continue
-
-                        if latest_timestamp and (
-                                to_pd_timestamp(current_timestamp) < to_pd_timestamp(latest_timestamp)):
-                            has_duplicate = True
-                            continue
-
                         # to the next date
-                        if latest_timestamp and not is_same_date(current_timestamp, latest_timestamp):
-                            to_the_next_day = True
+                        if current_timestamp and not is_same_date(current_timestamp, trade['timestamp']):
                             break
 
-                        if not latest_ids:
-                            latest_ids = []
-
-                        if current_id:
-                            latest_ids.append(current_id)
+                        current_timestamp = trade['timestamp']
 
                         tick = {
                             'securityId': security_item['id'],
@@ -273,31 +268,21 @@ class CoinRecorder(Recorder):
                         }
                         tick_list.append(tick)
 
-                    if latest_timestamp and not has_duplicate:
-                        logger.warning(
-                            "{} level:{} gap between {} and {}".format(security_item['id'],
-                                                                       to_time_str(latest_timestamp,
-                                                                                   TIME_FORMAT_ISO8601),
-                                                                       to_time_str(trades[0]['timestamp'],
-                                                                                   TIME_FORMAT_ISO8601)))
-
-                    latest_timestamp = trades[-1]['timestamp']
-
-                    if len(tick_list) >= 500 or to_the_next_day:
+                    if tick_list:
                         df = pd.DataFrame(tick_list)
                         df = df.loc[:, COIN_TICK_COL]
 
-                        csv_path = get_tick_path(security_item, to_time_str(latest_timestamp))
+                        csv_path = get_tick_path(security_item, to_time_str(tick_list[0]['timestamp']))
 
-                        df_save_timeseries_data(df, csv_path, append=True)
+                        df_save_timeseries_data(df, csv_path, append=True, drop_duplicate_timestamp=False)
                         logger.info(
-                            "record_tick for security:{} latest_timestamp:{} success".format(
-                                security_item['id'], to_time_str(latest_timestamp, fmt=TIME_FORMAT_ISO8601)))
+                            "record_tick for security:{} got size:{} form {} to {} success".format(
+                                security_item['id'], len(tick_list), tick_list[0]['timestamp'],
+                                tick_list[-1]['timestamp']))
 
-                        tick_list = []
-                        to_the_next_day = False
-                        latest_timestamp = None
-                        latest_ids = []
+                        # using the saved to filter duplicate
+                        latest_saved_timestamp = tick_list[-1]['timestamp']
+                        latest_saved_ids = [tick['id'] for tick in tick_list if tick['id']]
 
                     limit = 500
                     time.sleep(10)

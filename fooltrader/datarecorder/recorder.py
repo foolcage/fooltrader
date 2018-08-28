@@ -101,17 +101,17 @@ class Recorder(object):
         wait_for = []
 
         # one thread for schedule recording day kdata
-        # wait_for.append(ex.submit(self.record_day_kdata))
+        wait_for.append(ex.submit(self.record_day_kdata))
 
-        # for security_item in self.security_items:
-        #     time.sleep(self.SAFE_SLEEPING_TIME)
-        #     wait_for.append(ex.submit(self.record_kdata, security_item, '1m'))
-        #     time.sleep(self.SAFE_SLEEPING_TIME)
-        #     wait_for.append(ex.submit(self.record_tick, security_item))
+        for security_item in self.security_items:
+            time.sleep(self.SAFE_SLEEPING_TIME)
+            wait_for.append(ex.submit(self.record_kdata, security_item, '1m'))
+            time.sleep(self.SAFE_SLEEPING_TIME)
+            wait_for.append(ex.submit(self.record_tick, security_item))
 
-        # for f in futures.as_completed(wait_for):
-        #     print('result: {}'.format(f.result()))
+        for f in futures.as_completed(wait_for):
+            print('result: {}'.format(f.result()))
 
         # self.record_kdata(self.security_items[0], level='day')
         # self.record_kdata(self.security_items[0], level='1m')
-        self.record_tick(self.security_items[0])
+        # self.record_tick(self.security_items[0])

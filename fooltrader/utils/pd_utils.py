@@ -9,8 +9,9 @@ from fooltrader.utils.time_utils import to_pd_timestamp
 logger = logging.getLogger(__name__)
 
 
-def df_save_timeseries_data(df, to_path, append=False):
-    df = df.drop_duplicates(subset='timestamp', keep='last')
+def df_save_timeseries_data(df, to_path, append=False, drop_duplicate_timestamp=True):
+    if drop_duplicate_timestamp:
+        df = df.drop_duplicates(subset='timestamp', keep='last')
     df = df.set_index(df['timestamp'], drop=False)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
