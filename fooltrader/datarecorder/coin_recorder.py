@@ -202,11 +202,13 @@ class CoinRecorder(Recorder):
                     if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
                         return
 
-                    limit = 10
-                    time.sleep(self.SAFE_SLEEPING_TIME)
 
                 except Exception as e:
                     logger.exception("record_kdata for security:{} failed".format(security_item['id']))
+                finally:
+                    limit = 10
+                    time.sleep(self.SAFE_SLEEPING_TIME)
+
 
         else:
             logger.warning("exchange:{} not support fetchOHLCV".format(security_item['exchange']))
@@ -239,13 +241,13 @@ class CoinRecorder(Recorder):
                         trades = [trade for trade in trades if (trade['id'] not in latest_saved_ids) and (
                                 to_pd_timestamp(trade['timestamp']) >= to_pd_timestamp(latest_saved_timestamp))]
 
-                        if len1 == len(trades):
+                        if trades and (len1 == len(trades)):
                             logger.warning(
-                                "{} level:{} gap between {} and {}".format(security_item['id'],
-                                                                           to_time_str(latest_saved_timestamp,
-                                                                                       TIME_FORMAT_ISO8601),
-                                                                           to_time_str(trades[0]['timestamp'],
-                                                                                       TIME_FORMAT_ISO8601)))
+                                "{} tick gap between {} and {}".format(security_item['id'],
+                                                                       to_time_str(latest_saved_timestamp,
+                                                                                   TIME_FORMAT_ISO8601),
+                                                                       to_time_str(trades[0]['timestamp'],
+                                                                                   TIME_FORMAT_ISO8601)))
 
                     for trade in trades:
                         # to the next date
@@ -284,11 +286,13 @@ class CoinRecorder(Recorder):
                         latest_saved_timestamp = tick_list[-1]['timestamp']
                         latest_saved_ids = [tick['id'] for tick in tick_list if tick['id']]
 
-                    limit = 500
-                    time.sleep(10)
 
                 except Exception as e:
                     logger.exception("record_tick for security:{} failed".format(security_item['id']))
+                finally:
+                    limit = 500
+                    time.sleep(self.SAFE_SLEEPING_TIME)
+
 
         else:
             logger.warning("exchange:{} not support fetchTrades".format(security_item['exchange']))
