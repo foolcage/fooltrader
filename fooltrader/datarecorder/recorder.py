@@ -19,7 +19,7 @@ class Recorder(object):
     codes = None
     security_items = None
 
-    SAFE_SLEEPING_TIME = 30
+    SAFE_SLEEPING_TIME = 40
 
     def __init__(self, security_type=None, exchanges=None, codes=None) -> None:
         if security_type:

@@ -52,7 +52,7 @@ class CoinRecorder(Recorder):
         exchange = eval("ccxt.{}()".format(exchange_str))
         exchange.apiKey = self.EXCHANGE_AUTH[exchange_str]['apiKey']
         exchange.secret = self.EXCHANGE_AUTH[exchange_str]['secret']
-        exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
+        # exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
         return exchange
 
     def init_security_list(self):
