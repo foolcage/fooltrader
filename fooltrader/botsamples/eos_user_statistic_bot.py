@@ -10,9 +10,8 @@ from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.contract.es_contract import get_cryptocurrency_user_statistic_index, \
     get_cryptocurrency_daily_user_statistic_index
 from fooltrader.domain.data.es_quote import EosUserStatistic
-from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.es_utils import es_get_latest_record, es_index_mapping
-from fooltrader.utils.utils import to_timestamp, to_time_str, is_same_date
+from fooltrader.utils.time_utils import to_timestamp, to_time_str, is_same_date, TIME_FORMAT_ISO8601
 
 user_statistic_index_name = get_cryptocurrency_user_statistic_index()
 daily_user_statistic_index_name = get_cryptocurrency_daily_user_statistic_index()

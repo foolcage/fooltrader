@@ -36,3 +36,5 @@ schedule
 pymongo
 
 arrow
+
+TA-Lib

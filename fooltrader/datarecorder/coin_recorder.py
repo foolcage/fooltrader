@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class CoinRecorder(Recorder):
-    # check the exchange api to set this
     exchange_conf = {}
 
     OVERLAPPING_SIZE = 10
@@ -41,7 +40,6 @@ class CoinRecorder(Recorder):
 
             resource_package = 'fooltrader'
             resource_path = 'conf/{}.json'.format(exchange)
-            # or for a file-like stream:
             config_file = pkg_resources.resource_filename(resource_package, resource_path)
 
             with open(config_file) as f:

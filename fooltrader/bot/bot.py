@@ -13,7 +13,7 @@ from fooltrader.bot.action.msg_action import WeixinAction, EmailAction
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
 from fooltrader.settings import KAFKA_HOST
 from fooltrader.utils.kafka_utils import get_latest_timestamp_order_from_topic
-from fooltrader.utils.utils import to_timestamp
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 
 class BaseBot(object):
@@ -88,9 +88,9 @@ class EventBot(BaseBot):
 
                     for message in consumer:
                         if 'timestamp' in message.value:
-                            message_time = to_timestamp(message.value['timestamp'])
+                            message_time = to_pd_timestamp(message.value['timestamp'])
                         else:
-                            message_time = to_timestamp(message.timestamp)
+                            message_time = to_pd_timestamp(message.timestamp)
 
                         if self.end_timestamp and (message_time > self.end_timestamp):
                             consumer.close()

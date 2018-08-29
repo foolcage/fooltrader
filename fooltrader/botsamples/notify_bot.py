@@ -4,8 +4,7 @@ from datetime import timedelta, datetime
 from fooltrader.api.esapi import esapi
 from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.domain.business.es_subscription import SubscriptionTriggered
-from fooltrader.settings import TIME_FORMAT_ISO8601
-from fooltrader.utils.utils import to_timestamp, to_time_str, is_same_date
+from fooltrader.utils.time_utils import to_timestamp, to_time_str, is_same_date, TIME_FORMAT_ISO8601
 
 
 class PriceNotifyBot(NotifyEventBot):

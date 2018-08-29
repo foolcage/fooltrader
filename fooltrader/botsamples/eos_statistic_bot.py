@@ -6,9 +6,9 @@ import pandas as pd
 from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_statistic_index
 from fooltrader.domain.data.es_quote import CommonKData, CommonStatistic
-from fooltrader.settings import TIME_FORMAT_ISO8601
 from fooltrader.utils.es_utils import es_get_latest_timestamp, es_get_latest_record, es_index_mapping
-from fooltrader.utils.utils import to_timestamp, to_time_str, fill_doc_type, is_same_date, is_same_time
+from fooltrader.utils.time_utils import to_timestamp, is_same_time, to_time_str, TIME_FORMAT_ISO8601, is_same_date
+from fooltrader.utils.utils import fill_doc_type
 
 statistic_index_name = get_es_statistic_index(security_type='coin', exchange='contract')
 kdata_index_name = get_es_kdata_index(security_type='coin', exchange='contract', level='1min')

@@ -45,6 +45,10 @@ def is_same_date(one, two):
     return to_pd_timestamp(one).date() == to_pd_timestamp(two).date()
 
 
+def is_same_time(one, two):
+    to_timestamp(one) == to_timestamp(two)
+
+
 def get_year_quarter(time):
     time = to_pd_timestamp(time)
     return time.year, ((time.month - 1) // 3) + 1
