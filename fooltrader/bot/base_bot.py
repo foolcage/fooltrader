@@ -139,7 +139,7 @@ class BaseBot(object):
             while True:
                 self.on_timer({"timestamp": self.current_time})
 
-                if is_same_date(self.current_time, pd.Timestamp.now(tz=CHINA_TZ)):
+                if is_same_date(self.current_time, pd.Timestamp.now()):
                     time.sleep(self.time_step.total_seconds())
 
                 self.current_time += self.time_step

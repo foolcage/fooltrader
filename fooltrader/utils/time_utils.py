@@ -26,6 +26,10 @@ def to_timestamp(the_time):
     return int(to_pd_timestamp(the_time).timestamp() * 1000)
 
 
+def current_ms():
+    return int(pd.Timestamp.utcnow().timestamp() * 1000)
+
+
 def to_time_str(the_time, fmt=TIME_FORMAT_DAY):
     try:
         return arrow.get(to_pd_timestamp(the_time)).format(fmt)

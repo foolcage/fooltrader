@@ -6,7 +6,6 @@ import time
 from concurrent import futures
 
 import pandas as pd
-import schedule
 
 from fooltrader import get_security_list, get_kdata_dir, get_tick_dir
 
@@ -56,6 +55,15 @@ class Recorder(object):
             return int(math.ceil(time_delta.total_seconds() / (60 * 60)))
 
     @staticmethod
+    def level_interval_ms(level='day'):
+        if level == 'day':
+            return 24 * 60 * 60 * 1000
+        if level == '1m':
+            return 60 * 1000
+        if level == '1h':
+            return 60 * 60 * 1000
+
+    @staticmethod
     def init_security_dir(security_item):
         kdata_dir = get_kdata_dir(security_item)
 
@@ -68,15 +76,13 @@ class Recorder(object):
             os.makedirs(tick_dir)
 
     def record_day_kdata(self):
-
-        for security_item in self.security_items:
-            self.record_kdata(security_item, 'day')
-            time.sleep(self.SAFE_SLEEPING_TIME)
-            schedule.every().day.at("00:01").do(self.record_kdata, security_item, 'day')
-
         while True:
-            schedule.run_pending()
-            time.sleep(self.SAFE_SLEEPING_TIME)
+            for security_item in self.security_items:
+                self.record_kdata(security_item, 'day')
+                time.sleep(self.SAFE_SLEEPING_TIME)
+            # sleep 6 hours
+            logger.info("sleep 6 hours for get {} day kdata".format(self.security_items))
+            time.sleep(6 * 60 * 60)
 
     def run(self):
         logger.info("record for security_type:{} exchanges:{}".format(self.security_type, self.exchanges))
@@ -89,9 +95,7 @@ class Recorder(object):
 
         self.security_items = [row.to_dict() for _, row in df.iterrows()]
 
-        logger.info("record for security_items:{}".format(self.security_items))
-
-        # schedule record day kdata
+        logger.info("recorder for security_items:{}".format(self.security_items))
 
         # tick,1m,day
         thread_size = len(self.security_items) * 2 + 1

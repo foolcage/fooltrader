@@ -16,7 +16,8 @@ from fooltrader.contract.files_contract import get_security_meta_path, get_secur
     get_kdata_path, get_tick_path
 from fooltrader.datarecorder.recorder import Recorder
 from fooltrader.utils.pd_utils import df_save_timeseries_data
-from fooltrader.utils.time_utils import is_same_date, to_pd_timestamp, to_time_str, TIME_FORMAT_ISO8601, next_date
+from fooltrader.utils.time_utils import is_same_date, to_pd_timestamp, to_time_str, TIME_FORMAT_ISO8601, next_date, \
+    current_ms
 from fooltrader.utils.utils import generate_security_item
 
 logger = logging.getLogger(__name__)
@@ -26,11 +27,27 @@ class CoinRecorder(Recorder):
     # check the exchange api to set this
     EXCHANGE_LIMIT = {
         'huobipro': {'tick_limit': 2000,
-                     'kdata_limit': 2000}
+                     'kdata_limit': 2000,
+                     'safe_sleeping_time': 40},
+        'binance': {'tick_limit': 1000,
+                    'kdata_limit': 1000,
+                    'save_sleeping_time': 40},
+        'okex': {'tick_limit': 200,
+                 'kdata_limit': 2000,
+                 'safe_sleeping_time': 20}
+
     }
 
     EXCHANGE_AUTH = {
         'huobipro': {
+            'apiKey': '',
+            'secret': ''
+        },
+        'binance': {
+            'apiKey': '',
+            'secret': ''
+        },
+        'okex': {
             'apiKey': '',
             'secret': ''
         }
@@ -48,11 +65,14 @@ class CoinRecorder(Recorder):
     def get_kdata_limit(self, exchange):
         return self.EXCHANGE_LIMIT[exchange]['kdata_limit']
 
+    def get_safe_sleeping_time(self, exchange):
+        return self.EXCHANGE_LIMIT[exchange]['safe_sleeping_time']
+
     def get_ccxt_exchange(self, exchange_str):
         exchange = eval("ccxt.{}()".format(exchange_str))
         exchange.apiKey = self.EXCHANGE_AUTH[exchange_str]['apiKey']
         exchange.secret = self.EXCHANGE_AUTH[exchange_str]['secret']
-        # exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
+        exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
         return exchange
 
     def init_security_list(self):
@@ -119,7 +139,6 @@ class CoinRecorder(Recorder):
 
     def record_kdata(self, security_item, level):
         ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
-
         if ccxt_exchange.has['fetchOHLCV']:
             latest_timestamp, _ = get_latest_kdata_timestamp(security_item, level=level)
 
@@ -146,13 +165,20 @@ class CoinRecorder(Recorder):
 
             while True:
                 try:
-                    kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
-                                                       timeframe=Recorder.level_to_timeframe(level),
-                                                       limit=limit)
+                    if security_item['exchange'] == 'okex':
+                        since = current_ms() - Recorder.level_interval_ms(level=level) * limit
+                        kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
+                                                           timeframe=Recorder.level_to_timeframe(level),
+                                                           since=since)
+                    else:
+                        kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
+                                                           timeframe=Recorder.level_to_timeframe(level),
+                                                           limit=limit)
 
                     has_duplicate = False
 
-                    for kdata in kdatas:
+                    # always ignore the latest one,because it's not finished
+                    for kdata in kdatas[0:-1]:
                         current_timestamp = kdata[0]
 
                         if latest_timestamp and (
@@ -170,14 +196,15 @@ class CoinRecorder(Recorder):
 
                         kdata_json = {
                             'timestamp': timestamp,
+                            'timestamp1': kdata[0],
+                            'securityId': security_item['id'],
                             'code': security_item['code'],
                             'name': security_item['name'],
                             'open': kdata[1],
                             'high': kdata[2],
                             'low': kdata[3],
                             'close': kdata[4],
-                            'volume': kdata[5],
-                            'securityId': security_item['id']
+                            'volume': kdata[5]
                         }
                         kdata_list.append(kdata_json)
 
@@ -207,6 +234,7 @@ class CoinRecorder(Recorder):
                     logger.exception("record_kdata for security:{} failed".format(security_item['id']))
                 finally:
                     limit = 10
+
                     time.sleep(self.SAFE_SLEEPING_TIME)
 
 
@@ -261,7 +289,7 @@ class CoinRecorder(Recorder):
                             'id': trade['id'],
                             'order': trade['order'],
                             'timestamp': to_time_str(trade['timestamp'], TIME_FORMAT_ISO8601),
-                            'datetime': trade['timestamp'],
+                            'timestamp1': trade['timestamp'],
                             'price': trade['price'],
                             'volume': trade['amount'],
                             'direction': self.to_direction(trade['side']),
@@ -304,5 +332,5 @@ if __name__ == '__main__':
 
     # args = parser.parse_args()
 
-    recorder = CoinRecorder(exchanges=['huobipro'])
+    recorder = CoinRecorder(exchanges=['okex'])
     recorder.run()
