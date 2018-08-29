@@ -25,33 +25,7 @@ logger = logging.getLogger(__name__)
 
 class CoinRecorder(Recorder):
     # check the exchange api to set this
-    EXCHANGE_LIMIT = {
-        'huobipro': {'tick_limit': 2000,
-                     'kdata_limit': 2000,
-                     'safe_sleeping_time': 40},
-        'binance': {'tick_limit': 1000,
-                    'kdata_limit': 1000,
-                    'save_sleeping_time': 40},
-        'okex': {'tick_limit': 200,
-                 'kdata_limit': 2000,
-                 'safe_sleeping_time': 20}
-
-    }
-
-    EXCHANGE_AUTH = {
-        'huobipro': {
-            'apiKey': '',
-            'secret': ''
-        },
-        'binance': {
-            'apiKey': '',
-            'secret': ''
-        },
-        'okex': {
-            'apiKey': '',
-            'secret': ''
-        }
-    }
+    exchange_conf = {}
 
     OVERLAPPING_SIZE = 10
 
@@ -59,21 +33,38 @@ class CoinRecorder(Recorder):
         super().__init__('coin', exchanges, COIN_CODE)
         self.exchanges = set(ccxt.exchanges) & set(COIN_EXCHANGES) & set(self.exchanges)
 
+        self.init_exchange_conf()
+
+    def init_exchange_conf(self):
+        for exchange in self.exchanges:
+            import pkg_resources
+
+            resource_package = 'fooltrader'
+            resource_path = 'conf/{}.json'.format(exchange)
+            # or for a file-like stream:
+            config_file = pkg_resources.resource_filename(resource_package, resource_path)
+
+            with open(config_file) as f:
+                self.exchange_conf[exchange] = json.load(f)
+
     def get_tick_limit(self, exchange):
-        return self.EXCHANGE_LIMIT[exchange]['tick_limit']
+        return self.exchange_conf[exchange]['tick_limit']
 
     def get_kdata_limit(self, exchange):
-        return self.EXCHANGE_LIMIT[exchange]['kdata_limit']
+        return self.exchange_conf[exchange]['kdata_limit']
 
     def get_safe_sleeping_time(self, exchange):
-        return self.EXCHANGE_LIMIT[exchange]['safe_sleeping_time']
+        return self.exchange_conf[exchange]['safe_sleeping_time']
 
     def get_ccxt_exchange(self, exchange_str):
         exchange = eval("ccxt.{}()".format(exchange_str))
-        exchange.apiKey = self.EXCHANGE_AUTH[exchange_str]['apiKey']
-        exchange.secret = self.EXCHANGE_AUTH[exchange_str]['secret']
-        exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
+        exchange.apiKey = self.exchange_conf[exchange_str]['apiKey']
+        exchange.secret = self.exchange_conf[exchange_str]['secret']
+        # exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
         return exchange
+
+    def limit_to_since(self, limit, level):
+        return current_ms() - Recorder.level_interval_ms(level=level) * limit
 
     def init_security_list(self):
         for exchange_str in self.exchanges:
@@ -165,8 +156,8 @@ class CoinRecorder(Recorder):
 
             while True:
                 try:
-                    if security_item['exchange'] == 'okex':
-                        since = current_ms() - Recorder.level_interval_ms(level=level) * limit
+                    if self.exchange_conf[security_item['exchange']]['support_since']:
+                        since = self.limit_to_since(level=level, limit=limit)
                         kdatas = ccxt_exchange.fetch_ohlcv(security_item['name'],
                                                            timeframe=Recorder.level_to_timeframe(level),
                                                            since=since)
@@ -235,7 +226,7 @@ class CoinRecorder(Recorder):
                 finally:
                     limit = 10
 
-                    time.sleep(self.SAFE_SLEEPING_TIME)
+                    time.sleep(self.exchange_conf[security_item['exchange']]['safe_sleeping_time'])
 
 
         else:
@@ -319,9 +310,7 @@ class CoinRecorder(Recorder):
                     logger.exception("record_tick for security:{} failed".format(security_item['id']))
                 finally:
                     limit = 500
-                    time.sleep(self.SAFE_SLEEPING_TIME)
-
-
+                    time.sleep(self.exchange_conf[security_item['exchange']]['safe_sleeping_time'])
         else:
             logger.warning("exchange:{} not support fetchTrades".format(security_item['exchange']))
 
