@@ -3,6 +3,7 @@ import datetime
 
 import arrow
 import pandas as pd
+import tzlocal
 
 CHINA_TZ = 'Asia/Shanghai'
 
@@ -23,10 +24,10 @@ def to_pd_timestamp(the_time):
 
 
 def to_timestamp(the_time):
-    return int(to_pd_timestamp(the_time).timestamp() * 1000)
+    return int(to_pd_timestamp(the_time).tz_localize(tzlocal.get_localzone()).timestamp() * 1000)
 
 
-def current_ms():
+def current_timestamp():
     return int(pd.Timestamp.utcnow().timestamp() * 1000)
 
 

@@ -17,6 +17,8 @@ from fooltrader.utils.time_utils import to_pd_timestamp
 
 
 class BaseBot(object):
+    current_timestamp = None
+
     def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
         self.bot_name = type(self).__name__.lower()
@@ -166,3 +168,8 @@ class NotifyEventBot(EventBot):
             self.email_action = EmailAction()
 
         self.after_init()
+
+
+class SoloBot(BaseBot):
+    def run(self):
+        pass

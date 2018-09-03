@@ -17,7 +17,7 @@ from fooltrader.contract.files_contract import get_security_meta_path, get_secur
 from fooltrader.datarecorder.recorder import Recorder
 from fooltrader.utils.pd_utils import df_save_timeseries_data
 from fooltrader.utils.time_utils import is_same_date, to_pd_timestamp, to_time_str, TIME_FORMAT_ISO8601, next_date, \
-    current_ms
+    current_timestamp
 from fooltrader.utils.utils import generate_security_item
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class CoinRecorder(Recorder):
         return exchange
 
     def limit_to_since(self, limit, level):
-        return current_ms() - Recorder.level_interval_ms(level=level) * limit
+        return current_timestamp() - Recorder.level_interval_ms(level=level) * limit
 
     def init_security_list(self):
         for exchange_str in self.exchanges:
