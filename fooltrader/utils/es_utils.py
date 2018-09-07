@@ -5,23 +5,9 @@ from ast import literal_eval
 from elasticsearch_dsl import Index
 
 from fooltrader import es_client
-from fooltrader.utils.utils import to_timestamp
+from fooltrader.utils.time_utils import to_timestamp
 
 logger = logging.getLogger(__name__)
-
-
-def es_transform_resp(response, append_meta=False, pageable=True):
-    sources = []
-
-    for hit in response['hits']['hits']:
-        the_json = hit['_source']
-        if append_meta:
-            the_json['_id'] = hit['_id']
-            the_json['_id'] = hit['_id']
-            the_json['_id'] = hit['_id']
-        sources.append(the_json)
-
-    return sources
 
 
 def es_get_latest_record(index, time_field='timestamp', query=None):

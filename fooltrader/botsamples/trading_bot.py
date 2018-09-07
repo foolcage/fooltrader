@@ -4,7 +4,7 @@ import time
 import schedule
 
 from fooltrader.bot.bot import SoloBot
-from fooltrader.model.model import CrossMaModel
+from fooltrader.trader.model import CrossMaModel
 
 
 class MaBot(SoloBot):

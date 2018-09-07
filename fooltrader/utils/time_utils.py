@@ -27,7 +27,7 @@ def to_timestamp(the_time):
     return int(to_pd_timestamp(the_time).tz_localize(tzlocal.get_localzone()).timestamp() * 1000)
 
 
-def current_timestamp():
+def now_timestamp():
     return int(pd.Timestamp.utcnow().timestamp() * 1000)
 
 

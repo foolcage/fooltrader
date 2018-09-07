@@ -6,7 +6,7 @@ from kafka import KafkaConsumer, TopicPartition
 
 from fooltrader import KAFKA_HOST
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
-from fooltrader.utils.utils import to_timestamp
+from fooltrader.utils.time_utils import to_timestamp
 
 logger = logging.getLogger(__name__)
 
