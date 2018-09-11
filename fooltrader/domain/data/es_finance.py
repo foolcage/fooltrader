@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Date, MetaField
+from elasticsearch_dsl import DocType, Keyword, Date, MetaField, Integer
 from elasticsearch_dsl import Float
 
 from fooltrader.domain import BaseDocType
@@ -11,6 +11,7 @@ class BalanceSheet(BaseDocType):
     securityId = Keyword()
     code = Keyword()
     reportPeriod = Date()
+    reportPeriodType = Integer()
     timestamp = Date()
     reportEventDate = Date()
     # 货币资金
@@ -200,6 +201,7 @@ class IncomeStatement(BaseDocType):
     securityId = Keyword()
     code = Keyword()
     reportPeriod = Date()
+    reportPeriodType = Integer()
     timestamp = Date()
     reportEventDate = Date()
     # /*营业总收入*/
@@ -271,6 +273,7 @@ class CashFlowStatement(DocType):
     securityId = Keyword()
     code = Keyword()
     reportPeriod = Date()
+    reportPeriodType = Integer()
     timestamp = Date()
     reportEventDate = Date()
 

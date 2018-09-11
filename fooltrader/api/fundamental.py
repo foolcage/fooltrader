@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import enum
 import logging
 import os
 
@@ -11,10 +11,29 @@ from fooltrader.contract.files_contract import get_balance_sheet_path, get_incom
     get_cash_flow_statement_path, get_finance_path
 from fooltrader.domain.data.es_finance import IncomeStatement, BalanceSheet, CashFlowStatement
 from fooltrader.items import SecurityItem
-from fooltrader.utils.time_utils import is_same_date, to_time_str
+from fooltrader.utils.time_utils import is_same_date, to_time_str, to_pd_timestamp
 from fooltrader.utils.utils import to_float, fill_doc_type
 
 logger = logging.getLogger(__name__)
+
+
+class FinanceReportPeriodType(enum.Enum):
+    PERIOD_SEASON1 = 1
+    PERIOD_HALF_YEAR = 2
+    PERIOD_SEASON3 = 3
+    PERIOD_YEAR = 4
+
+
+def to_report_period_type(report_period):
+    the_date = to_pd_timestamp(report_period)
+    if the_date.month == 3 and the_date.day == 31:
+        return FinanceReportPeriodType.PERIOD_SEASON1
+    if the_date.month == 6 and the_date.day == 30:
+        return FinanceReportPeriodType.PERIOD_HALF_YEAR
+    if the_date.month == 9 and the_date.day == 30:
+        return FinanceReportPeriodType.PERIOD_SEASON3
+    if the_date.month == 12 and the_date.day == 31:
+        return FinanceReportPeriodType.PERIOD_YEAR
 
 
 def get_balance_sheet_items(security_item, start_date=None, report_period=None, report_event_date=None,
@@ -251,6 +270,7 @@ def get_balance_sheet_items(security_item, start_date=None, report_period=None, 
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportPeriod": to_time_str(reportDate[idx]),
+                "reportPeriodType": to_report_period_type(reportDate[idx]).value,
                 "timestamp": to_time_str(reportEventDate),
                 "reportEventDate": to_time_str(reportEventDate),
                 "securityId": security_item["id"],
@@ -561,6 +581,7 @@ def get_income_statement_items(security_item, start_date=None, report_period=Non
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportPeriod": to_time_str(reportDate[idx]),
+                "reportPeriodType": to_report_period_type(reportDate[idx]).value,
                 "timestamp": to_time_str(reportEventDate),
                 "reportEventDate": to_time_str(reportEventDate),
                 "securityId": security_item["id"],
@@ -842,6 +863,7 @@ def get_cash_flow_statement_items(security_item, start_date=None, report_period=
             the_json = {
                 "id": '{}_{}'.format(security_item["id"], reportDate[idx]),
                 "reportPeriod": to_time_str(reportDate[idx]),
+                "reportPeriodType": to_report_period_type(reportDate[idx]).value,
                 "timestamp": to_time_str(reportEventDate),
                 "reportEventDate": to_time_str(reportEventDate),
                 "securityId": security_item["id"],

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
 
-from fooltrader import to_security_item
 from fooltrader.api.esapi import esapi
+from fooltrader.api.technical import to_security_item
 from fooltrader.models.technical_model import CrossMaModel
 from fooltrader.trader.model import TradingLevel
 from fooltrader.utils.time_utils import now_timestamp, to_timestamp
