@@ -97,7 +97,7 @@ if not FOOLTRADER_STORE_PATH:
     FOOLTRADER_STORE_PATH = '/home/xuanqi/workspace/github/fooltrader/data'
 
 STOCK_START_CODE = '000001'
-STOCK_END_CODE = '666666'
+STOCK_END_CODE = '000002'
 
 US_STOCK_CODES = ['MSFT', 'AMZN', 'NVDA', 'SINA', 'AAPL']
 # US_STOCK_CODES = ['MSFT']

@@ -10,11 +10,14 @@ from scrapy import signals
 from fooltrader.api.technical import get_security_list
 from fooltrader.consts import SSE_KDATA_HEADER
 from fooltrader.contract.files_contract import get_trading_dates_path_sse
-from fooltrader.settings import TIME_FORMAT_DAY, STOCK_START_CODE, STOCK_END_CODE
+from fooltrader.settings import  STOCK_START_CODE, STOCK_END_CODE
 
 
 # 本来想以交易所网站的数据为标准,结果发现数据质量堪忧，比如很多股票的交易日跑到周末去了，上市前也有数据
 # 所以:不要用这个爬虫
+from fooltrader.utils.time_utils import TIME_FORMAT_DAY
+
+
 class StockTradingDateSpider(scrapy.Spider):
     name = "stock_trading_date"
 

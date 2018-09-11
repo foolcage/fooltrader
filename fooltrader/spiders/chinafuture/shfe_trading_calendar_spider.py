@@ -10,7 +10,8 @@ from scrapy import signals
 
 from fooltrader.api.technical import get_trading_calendar
 from fooltrader.contract.files_contract import get_exchange_trading_calendar_path
-from fooltrader.utils.utils import next_date, to_time_str, drop_duplicate
+from fooltrader.utils.time_utils import next_date, to_time_str
+from fooltrader.utils.utils import drop_duplicate
 
 
 class ShfeTradingCalendarSpider(scrapy.Spider):

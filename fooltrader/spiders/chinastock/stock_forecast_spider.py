@@ -62,12 +62,15 @@ class StockForecastSpider(scrapy.Spider):
                 else:
                     change = change_str
 
-                if change:
-                    change = change.strip('%')
-                    change = float(change) / 100
-                if change_start:
-                    change_start = change_start.strip('%')
-                    change_start = float(change_start) / 100
+                try:
+                    if change:
+                        change = change.strip('%')
+                        change = float(change) / 100
+                    if change_start:
+                        change_start = change_start.strip('%')
+                        change_start = float(change_start) / 100
+                except Exception as e:
+                    pass
 
                 # preEPS可能为空
                 preEPS = None
@@ -90,13 +93,14 @@ class StockForecastSpider(scrapy.Spider):
             if forecast_jsons:
                 df = pd.DataFrame(forecast_jsons)
                 df = df.drop_duplicates()
-                df = df[:, EVENT_STOCK_FINANCE_FORECAST_COL]
+                df = df.loc[:, EVENT_STOCK_FINANCE_FORECAST_COL]
                 df = index_df_with_time(df)
                 df.to_csv(get_finance_forecast_event_path(security_item), index=False)
 
 
         except Exception as e:
-            self.logger.exception('error when getting k data url={} error={}'.format(response.url, e))
+            self.logger.exception('content:{}'.format(trs))
+            self.logger.exception('error when getting forecast event url={} error={}'.format(response.url, e))
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):

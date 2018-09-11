@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
+import enum
+import logging
+import os
 
-from datetime import datetime
-
+import pandas as pd
 from elasticsearch_dsl import connections
 from kafka import KafkaProducer
 
-from fooltrader.api.computing import *
-from fooltrader.api.event import *
-from fooltrader.api.fundamental import *
-from fooltrader.api.technical import *
 from fooltrader.api.technical import get_security_list
 from fooltrader.contract.data_contract import EXCHANGE_LIST_COL
 from fooltrader.contract.files_contract import get_finance_dir, get_tick_dir, get_event_dir, get_kdata_dir, \
     get_exchange_dir, get_exchange_cache_dir
 from fooltrader.settings import FOOLTRADER_STORE_PATH, ES_HOSTS, KAFKA_HOST
+from fooltrader.utils.time_utils import now_pd_timestamp
+
+
+class SecurityType(enum.Enum):
+    STOCK = 'stock'
+    FUTURE = 'future'
+    COIN = 'coin'
+    INDEX = 'index'
 
 
 def init_log():
@@ -37,26 +43,27 @@ def init_log():
     root_logger.addHandler(ch)
 
 
-def mkdir_for_stock(item):
-    finance_dir = get_finance_dir(item)
+def init_security_item_dir(security_item):
+    finance_dir = get_finance_dir(security_item)
     if not os.path.exists(finance_dir):
         os.makedirs(finance_dir)
 
-    tick_dir = get_tick_dir(item)
+    tick_dir = get_tick_dir(security_item)
     if not os.path.exists(tick_dir):
         os.makedirs(tick_dir)
 
-    event_dir = get_event_dir(item)
+    event_dir = get_event_dir(security_item)
     if not os.path.exists(event_dir):
         os.makedirs(event_dir)
 
-    bfq_kdata_dir = get_kdata_dir(item, 'bfq')
-    if not os.path.exists(bfq_kdata_dir):
-        os.makedirs(bfq_kdata_dir)
+    if security_item['type'] == 'stock':
+        bfq_kdata_dir = get_kdata_dir(security_item, 'bfq')
+        if not os.path.exists(bfq_kdata_dir):
+            os.makedirs(bfq_kdata_dir)
 
-    hfq_kdata_dir = get_kdata_dir(item, 'hfq')
-    if not os.path.exists(hfq_kdata_dir):
-        os.makedirs(hfq_kdata_dir)
+        hfq_kdata_dir = get_kdata_dir(security_item, 'hfq')
+        if not os.path.exists(hfq_kdata_dir):
+            os.makedirs(hfq_kdata_dir)
 
 
 def init_env():
@@ -66,7 +73,7 @@ def init_env():
     else:
         # 初始化股票文件夹
         for _, item in get_security_list(exchanges=EXCHANGE_LIST_COL).iterrows():
-            mkdir_for_stock(item)
+            init_security_item_dir(item)
 
         # 初始化指数文件夹
         for _, item in get_security_list(security_type='index', exchanges=['sh', 'sz', 'nasdaq']).iterrows():
@@ -80,7 +87,7 @@ def init_env():
                 os.makedirs(exchange_cache_dir)
 
             exchange_cache_dir = get_exchange_cache_dir(security_type='future', exchange='shfe',
-                                                        the_year=datetime.datetime.today().year,
+                                                        the_year=now_pd_timestamp().year,
                                                         data_type="day_kdata")
             if not os.path.exists(exchange_cache_dir):
                 os.makedirs(exchange_cache_dir)

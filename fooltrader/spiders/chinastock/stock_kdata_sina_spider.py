@@ -192,11 +192,16 @@ class StockKDataSinaSpider(scrapy.Spider):
 
                 the_dir = get_kdata_dir(security_item, fuquan=fuquan)
 
+                need_remove_files = []
+
                 if os.path.exists(the_dir):
                     files = [os.path.join(the_dir, f) for f in os.listdir(the_dir) if
                              ('dayk.csv' not in f and os.path.isfile(os.path.join(the_dir, f)))]
                     for f in files:
-                        df = df.append(pd.read_csv(f, dtype=str), ignore_index=True)
+                        tmp_df = pd.read_csv(f, dtype=str)
+                        if len(tmp_df) > 0:
+                            df = df.append(tmp_df, ignore_index=True)
+                            need_remove_files.append(f)
                 if df.size > 0:
                     df = df.set_index(df['timestamp'])
                     df.index = pd.to_datetime(df.index)
@@ -207,7 +212,7 @@ class StockKDataSinaSpider(scrapy.Spider):
                     else:
                         StockKDataSinaSpider.merge_to_current_kdata(security_item, df, fuquan=fuquan)
 
-                for f in files:
+                for f in need_remove_files:
                     logger.info("remove {}".format(f))
                     os.remove(f)
 

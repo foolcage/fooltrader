@@ -36,16 +36,18 @@ def get_security_list_path(security_type, exchange):
     return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, '{}.csv'.format(exchange))
 
 
-def get_security_dir(item=None, security_type=None, exchange=None, code=None):
+def get_security_dir(security_item=None, security_type=None, exchange=None, code=None):
     if security_type and exchange and code:
         return os.path.join(settings.FOOLTRADER_STORE_PATH, security_type, exchange, code)
     else:
-        return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'])
+        return os.path.join(settings.FOOLTRADER_STORE_PATH, security_item['type'], security_item['exchange'],
+                            security_item['code'])
 
 
-def get_security_meta_path(item=None, security_type=None, exchange=None, code=None):
-    return os.path.join(get_security_dir(item=item, security_type=security_type, exchange=exchange, code=code),
-                        "meta.json")
+def get_security_meta_path(security_item=None, security_type=None, exchange=None, code=None):
+    return os.path.join(
+        get_security_dir(security_item=security_item, security_type=security_type, exchange=exchange, code=code),
+        "meta.json")
 
 
 # k线相关
@@ -59,71 +61,72 @@ def adjust_source(security_item, source):
     return source
 
 
-def get_kdata_dir(item, fuquan='bfq'):
+def get_kdata_dir(security_item, fuquan='bfq'):
     # 目前只有股票需要复权信息
-    if item['type'] == 'stock':
-        return os.path.join(get_security_dir(item), 'kdata', _to_valid_fuquan(fuquan))
+    if security_item['type'] == 'stock':
+        return os.path.join(get_security_dir(security_item), 'kdata', _to_valid_fuquan(fuquan))
     else:
-        return os.path.join(get_security_dir(item), 'kdata')
+        return os.path.join(get_security_dir(security_item), 'kdata')
 
 
-def get_kdata_path(item, source=None, fuquan='bfq', year=None, quarter=None, level='day'):
-    source = adjust_source(item, source)
+def get_kdata_path(security_item, source=None, fuquan='bfq', year=None, quarter=None, level='day'):
+    source = adjust_source(security_item, source)
     if source == 'sina':
         if not year and not quarter:
-            return os.path.join(get_kdata_dir(item, fuquan), 'dayk.csv')
+            return os.path.join(get_kdata_dir(security_item, fuquan), 'dayk.csv')
         else:
-            return os.path.join(get_kdata_dir(item, fuquan), '{}Q{}.csv'.format(year, quarter))
+            return os.path.join(get_kdata_dir(security_item, fuquan), '{}Q{}.csv'.format(year, quarter))
     else:
-        return os.path.join(get_kdata_dir(item, fuquan), '{}_{}k.csv'.format(source, level))
+        return os.path.join(get_kdata_dir(security_item, fuquan), '{}_{}k.csv'.format(source, level))
 
 
 # tick相关
-def get_tick_dir(item):
-    return os.path.join(settings.FOOLTRADER_STORE_PATH, item['type'], item['exchange'], item['code'], 'tick')
+def get_tick_dir(security_item):
+    return os.path.join(settings.FOOLTRADER_STORE_PATH, security_item['type'], security_item['exchange'],
+                        security_item['code'], 'tick')
 
 
-def get_tick_path(item, date):
-    return os.path.join(get_tick_dir(item), date + ".csv")
+def get_tick_path(security_item, date):
+    return os.path.join(get_tick_dir(security_item), date + ".csv")
 
 
 # 事件相关
-def get_event_dir(item):
-    return os.path.join(get_security_dir(item), 'event')
+def get_event_dir(security_item):
+    return os.path.join(get_security_dir(security_item), 'event')
 
 
-def get_event_path(item, event_type='finance_forecast'):
-    return os.path.join(get_event_dir(item), '{}.csv'.format(event_type))
+def get_event_path(security_item, event_type='finance_forecast'):
+    return os.path.join(get_event_dir(security_item), '{}.csv'.format(event_type))
 
 
-def get_finance_forecast_event_path(item):
-    return os.path.join(get_event_dir(item), 'finance_forecast.csv')
+def get_finance_forecast_event_path(security_item):
+    return os.path.join(get_event_dir(security_item), 'finance_forecast.csv')
 
 
-def get_finance_report_event_path(item):
-    return os.path.join(get_event_dir(item), 'finance_report.csv')
+def get_finance_report_event_path(security_item):
+    return os.path.join(get_event_dir(security_item), 'finance_report.csv')
 
 
 # 财务相关
-def get_finance_dir(item):
-    return os.path.join(get_security_dir(item), "finance")
+def get_finance_dir(security_item):
+    return os.path.join(get_security_dir(security_item), "finance")
 
 
 # 美股财务数据目前只存一个文件
-def get_finance_path(item):
-    return os.path.join(get_finance_dir(item), "finance.csv")
+def get_finance_path(security_item):
+    return os.path.join(get_finance_dir(security_item), "finance.csv")
 
 
-def get_balance_sheet_path(item):
-    return os.path.join(get_finance_dir(item), "balance_sheet.xls")
+def get_balance_sheet_path(security_item):
+    return os.path.join(get_finance_dir(security_item), "balance_sheet.xls")
 
 
-def get_income_statement_path(item):
-    return os.path.join(get_finance_dir(item), "income_statement.xls")
+def get_income_statement_path(security_item):
+    return os.path.join(get_finance_dir(security_item), "income_statement.xls")
 
 
-def get_cash_flow_statement_path(item):
-    return os.path.join(get_finance_dir(item), "cash_flow_statement.xls")
+def get_cash_flow_statement_path(security_item):
+    return os.path.join(get_finance_dir(security_item), "cash_flow_statement.xls")
 
 
 def _to_valid_fuquan(fuquan='bfq'):
@@ -133,16 +136,16 @@ def _to_valid_fuquan(fuquan='bfq'):
         return 'bfq'
 
 
-def get_trading_dates_path_163(item):
-    return os.path.join(get_security_dir(item), 'trading_dates_163.json')
+def get_trading_dates_path_163(security_item):
+    return os.path.join(get_security_dir(security_item), 'trading_dates_163.json')
 
 
-def get_trading_dates_path_ths(item):
-    return os.path.join(get_security_dir(item), 'trading_dates_ths.json')
+def get_trading_dates_path_ths(security_item):
+    return os.path.join(get_security_dir(security_item), 'trading_dates_ths.json')
 
 
-def get_trading_dates_path_sse(item):
-    return os.path.join(get_security_dir(item), 'trading_dates_sse.json')
+def get_trading_dates_path_sse(security_item):
+    return os.path.join(get_security_dir(security_item), 'trading_dates_sse.json')
 
 
 def get_code_from_path(the_path, security_type='stock'):

@@ -33,7 +33,7 @@ def convert_to_list_if_need(input):
 
 # meta
 def get_security_list(security_type='stock', exchanges=None, start_code=None, end_code=None,
-                      mode='simple', start_list_date=None, codes=None):
+                      mode='simple', start_timestamp=None, end_timestamp=None, codes=None):
     """
     get security list.
 
@@ -51,7 +51,9 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
         if using codes,it would be ignored
     mode : str
         whether parse more security info,{'simple','es'},default:'simple'
-    start_list_date : Timestamp str or Timestamp
+    start_timestamp : Timestamp str or Timestamp
+        the filter for start list date,default:None
+    end_timestamp : Timestamp str or Timestamp
         the filter for start list date,default:None
     codes : list
         the exact codes to query,default:None
@@ -88,7 +90,7 @@ def get_security_list(security_type='stock', exchanges=None, start_code=None, en
                     df = df.append(pd.read_csv(the_path, dtype=str), ignore_index=True)
 
     if not df.empty > 0:
-        df = df_for_date_range(df, start_date=start_list_date)
+        df = df_for_date_range(df, start_date=start_timestamp, end_date=end_timestamp)
 
         df = df.set_index(df['code'], drop=False)
         df = df.sort_index()
