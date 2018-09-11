@@ -71,10 +71,10 @@ def test_to_security_item():
     assert item.id == 'future_shfe_ag1301'
     assert item.code == 'ag1301'
 
-    item = technical.to_security_item('BTC-USD', exchange='gdax')
+    item = technical.to_security_item('BTC-USDT', exchange='binance')
 
-    assert item.id == 'coin_gdax_BTC-USD'
-    assert item.code == 'BTC-USD'
+    assert item.id == 'coin_binance_BTC-USDT'
+    assert item.code == 'BTC-USDT'
 
 
 def test_get_stock_kdata():
@@ -121,16 +121,10 @@ def test_get_future_kdata():
     assert '20160516' in df.index
 
 
-def test_get_cryptocurrency_kdata():
-    df = technical.get_kdata('BTC-USD', exchange='gdax')
+def test_get_coin_kdata():
+    df = technical.get_kdata('BTC-USDT', exchange='binance')
     assert not df.empty
     assert '2017-09-14' in df.index
-    assert df.loc['2017-09-14', 'changePct'] < -0.18
-
-    df = technical.get_kdata('BTC-JPY', exchange='kraken')
-    assert not df.empty
-    assert '2017-09-14' in df.index
-    assert df.loc['2017-09-14', 'changePct'] < -0.18
 
 
 def test_get_ticks():

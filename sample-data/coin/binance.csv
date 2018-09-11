@@ -1,0 +1,4 @@
+code,exchange,id,listDate,name,timestamp,type
+BTC-USDT,binance,coin_binance_BTC-USDT,,BTC/USDT,,coin
+ETH-USDT,binance,coin_binance_ETH-USDT,,ETH/USDT,,coin
+EOS-USDT,binance,coin_binance_EOS-USDT,,EOS/USDT,,coin
