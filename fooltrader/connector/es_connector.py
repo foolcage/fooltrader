@@ -41,15 +41,16 @@ def df_to_es(df, doc_type, index_name=None, timestamp_filed='timestamp', securit
             query["term"]["securityId"] = security_item["id"]
 
         start_date = es_get_latest_timestamp(index=index_name, query=query, time_field=timestamp_filed)
-        logger.info("{} latest timestamp:{}".format(index_name, start_date))
+        logger.info("{} {} es latest timestamp:{}".format(index_name, security_item["id"], start_date))
         if start_date:
             df = df.loc[start_date:, :]
+            logger.info("index time range:{}".format(df.index))
 
     actions = []
 
     for _, item in df.iterrows():
         try:
-            es_data = doc_type(meta={'id': item['id'], 'index': index_name})
+            es_data = doc_type(meta={'id': item['id'], '_index': index_name})
 
             item_json = json.loads(item.to_json())
 

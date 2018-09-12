@@ -60,7 +60,7 @@ class CoinRecorder(Recorder):
         exchange = eval("ccxt.{}()".format(exchange_str))
         exchange.apiKey = self.exchange_conf[exchange_str]['apiKey']
         exchange.secret = self.exchange_conf[exchange_str]['secret']
-        exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
+        # exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
         return exchange
 
     def limit_to_since(self, limit, level):
@@ -207,7 +207,6 @@ class CoinRecorder(Recorder):
                             "{} level:{} gap between {} and {}".format(security_item['id'], level,
                                                                        to_time_str(latest_timestamp),
                                                                        to_time_str(kdatas[0][0])))
-                    latest_timestamp = kdata_list[-1]['timestamp']
 
                     if kdata_list:
                         df = pd.DataFrame(kdata_list)
@@ -221,6 +220,8 @@ class CoinRecorder(Recorder):
                                  index_name=get_es_kdata_index(security_type=security_item['type'],
                                                                exchange=security_item['exchange'], level=level),
                                  security_item=security_item)
+
+                        latest_timestamp = kdata_list[-1]['timestamp']
 
                         logger.info(
                             "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(
@@ -332,5 +333,5 @@ if __name__ == '__main__':
 
     # args = parser.parse_args()
 
-    recorder = CoinRecorder(exchanges=['binance'], codes=['EOS-USDT'])
+    recorder = CoinRecorder(exchanges=['binance'])
     recorder.run()
