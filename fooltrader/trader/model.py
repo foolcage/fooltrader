@@ -76,6 +76,9 @@ class Model(object):
     trading_level = None
     model_type = None
 
+    def __init__(self, trading_level) -> None:
+        self.trading_level = trading_level
+
     def set_history_data(self, history_data):
         self.history_data = history_data
         self.current_timestamp = history_data[-1]['timestamp']

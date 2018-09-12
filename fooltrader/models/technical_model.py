@@ -21,6 +21,10 @@ class CrossMaModel(Model):
     last_status = None
     model_type = ModelType.TECHNICAL_MODEL
 
+    def __init__(self, trading_level) -> None:
+        super().__init__(trading_level)
+        self.trading_level = trading_level
+
     # keep_status = []
 
     def make_decision(self):

@@ -3,7 +3,7 @@ import math
 
 from elasticsearch_dsl import Search
 
-from fooltrader import es_client, to_time_str
+from fooltrader import es_client
 from fooltrader.api.technical import to_security_item
 from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL, KDATA_INDEX_COL, \
     KDATA_COMMON_COL
@@ -11,6 +11,7 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_cryptocurren
     get_cryptocurrency_daily_user_statistic_index, get_es_statistic_index
 from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.utils.es_utils import es_resp_to_payload
+from fooltrader.utils.time_utils import to_time_str
 
 
 def es_get_subscription(user_id=None, security_id=None, from_idx=0, size=500):
@@ -145,11 +146,17 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
     if level == 'day' and the_date:
         doc_id = '{}_{}'.format(security_item['id'], to_time_str(the_date))
         return es_client.get_source(index=index, doc_type='doc', id=doc_id, _source_include=fields)
-    elif start_date and end_date:
+    elif start_date or end_date:
+        time_range_condition = {}
+        if end_date:
+            time_range_condition['lte'] = end_date
+        if start_date:
+            time_range_condition['gte'] = start_date
+
         s = Search(using=es_client, index=index, doc_type='doc') \
             .source(include=fields) \
             .filter('term', code=security_item['code']) \
-            .filter('range', timestamp={'gte': start_date, 'lte': end_date}) \
+            .filter('range', timestamp=time_range_condition) \
             .sort({"timestamp": {"order": "asc"}})
 
         resp = s[from_idx:from_idx + size].execute()

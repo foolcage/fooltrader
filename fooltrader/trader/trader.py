@@ -28,8 +28,10 @@ class Trader(object):
 
         # init history data
         for model in self.models:
-            datas = esapi.es_get_kdata(self.security_item, level=model.trading_level.value,
-                                       end_date=self.start_timestamp)['data']
+            datas = \
+                esapi.es_get_kdata(self.security_item, level=model.trading_level.value,
+                                   start_date=self.start_timestamp)[
+                    'data']
             model.set_history_data(datas)
 
     def on_next_period(self):
@@ -55,13 +57,11 @@ class Trader(object):
 
 
 class TestTrader(Trader):
-    security_item = 'stock_sz_300027'
-    start_timestamp = '2009-10-30'
-    end_timestamp = '2018-01-01'
-
-    models = [CrossMaModel()]
-
+    security_item = 'coin_binance_EOS-USDT'
+    start_timestamp = '2018-05-28'
     trading_level = TradingLevel.LEVEL_1DAY
+
+    models = [CrossMaModel(trading_level=trading_level)]
 
 
 if __name__ == '__main__':
