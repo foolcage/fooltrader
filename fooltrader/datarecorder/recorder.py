@@ -88,34 +88,34 @@ class Recorder(object):
         logger.info("record for security_type:{} exchanges:{}".format(self.security_type, self.exchanges))
 
         # init security list
-        self.init_security_list()
-
+        # self.init_security_list()
+        #
         df = get_security_list(security_type=self.security_type, exchanges=self.exchanges,
                                codes=self.codes)
 
         self.security_items = [row.to_dict() for _, row in df.iterrows()]
+        #
+        # logger.info("recorder for security_items:{}".format(self.security_items))
+        #
+        # # tick,1m,day
+        # thread_size = len(self.security_items) * 2 + 1
+        #
+        # ex = futures.ThreadPoolExecutor(max_workers=thread_size)
+        #
+        # wait_for = []
+        #
+        # # one thread for schedule recording day kdata
+        # wait_for.append(ex.submit(self.record_day_kdata))
+        #
+        # for security_item in self.security_items:
+        #     time.sleep(self.SAFE_SLEEPING_TIME)
+        #     wait_for.append(ex.submit(self.record_kdata, security_item, '1m'))
+        #     time.sleep(self.SAFE_SLEEPING_TIME)
+        #     wait_for.append(ex.submit(self.record_tick, security_item))
+        #
+        # for f in futures.as_completed(wait_for):
+        #     print('result: {}'.format(f.result()))
 
-        logger.info("recorder for security_items:{}".format(self.security_items))
-
-        # tick,1m,day
-        thread_size = len(self.security_items) * 2 + 1
-
-        ex = futures.ThreadPoolExecutor(max_workers=thread_size)
-
-        wait_for = []
-
-        # one thread for schedule recording day kdata
-        wait_for.append(ex.submit(self.record_day_kdata))
-
-        for security_item in self.security_items:
-            time.sleep(self.SAFE_SLEEPING_TIME)
-            wait_for.append(ex.submit(self.record_kdata, security_item, '1m'))
-            time.sleep(self.SAFE_SLEEPING_TIME)
-            wait_for.append(ex.submit(self.record_tick, security_item))
-
-        for f in futures.as_completed(wait_for):
-            print('result: {}'.format(f.result()))
-
-        # self.record_kdata(self.security_items[0], level='day')
+        self.record_kdata(self.security_items[0], level='day')
         # self.record_kdata(self.security_items[0], level='1m')
         # self.record_tick(self.security_items[0])

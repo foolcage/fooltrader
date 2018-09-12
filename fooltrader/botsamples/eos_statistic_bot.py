@@ -7,7 +7,7 @@ from fooltrader.bot.bot import NotifyEventBot
 from fooltrader.contract.es_contract import get_es_kdata_index, get_es_statistic_index
 from fooltrader.domain.data.es_quote import CommonKData, CommonStatistic
 from fooltrader.utils.es_utils import es_get_latest_timestamp, es_get_latest_record, es_index_mapping
-from fooltrader.utils.time_utils import to_timestamp, is_same_time, to_time_str, TIME_FORMAT_ISO8601, is_same_date
+from fooltrader.utils.time_utils import to_pd_timestamp, is_same_time, to_time_str, TIME_FORMAT_ISO8601, is_same_date
 from fooltrader.utils.utils import fill_doc_type
 
 statistic_index_name = get_es_statistic_index(security_type='coin', exchange='contract')
@@ -50,12 +50,12 @@ class EosStatisticBot(NotifyEventBot):
 
         if latest_kdata_timestamp and self.latest_statistic_record:
             self.start_timestamp = min(latest_kdata_timestamp,
-                                       to_timestamp(self.latest_statistic_record['updateTimestamp']))
+                                       to_pd_timestamp(self.latest_statistic_record['updateTimestamp']))
 
     def after_init(self):
         super().after_init()
         if not self.start_timestamp:
-            self.start_timestamp = to_timestamp(self.security_item['listDate'])
+            self.start_timestamp = to_pd_timestamp(self.security_item['listDate'])
         # the last timestamp for the computing interval
         self.last_timestamp = None
         self.last_day_time_str = None
@@ -67,7 +67,7 @@ class EosStatisticBot(NotifyEventBot):
         self.computing_start = None
 
     def init_new_computing_interval(self, event_timestamp):
-        self.last_timestamp = to_timestamp(event_timestamp)
+        self.last_timestamp = to_pd_timestamp(event_timestamp)
         self.kdata_timestamp = self.last_timestamp + timedelta(seconds=-self.last_timestamp.second,
                                                                microseconds=-self.last_timestamp.microsecond)
 
@@ -80,7 +80,7 @@ class EosStatisticBot(NotifyEventBot):
         if not self.last_timestamp:
             self.init_new_computing_interval(event_item['timestamp'])
 
-        current_timestamp = to_timestamp(event_item['timestamp'])
+        current_timestamp = to_pd_timestamp(event_item['timestamp'])
 
         # calculating last minute
         if current_timestamp.minute != self.last_timestamp.minute:
@@ -113,7 +113,7 @@ class EosStatisticBot(NotifyEventBot):
 
     def generate_eos_daily_statistic(self):
         # ignore the statistic has computed before
-        if self.latest_statistic_record and self.kdata_timestamp <= to_timestamp(
+        if self.latest_statistic_record and self.kdata_timestamp <= to_pd_timestamp(
                 self.latest_statistic_record['updateTimestamp']):
             return
 

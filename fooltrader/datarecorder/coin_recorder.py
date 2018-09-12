@@ -8,13 +8,15 @@ import time
 import ccxt
 import pandas as pd
 
-from fooltrader import get_exchange_dir, get_latest_tick_timestamp_ids
-from fooltrader.api.technical import get_latest_kdata_timestamp
-from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS, COIN_CODE
+from fooltrader.api.technical import get_latest_kdata_timestamp, get_latest_tick_timestamp_ids
+from fooltrader.connector.es_connector import df_to_es, kdata_to_es
+from fooltrader.consts import COIN_EXCHANGES, COIN_PAIRS
 from fooltrader.contract.data_contract import KDATA_COMMON_COL, COIN_TICK_COL
+from fooltrader.contract.es_contract import get_es_kdata_index
 from fooltrader.contract.files_contract import get_security_meta_path, get_security_list_path, \
-    get_kdata_path, get_tick_path
+    get_kdata_path, get_tick_path, get_exchange_dir
 from fooltrader.datarecorder.recorder import Recorder
+from fooltrader.domain.data.es_quote import CoinKData
 from fooltrader.utils.pd_utils import df_save_timeseries_data
 from fooltrader.utils.time_utils import is_same_date, to_pd_timestamp, to_time_str, TIME_FORMAT_ISO8601, next_date, \
     now_timestamp
@@ -28,8 +30,8 @@ class CoinRecorder(Recorder):
 
     OVERLAPPING_SIZE = 10
 
-    def __init__(self, exchanges=None) -> None:
-        super().__init__('coin', exchanges, COIN_CODE)
+    def __init__(self, exchanges=None, codes=None) -> None:
+        super().__init__('coin', exchanges, codes=codes)
         self.exchanges = set(ccxt.exchanges) & set(COIN_EXCHANGES) & set(self.exchanges)
 
         self.init_exchange_conf()
@@ -58,7 +60,7 @@ class CoinRecorder(Recorder):
         exchange = eval("ccxt.{}()".format(exchange_str))
         exchange.apiKey = self.exchange_conf[exchange_str]['apiKey']
         exchange.secret = self.exchange_conf[exchange_str]['secret']
-        # exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
+        exchange.proxies = {'http': 'http://127.0.0.1:10081', 'https': 'http://127.0.0.1:10081'}
         return exchange
 
     def limit_to_since(self, limit, level):
@@ -127,6 +129,9 @@ class CoinRecorder(Recorder):
                 logger.exception("init_markets for {} failed".format(exchange_str), e)
 
     def record_kdata(self, security_item, level):
+        # history csv to es if possible
+        kdata_to_es(security_item=security_item, level=level)
+
         ccxt_exchange = self.get_ccxt_exchange(security_item['exchange'])
         if ccxt_exchange.has['fetchOHLCV']:
             latest_timestamp, _ = get_latest_kdata_timestamp(security_item, level=level)
@@ -202,20 +207,28 @@ class CoinRecorder(Recorder):
                             "{} level:{} gap between {} and {}".format(security_item['id'], level,
                                                                        to_time_str(latest_timestamp),
                                                                        to_time_str(kdatas[0][0])))
-                    latest_timestamp = kdatas[-1][0]
+                    latest_timestamp = kdata_list[-1]['timestamp']
 
                     if kdata_list:
                         df = pd.DataFrame(kdata_list)
                         df = df.loc[:, KDATA_COMMON_COL]
 
-                        df_save_timeseries_data(df, get_kdata_path(security_item, level=level), append=True)
+                        # TODO:handle store in better way
+                        df = df_save_timeseries_data(df, get_kdata_path(security_item, level=level), append=True)
+
+                        df['id'] = df['securityId'] + '_' + df['timestamp']
+                        df_to_es(df, doc_type=CoinKData,
+                                 index_name=get_es_kdata_index(security_type=security_item['type'],
+                                                               exchange=security_item['exchange'], level=level),
+                                 security_item=security_item)
+
                         logger.info(
                             "fetch_kdata for security:{} level:{} latest_timestamp:{} success".format(
                                 security_item['id'], level,
                                 to_time_str(latest_timestamp, fmt=TIME_FORMAT_ISO8601)))
                         kdata_list = []
 
-                    if level == 'day' and is_same_date(latest_timestamp, pd.Timestamp.today()):
+                    if level == 'day' and is_same_date(kdatas[-1][0], pd.Timestamp.today()):
                         return
 
 
@@ -319,5 +332,5 @@ if __name__ == '__main__':
 
     # args = parser.parse_args()
 
-    recorder = CoinRecorder(exchanges=['okex'])
+    recorder = CoinRecorder(exchanges=['binance'], codes=['EOS-USDT'])
     recorder.run()

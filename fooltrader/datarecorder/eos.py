@@ -11,7 +11,7 @@ from fooltrader import to_time_str
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
 from fooltrader.settings import EOS_MONGODB_URL, KAFKA_HOST
 from fooltrader.utils.kafka_utils import get_latest_timestamp_order
-from fooltrader.utils.time_utils import TIME_FORMAT_ISO8601, to_timestamp
+from fooltrader.utils.time_utils import TIME_FORMAT_ISO8601, to_pd_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ def eos_ram_to_kafka():
                                         timestamp_ms=int(item['block_time'].timestamp() * 1000))
             record = record_meta.get(10)
 
-            latest_timestamp = to_timestamp(record.timestamp)
+            latest_timestamp = to_pd_timestamp(record.timestamp)
 
             latest_order = tick['order']
 

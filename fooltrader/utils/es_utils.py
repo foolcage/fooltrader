@@ -5,7 +5,7 @@ from ast import literal_eval
 from elasticsearch_dsl import Index
 
 from fooltrader import es_client
-from fooltrader.utils.time_utils import to_timestamp
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def es_get_latest_record(index, time_field='timestamp', query=None):
 def es_get_latest_timestamp(index, time_field='timestamp', query=None):
     latest_record = es_get_latest_record(index, time_field, query)
     if latest_record:
-        return to_timestamp(latest_record['timestamp'])
+        return to_pd_timestamp(latest_record['timestamp'])
 
 
 def es_delete(index, query=None):

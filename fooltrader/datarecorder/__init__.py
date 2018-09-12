@@ -2,7 +2,8 @@ import os
 
 import pandas as pd
 
-from fooltrader import get_security_list_path, get_exchange_dir
+from fooltrader import get_exchange_dir
+from fooltrader.contract.files_contract import get_security_list_path
 
 df = pd.DataFrame()
 

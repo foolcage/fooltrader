@@ -5,7 +5,7 @@ from fooltrader.api.esapi import esapi
 from fooltrader.api.technical import to_security_item
 from fooltrader.models.technical_model import CrossMaModel
 from fooltrader.trader.model import TradingLevel
-from fooltrader.utils.time_utils import now_timestamp, to_timestamp
+from fooltrader.utils.time_utils import now_timestamp, to_pd_timestamp
 
 
 class Trader(object):
@@ -18,10 +18,10 @@ class Trader(object):
 
     def __init__(self) -> None:
         if self.start_timestamp:
-            self.start_timestamp = to_timestamp(self.start_timestamp)
+            self.start_timestamp = to_pd_timestamp(self.start_timestamp)
             self.current_timestamp = self.start_timestamp
         if self.end_timestamp:
-            self.end_timestamp = to_timestamp(self.end_timestamp)
+            self.end_timestamp = to_pd_timestamp(self.end_timestamp)
 
         if self.security_item:
             self.security_item = to_security_item(self.security_item)

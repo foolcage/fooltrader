@@ -123,9 +123,10 @@ class StockKData(BaseDocType):
 
 
 # 数字货币K线
-class CryptoCurrencyKData(BaseDocType):
+class CoinKData(BaseDocType):
     id = Keyword()
     timestamp = Date()
+    timestamp1 = Date()
     securityId = Keyword()
     code = Keyword()
 
@@ -135,10 +136,6 @@ class CryptoCurrencyKData(BaseDocType):
     high = Float()
     low = Float()
     volume = Float()
-    turnover = Float()
-    preClose = Float()
-    change = Float()
-    changePct = Float()
 
     class Meta:
         doc_type = 'doc'

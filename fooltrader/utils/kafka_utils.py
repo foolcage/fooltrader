@@ -6,7 +6,7 @@ from kafka import KafkaConsumer, TopicPartition
 
 from fooltrader import KAFKA_HOST
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
-from fooltrader.utils.time_utils import to_timestamp
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def get_latest_timestamp_order_from_topic(topic):
         msgs = message[topic_partition]
         if len(msgs) > 0:
             record = msgs[-1]
-            timestamp = to_timestamp(record.value['timestamp'])
+            timestamp = to_pd_timestamp(record.value['timestamp'])
             order = None
             if 'order' in record.value:
                 order = record.value['order']

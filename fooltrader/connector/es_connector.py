@@ -12,11 +12,10 @@ from fooltrader.api.fundamental import get_balance_sheet_items, get_income_state
     get_cash_flow_statement_items, \
     get_finance_summary_items
 from fooltrader.api.technical import get_security_list, get_kdata
-from fooltrader.consts import COIN_CODE
 from fooltrader.contract.es_contract import get_es_kdata_index
 from fooltrader.domain.data.es_event import FinanceForecastEvent, FinanceReportEvent
 from fooltrader.domain.data.es_finance import BalanceSheet, IncomeStatement, CashFlowStatement, FinanceSummary
-from fooltrader.domain.data.es_quote import StockMeta, StockKData, IndexKData, CryptoCurrencyKData, IndexMeta, \
+from fooltrader.domain.data.es_quote import StockMeta, StockKData, IndexKData, CoinKData, IndexMeta, \
     CoinMeta
 from fooltrader.settings import US_STOCK_CODES
 from fooltrader.utils.es_utils import es_index_mapping, es_get_latest_timestamp
@@ -80,23 +79,25 @@ def security_meta_to_es(security_type='stock'):
     df_to_es(df, doc_type, force=True)
 
 
-def kdata_to_es(security_type='stock', start_code=None, end_code=None, force=False):
-    codes = None
-    if security_type == 'stock':
-        doc_type = StockKData
-    elif security_type == 'index':
-        doc_type = IndexKData
-    elif security_type == 'coin':
-        doc_type = CryptoCurrencyKData
-        codes = COIN_CODE
-
+def batch_kdata_to_es(security_type='stock', start_code=None, end_code=None, force=False, level='day'):
     for _, security_item in get_security_list(security_type=security_type, start_code=start_code,
-                                              end_code=end_code, codes=codes).iterrows():
-        index_name = get_es_kdata_index(security_item['type'], security_item['exchange'])
+                                              end_code=end_code).iterrows():
+        kdata_to_es(security_item, force=force, level=level)
 
-        df = get_kdata(security_item, generate_id=True)
 
-        df_to_es(df, doc_type=doc_type, index_name=index_name, security_item=security_item, force=force)
+def kdata_to_es(security_item, force=False, level='day'):
+    if security_item['type'] == 'stock':
+        doc_type = StockKData
+    elif security_item['type'] == 'index':
+        doc_type = IndexKData
+    elif security_item['type'] == 'coin':
+        doc_type = CoinKData
+
+    index_name = get_es_kdata_index(security_item['type'], security_item['exchange'], level=level)
+
+    df = get_kdata(security_item, generate_id=True, level=level)
+
+    df_to_es(df, doc_type=doc_type, index_name=index_name, security_item=security_item, force=force)
 
 
 def finance_sheet_to_es(sheet_type=None, start_code=None, end_code=None, force=False):
@@ -158,7 +159,7 @@ def finance_event_to_es(event_type='finance_forecast', start_code=None, end_code
 
 
 if __name__ == '__main__':
-    kdata_to_es(security_type='coin')
+    batch_kdata_to_es(security_type='coin')
     # security_meta_to_es()
     # kdata_to_es(start_code='300027', end_code='300028', force=False)
     # kdata_to_es(security_type='index', force=True)

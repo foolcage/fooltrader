@@ -10,7 +10,7 @@ from scrapy import signals
 
 from fooltrader.api.technical import parse_shfe_data, parse_shfe_day_data
 from fooltrader.contract.files_contract import get_exchange_cache_dir, get_exchange_cache_path
-from fooltrader.utils.time_utils import to_timestamp
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 
 class FutureDceSpider(scrapy.Spider):
@@ -39,7 +39,7 @@ class FutureDceSpider(scrapy.Spider):
         today = pd.Timestamp.today()
         requests = []
         for date in pd.date_range(start=today.date()-pd.Timedelta(weeks=520),end=today):
-            the_dir = get_exchange_cache_path(security_type='future', exchange='dce',the_date=to_timestamp(date),data_type="day_inventory")+'.zip'
+            the_dir = get_exchange_cache_path(security_type='future', exchange='dce', the_date=to_pd_timestamp(date), data_type="day_inventory") + '.zip'
             if(date.dayofweek<5 and not os.path.exists(the_dir)):
                 requests.append(FormRequest(url="http://www.dce.com.cn/publicweb/quotesdata/exportMemberDealPosiQuotesBatchData.html",formdata={
             'batchExportFlag':'batch',
@@ -59,7 +59,7 @@ class FutureDceSpider(scrapy.Spider):
         today = pd.Timestamp.today()
         requests=[]
         for date in pd.date_range(start=today.date()-pd.Timedelta(days=today.dayofyear-1),end=today):
-            the_dir = get_exchange_cache_path(security_type='future', exchange='dce',the_date=to_timestamp(date),data_type="day_kdata")+'.xls'
+            the_dir = get_exchange_cache_path(security_type='future', exchange='dce', the_date=to_pd_timestamp(date), data_type="day_kdata") + '.xls'
             if(date.dayofweek<5 and not os.path.exists(the_dir)):
                 requests.append( FormRequest(url="http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html",formdata={
             'year':str(date.year),

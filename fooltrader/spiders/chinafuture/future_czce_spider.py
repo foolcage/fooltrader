@@ -10,7 +10,7 @@ from scrapy import signals
 
 from fooltrader.api.technical import parse_shfe_data, parse_shfe_day_data
 from fooltrader.contract.files_contract import get_exchange_cache_dir, get_exchange_cache_path
-from fooltrader.utils.time_utils import to_timestamp
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 
 class FutureCzceSpider(scrapy.Spider):
@@ -30,7 +30,7 @@ class FutureCzceSpider(scrapy.Spider):
         if self.dataType is None:
             today = pd.Timestamp.today()
             for date in pd.date_range(start=today.date()-pd.Timedelta(days=today.dayofyear-1),end=today):
-                the_dir = get_exchange_cache_path(security_type='future',exchange='czce',the_date=to_timestamp(date),data_type='day_kdata')+'.xls'
+                the_dir = get_exchange_cache_path(security_type='future', exchange='czce', the_date=to_pd_timestamp(date), data_type='day_kdata') + '.xls'
                 if(date.dayofweek<5 and not os.path.exists(the_dir)):
                     yield Request(url="http://www.czce.com.cn/portal/DFSStaticFiles/Future/"+date.strftime("%Y/%Y%m%d")+"/FutureDataDaily.xls",callback=self.download_czce_kline_data,meta={'filename':the_dir})
         elif self.dataType=='historyk':
@@ -38,7 +38,7 @@ class FutureCzceSpider(scrapy.Spider):
         elif self.dataType=='inventory':
             today = pd.Timestamp.today()
             for date in pd.date_range(start=today.date()-pd.Timedelta(weeks=450),end=today):
-                the_dir = get_exchange_cache_path(security_type='future',exchange='czce',the_date=to_timestamp(date),data_type='inventory')+'.xls'
+                the_dir = get_exchange_cache_path(security_type='future', exchange='czce', the_date=to_pd_timestamp(date), data_type='inventory') + '.xls'
                 if(date.dayofweek<5 and not os.path.exists(the_dir)):
                     yield Request(url="http://www.czce.com.cn/portal/DFSStaticFiles/Future/"+date.strftime("%Y/%Y%m%d")+"/FutureDataHolding.xls",callback=self.download_czce_kline_data,meta={'filename':the_dir})
 

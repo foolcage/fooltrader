@@ -10,7 +10,7 @@ import pandas as pd
 
 from fooltrader.api.technical import parse_shfe_data, parse_shfe_day_data
 from fooltrader.contract.files_contract import get_exchange_cache_dir, get_exchange_cache_path
-from fooltrader.utils.time_utils import to_timestamp
+from fooltrader.utils.time_utils import to_pd_timestamp
 
 
 class FutureCffexSpider(scrapy.Spider):
@@ -31,7 +31,7 @@ class FutureCffexSpider(scrapy.Spider):
             daterange=pd.date_range(start='2006-06-30',end=pd.Timestamp.today())
             daterange=daterange[daterange.dayofweek<5]
             for i in daterange:
-                the_dir = get_exchange_cache_path(security_type='future',exchange='cffex',data_type='day_kdata',the_date=to_timestamp(i))+".csv"
+                the_dir = get_exchange_cache_path(security_type='future', exchange='cffex', data_type='day_kdata', the_date=to_pd_timestamp(i)) + ".csv"
                 if not os.path.exists(the_dir):
                     yield Request(url="http://www.cffex.com.cn/sj/hqsj/rtj/"+i.strftime("%Y%m/%d/%Y%m%d")+"_1.csv",callback=self.download_cffex_history_data_file,meta={'filename':the_dir})
         elif self.dataType =='inventory':
@@ -40,7 +40,7 @@ class FutureCffexSpider(scrapy.Spider):
             daterange=daterange[daterange.dayofweek<5]
             for i in daterange:
                 for j in k:
-                    the_dir = get_exchange_cache_path(security_type='future',exchange='cffex',data_type='inventory',the_date=to_timestamp(i))+j+".csv"
+                    the_dir = get_exchange_cache_path(security_type='future', exchange='cffex', data_type='inventory', the_date=to_pd_timestamp(i)) + j + ".csv"
                     if not os.path.exists(the_dir):
                         yield Request(url="http://www.cffex.com.cn/sj/ccpm/"+i.strftime("%Y%m/%d/")+j+"_1.csv",callback=self.download_cffex_history_data_file,meta={'filename':the_dir})
 

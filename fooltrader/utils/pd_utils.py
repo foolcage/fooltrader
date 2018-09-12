@@ -21,6 +21,7 @@ def df_save_timeseries_data(df, to_path, append=False, drop_duplicate_timestamp=
             df.to_csv(f, header=False, index=False)
     else:
         df.to_csv(to_path, index=False)
+    return df
 
 
 def df_for_date_range(df, start_date=None, end_date=None):
