@@ -149,7 +149,7 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
     elif start_date or end_date:
         time_range_condition = {}
         if end_date:
-            time_range_condition['lte'] = end_date
+            time_range_condition['lt'] = end_date
         if start_date:
             time_range_condition['gte'] = start_date
 

@@ -3,6 +3,8 @@ import enum
 
 import pandas as pd
 
+from fooltrader.utils.time_utils import to_pd_timestamp
+
 
 class TradingSignal(enum.Enum):
     TRADING_SIGNAl_LONG = 'trading_signal_long'
@@ -80,21 +82,26 @@ class Model(object):
         self.trading_level = trading_level
 
     def set_history_data(self, history_data):
-        self.history_data = history_data
-        self.current_timestamp = history_data[-1]['timestamp']
+        self.history_data = pd.DataFrame(history_data)
+        self.current_timestamp = to_pd_timestamp(history_data[-1]['timestamp'])
 
     def append_data(self, data):
-        if not self.history_data:
+        if self.history_data is None:
             self.history_data = pd.DataFrame()
 
-        self.history_data.append(data)
-        self.current_timestamp = data['timestamp']
-        for decision in self.make_decision():
-            yield decision
+        self.history_data = self.history_data.append(data)
+        self.current_timestamp = data.name
 
-    def evaluate_fetch_interval(self, to_timestamp):
-        if to_timestamp - self.current_timestamp >= self.trading_level.to_ms():
-            return self.current_timestamp, to_timestamp
+        for decision in self.make_decision():
+            print(decision)
+
+    def evaluate_fetch_interval(self, end_timestamp):
+        if not self.current_timestamp:
+            self.current_timestamp = end_timestamp
+            return None, None
+        time_delta = end_timestamp - self.current_timestamp
+        if time_delta.total_seconds() >= self.trading_level.to_second():
+            return self.current_timestamp, end_timestamp
         return None, None
 
     def get_state(self):
@@ -104,4 +111,4 @@ class Model(object):
         pass
 
     def signal_timestamp(self):
-        return self.current_timestamp + TradingLevel.to_ms(self.trading_level)
+        return self.current_timestamp + pd.Timedelta(seconds=self.trading_level.to_second())
