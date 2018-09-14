@@ -13,6 +13,8 @@ from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.time_utils import to_time_str
 
+def es_get_sim_account():
+    pass
 
 def es_get_subscription(user_id=None, security_id=None, from_idx=0, size=500):
     s = PriceSubscription.search()

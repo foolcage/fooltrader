@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean
+from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean, InnerDoc
 from elasticsearch_dsl import MetaField
 
 
-class Account(DocType):
+class SimAccount(DocType):
     # 机器人名字
-    botName = Keyword()
+    traderName = Keyword()
+    # 所用的模型
+    modelName = Keyword()
     # 可用现金
     cash = Float()
     # 具体仓位
@@ -22,13 +24,13 @@ class Account(DocType):
     closing = Boolean()
 
     class Meta:
-        index = 'account'
+        index = 'sim_account'
         doc_type = 'doc'
         all = MetaField(enabled=False)
         dynamic = MetaField('strict')
 
 
-class Position(DocType):
+class Position(InnerDoc):
     # 证券id
     securityId = Keyword()
 

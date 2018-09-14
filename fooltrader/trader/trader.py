@@ -6,6 +6,7 @@ import pandas as pd
 from fooltrader.api.esapi import esapi
 from fooltrader.api.technical import to_security_item
 from fooltrader.models.technical_model import CrossMaModel
+from fooltrader.trader.account import SimAccountService
 from fooltrader.trader.model import TradingLevel
 from fooltrader.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 
@@ -17,6 +18,7 @@ class Trader(object):
     models = []
     trading_level = None
     security_item = None
+    account_service = SimAccountService()
 
     def __init__(self) -> None:
         if self.start_timestamp:
@@ -67,6 +69,11 @@ class TestTrader(Trader):
     trading_level = TradingLevel.LEVEL_1DAY
 
     models = [CrossMaModel(trading_level=trading_level)]
+
+    def on_next_period(self):
+        super().on_next_period()
+        # check the models decision
+        # check the models state
 
 
 if __name__ == '__main__':

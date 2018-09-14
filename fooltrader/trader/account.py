@@ -4,7 +4,8 @@ import logging
 import math
 
 from fooltrader.api.esapi import esapi
-from fooltrader.domain.business.es_account import Account, Position
+from fooltrader.domain.business.es_account import SimAccount, Position
+from fooltrader.trader.model import TradingSignalType
 from fooltrader.utils.es_utils import es_get_latest_record, es_delete, es_index_mapping
 from fooltrader.utils.utils import fill_doc_type
 
@@ -15,42 +16,57 @@ ORDER_TYPE_CLOSE_SHORT = 3
 
 
 class AccountService(object):
+    def handle_trading_signal(self, trading_signal):
+        pass
 
-    def __init__(self, bot_name, timestamp,
+
+class SimAccountService(AccountService):
+    def __init__(self, trader_name,
+                 model_name,
+                 timestamp,
                  base_capital=1000000,
                  buy_cost=0.001,
                  sell_cost=0.001,
-                 slippage=0.001,
-                 stock_fuquan='hfq'):
+                 slippage=0.001):
         self.logger = logging.getLogger(__name__)
 
         self.base_capital = base_capital
         self.buy_cost = buy_cost
         self.sell_cost = sell_cost
         self.slippage = slippage
-        self.stock_fuquan = stock_fuquan
-        self.bot_name = bot_name
+        self.trader_name = trader_name
+        self.model_name = model_name
 
-        account = es_get_latest_record(index='account', query={"term": {"botName": bot_name}})
+        account = es_get_latest_record(index='sim_account', query={"term": {"traderName": trader_name}})
 
         if account:
-            self.logger.warning("bot:{} has run before,old result would be deleted".format(bot_name))
-            es_delete(index='account', query={"term": {"botName": bot_name}})
+            self.logger.warning("trader:{} has run before,old result would be deleted".format(trader_name))
+            es_delete(index='account', query={"term": {"traderName": trader_name}})
 
-        es_index_mapping('account', Account)
+        es_index_mapping('sim_account', SimAccount)
 
-        self.account = Account()
-        self.account.botName = bot_name
+        self.account = SimAccount()
+        self.account.traderName = trader_name
         self.account.cash = self.base_capital
         self.account.positions = []
         self.account.value = self.base_capital
         self.account.timestamp = timestamp
         self.account.save()
 
+    def handle_trading_signal(self, trading_signal):
+        if trading_signal:
+            if trading_signal.trading_signal_type == TradingSignalType.TRADING_SIGNAl_LONG:
+                self.close_short(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
+                self.buy(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
+
+            if trading_signal.trading_signal_type == TradingSignalType.TRADING_SIGNAl_SHORT:
+                self.close_long(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
+                self.sell(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
+
     def get_account(self, refresh=True):
         if refresh:
-            account_json = es_get_latest_record(index='account', query={"term": {"botName": self.bot_name}})
-            self.account = Account()
+            account_json = es_get_latest_record(index='account', query={"term": {"botName": self.trader_name}})
+            self.account = SimAccount()
             fill_doc_type(self.account, account_json)
 
         return self.account
@@ -67,7 +83,7 @@ class AccountService(object):
         account = self.get_account()
         for position in account.positions:
             kdata = esapi.es_get_kdata(security_item=position['securityId'], the_date=the_date)
-            closing_price = kdata['hfqClose']
+            closing_price = kdata['close']
             position.availableLong = position.longAmount
             position.availableShort = position.shortAmount
 

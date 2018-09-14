@@ -8,7 +8,7 @@ from kafka import KafkaConsumer
 from kafka import TopicPartition
 
 from fooltrader.api.technical import to_security_item
-from fooltrader.bot.action.account_action import AccountService
+from fooltrader.bot.action.account_action import SimAccount
 from fooltrader.bot.action.msg_action import WeixinAction, EmailAction
 from fooltrader.contract.kafka_contract import get_kafka_tick_topic
 from fooltrader.settings import KAFKA_HOST
@@ -145,9 +145,9 @@ class TradingEventBot(EventBot):
         timestamp = self.start_timestamp
         if not timestamp:
             timestamp = datetime.datetime.now()
-        self.account_service = AccountService(bot_name=self.bot_name, timestamp=timestamp,
-                                              base_capital=self.base_capital, buy_cost=self.buy_cost,
-                                              sell_cost=self.sell_cost, slippage=self.slippage)
+        self.account_service = SimAccount(bot_name=self.bot_name, timestamp=timestamp,
+                                          base_capital=self.base_capital, buy_cost=self.buy_cost,
+                                          sell_cost=self.sell_cost, slippage=self.slippage)
 
         self.after_init()
 

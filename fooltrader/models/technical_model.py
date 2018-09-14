@@ -3,7 +3,7 @@ import enum
 
 from talib import abstract
 
-from fooltrader.trader.model import TradingSignal, Model, ModelType
+from fooltrader.trader.model import TradingSignalType, Model, ModelType, TradingSignal
 
 SMA = abstract.Function('sma')
 
@@ -17,13 +17,11 @@ class ShortLongStatus(enum.Enum):
 class CrossMaModel(Model):
     short_period = 5
     long_period = 10
-    trading_level = None
     last_status = None
     model_type = ModelType.TECHNICAL_MODEL
 
-    def __init__(self, trading_level) -> None:
-        super().__init__(trading_level)
-        self.trading_level = trading_level
+    def __init__(self, security_id, trading_level) -> None:
+        super().__init__(security_id, trading_level)
 
     # keep_status = []
 
@@ -33,30 +31,45 @@ class CrossMaModel(Model):
 
         if ma_short > ma_long:
             if self.last_status == ShortLongStatus.SHORT_ON_LONG:
-                yield {
-                    "timestamp": self.signal_timestamp(),
-                    "signal": TradingSignal.TRADING_SIGNAl_KEEP_LONG
-                }
+                start, end = self.signal_timestamp_interval()
+
+                self.current_trading_signal = TradingSignal(security_id=self.security_id,
+                                                            current_price=self.current_data['close'],
+                                                            start_timestamp=start,
+                                                            end_timestamp=end,
+                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_KEEP_LONG
+                                                            )
+
             else:
                 # self.keep_status.append((self.current_timestamp, ShortLongStatus.SHORT_ON_LONG))
-                yield {
-                    "timestamp": self.signal_timestamp(),
-                    "signal": TradingSignal.TRADING_SIGNAl_LONG
-                }
+                start, end = self.signal_timestamp_interval()
+
+                self.current_trading_signal = TradingSignal(security_id=self.security_id,
+                                                            current_price=self.current_data['close'],
+                                                            start_timestamp=start, end_timestamp=end,
+                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_LONG)
 
             self.last_status = ShortLongStatus.SHORT_ON_LONG
 
         if ma_short < ma_long:
             if self.last_status == ShortLongStatus.LONG_ON_SHORT:
-                yield {
-                    "timestamp": self.signal_timestamp(),
-                    "signal": TradingSignal.TRADING_SIGNAl_KEEP_SHORT
-                }
+                start, end = self.signal_timestamp_interval()
+
+                self.current_trading_signal = TradingSignal(security_id=self.security_id,
+                                                            current_price=self.current_data['close'],
+                                                            start_timestamp=start, end_timestamp=end,
+                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_KEEP_SHORT)
+
+
             else:
                 # self.keep_status.append((self.current_timestamp, ShortLongStatus.LONG_ON_SHORT))
-                yield {
-                    "timestamp": self.signal_timestamp(),
-                    "signal": TradingSignal.TRADING_SIGNAl_SHORT
-                }
+                start, end = self.signal_timestamp_interval()
+
+                self.current_trading_signal = TradingSignal(security_id=self.security_id,
+                                                            current_price=self.current_data['close'],
+                                                            start_timestamp=start, end_timestamp=end,
+                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_SHORT)
 
             self.last_status = ShortLongStatus.LONG_ON_SHORT
+
+        self.current_trading_signal = None
