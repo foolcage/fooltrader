@@ -9,12 +9,26 @@ from fooltrader.contract.data_contract import KDATA_STOCK_COL, KDATA_FUTURE_COL,
     KDATA_COMMON_COL
 from fooltrader.contract.es_contract import get_es_kdata_index, get_cryptocurrency_user_statistic_index, \
     get_cryptocurrency_daily_user_statistic_index, get_es_statistic_index
+from fooltrader.domain.business.es_account import SimAccount
 from fooltrader.domain.business.es_subscription import PriceSubscription
 from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.time_utils import to_time_str
 
-def es_get_sim_account():
-    pass
+
+def es_get_sim_account(trader_name, model_name, the_date=None, start_date=None, end_date=None, from_idx=0, size=500,
+                       order='timestamp'):
+    s = SimAccount.search()
+    if trader_name:
+        s = s.filter('term', traderName=trader_name)
+    if model_name:
+        s = s.filter('term', modelName=model_name)
+
+    s = s.sort({order: {"order": "desc"}})
+
+    resp = s[from_idx:from_idx + size].execute()
+
+    return es_resp_to_payload(resp)
+
 
 def es_get_subscription(user_id=None, security_id=None, from_idx=0, size=500):
     s = PriceSubscription.search()

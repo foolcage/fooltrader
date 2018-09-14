@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean, InnerDoc
+from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean
 from elasticsearch_dsl import MetaField
 
 
@@ -30,7 +30,7 @@ class SimAccount(DocType):
         dynamic = MetaField('strict')
 
 
-class Position(InnerDoc):
+class Position(DocType):
     # 证券id
     securityId = Keyword()
 
@@ -48,6 +48,7 @@ class Position(InnerDoc):
     # 平均做空价格
     averageShortPrice = Long()
 
+    profit = Long()
     # 市值 或者 占用的保证金(方便起见，总是100%)
     value = Float()
     # 交易类型(0代表T+0,1代表T+1)
@@ -58,8 +59,10 @@ class Position(InnerDoc):
         self.securityId = security_id
         self.longAmount = 0
         self.availableLong = 0
+        self.averageLongPrice = 0
         self.shortAmount = 0
         self.availableShort = 0
+        self.averageShortPrice = 0
 
         self.profit = 0
         self.value = 0

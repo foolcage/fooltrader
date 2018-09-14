@@ -4,9 +4,11 @@ import logging
 import math
 
 from fooltrader.api.esapi import esapi
+from fooltrader.api.esapi.esapi import es_get_sim_account
 from fooltrader.domain.business.es_account import SimAccount, Position
 from fooltrader.trader.common import TradingSignalType
 from fooltrader.utils.es_utils import es_get_latest_record, es_delete, es_index_mapping
+from fooltrader.utils.time_utils import to_pd_timestamp
 from fooltrader.utils.utils import fill_doc_type
 
 ORDER_TYPE_LONG = 0
@@ -47,6 +49,7 @@ class SimAccountService(AccountService):
 
         self.account = SimAccount()
         self.account.traderName = trader_name
+        self.account.modelName = model_name
         self.account.cash = self.base_capital
         self.account.positions = []
         self.account.value = self.base_capital
@@ -56,16 +59,33 @@ class SimAccountService(AccountService):
     def handle_trading_signal(self, trading_signal):
         if trading_signal:
             if trading_signal.trading_signal_type == TradingSignalType.TRADING_SIGNAl_LONG:
-                self.close_short(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
-                self.buy(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
+                try:
+                    self.close_short(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
+                                     current_timestamp=trading_signal.start_timestamp)
+                except Exception as e:
+                    pass
+                try:
+                    self.buy(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
+                             current_timestamp=trading_signal.start_timestamp)
+                except Exception as e:
+                    pass
 
             if trading_signal.trading_signal_type == TradingSignalType.TRADING_SIGNAl_SHORT:
-                self.close_long(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
-                self.sell(security_id=trading_signal.security_id, current_price=trading_signal.current_price)
+                try:
+                    self.close_long(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
+                                    current_timestamp=trading_signal.start_timestamp)
+                except Exception as e:
+                    pass
+                try:
+                    self.sell(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
+                              current_timestamp=trading_signal.start_timestamp)
+                except Exception as e:
+                    pass
 
     def get_account(self, refresh=True):
         if refresh:
-            account_json = es_get_latest_record(index='sim_account', query={"term": {"traderName": self.trader_name}})
+            account_json = es_get_sim_account(trader_name=self.trader_name, model_name=self.model_name, size=1)['data'][
+                0]
             self.account = SimAccount()
             fill_doc_type(self.account, account_json)
 
@@ -99,15 +119,17 @@ class SimAccountService(AccountService):
     # 两种情况下会被调用：
     # 1)操作导致账户更新
     # 2)当日收盘
-    def save_account(self):
+    def save_account(self, timestamp):
+        self.account.timestamp = timestamp
         self.account.save()
 
-    def update_account(self, security_id, new_position):
+    def update_account(self, security_id, new_position, timestamp):
         # 先去掉之前的position
         positions = [position for position in self.account.positions if position.securityId != security_id]
         # 更新为新的position
         positions.append(new_position)
         self.account.positions = positions
+        self.account.timestamp = to_pd_timestamp(timestamp)
         self.account.save()
 
     def update_position(self, current_position, order_amount, current_price, order_type):
@@ -115,7 +137,7 @@ class SimAccountService(AccountService):
             # 计算平均价
             long_amount = current_position.longAmount + order_amount
             current_position.averageLongPrice = (current_position.averageLongPrice *
-                                                 current_position.longAmount + current_price * current_price) / long_amount
+                                                 current_position.longAmount + current_price * order_amount) / long_amount
 
             current_position.longAmount = long_amount
 
@@ -124,7 +146,7 @@ class SimAccountService(AccountService):
         elif order_type == ORDER_TYPE_SHORT:
             short_amount = current_position.shortAmount + order_amount
             current_position.averageShortPrice = (current_position.averageShortPrice *
-                                                  current_position.shortAmount + current_price * current_price) / short_amount
+                                                  current_position.shortAmount + current_price * order_amount) / short_amount
 
             current_position.shortAmount = short_amount
 
@@ -132,22 +154,26 @@ class SimAccountService(AccountService):
                 current_position.availableShort += order_amount
 
     # 开多,对于某些品种只能开多，比如中国股票
-    def buy(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_LONG)
+    def buy(self, security_id, current_price, current_timestamp, order_amount=0, order_pct=1.0, order_price=0):
+        self.order(security_id, current_price, current_timestamp, order_amount, order_pct, order_price,
+                   order_type=ORDER_TYPE_LONG)
 
     # 开空
-    def sell(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_SHORT)
+    def sell(self, security_id, current_price, current_timestamp, order_amount=0, order_pct=1.0, order_price=0):
+        self.order(security_id, current_price, current_timestamp, order_amount, order_pct, order_price,
+                   order_type=ORDER_TYPE_SHORT)
 
     # 平多
-    def close_long(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_CLOSE_LONG)
+    def close_long(self, security_id, current_price, current_timestamp, order_amount=0, order_pct=1.0, order_price=0):
+        self.order(security_id, current_price, current_timestamp, order_amount, order_pct, order_price,
+                   order_type=ORDER_TYPE_CLOSE_LONG)
 
     # 平空
-    def close_short(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0):
-        self.order(security_id, current_price, order_amount, order_pct, order_price, order_type=ORDER_TYPE_CLOSE_SHORT)
+    def close_short(self, security_id, current_price, current_timestamp, order_amount=0, order_pct=1.0, order_price=0):
+        self.order(security_id, current_price, current_timestamp, order_amount, order_pct, order_price,
+                   order_type=ORDER_TYPE_CLOSE_SHORT)
 
-    def order(self, security_id, current_price, order_amount=0, order_pct=1.0, order_price=0,
+    def order(self, security_id, current_price, current_timestamp, order_amount=0, order_pct=1.0, order_price=0,
               order_type=ORDER_TYPE_LONG):
         """
         对每个投资标的开多.
@@ -267,4 +293,4 @@ class SimAccountService(AccountService):
                     else:
                         raise Exception("not enough position")
 
-            self.update_account(security_id, current_position)
+            self.update_account(security_id, current_position, current_timestamp)

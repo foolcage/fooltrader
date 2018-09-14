@@ -30,6 +30,7 @@ class CrossMaModel(Model):
     # keep_status = []
 
     def make_decision(self):
+        self.current_trading_signal = None
         ma_short = SMA(self.history_data, self.short_period)[-1]
         ma_long = SMA(self.history_data, self.long_period)[-1]
 
@@ -75,5 +76,3 @@ class CrossMaModel(Model):
                                                             trading_signal_type=TradingSignalType.TRADING_SIGNAl_SHORT)
 
             self.last_status = ShortLongStatus.LONG_ON_SHORT
-
-        self.current_trading_signal = None
