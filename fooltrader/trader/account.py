@@ -5,7 +5,7 @@ import math
 
 from fooltrader.api.esapi import esapi
 from fooltrader.domain.business.es_account import SimAccount, Position
-from fooltrader.trader.model import TradingSignalType
+from fooltrader.trader.common import TradingSignalType
 from fooltrader.utils.es_utils import es_get_latest_record, es_delete, es_index_mapping
 from fooltrader.utils.utils import fill_doc_type
 
@@ -41,7 +41,7 @@ class SimAccountService(AccountService):
 
         if account:
             self.logger.warning("trader:{} has run before,old result would be deleted".format(trader_name))
-            es_delete(index='account', query={"term": {"traderName": trader_name}})
+            es_delete(index='sim_account', query={"term": {"traderName": trader_name}})
 
         es_index_mapping('sim_account', SimAccount)
 
@@ -65,7 +65,7 @@ class SimAccountService(AccountService):
 
     def get_account(self, refresh=True):
         if refresh:
-            account_json = es_get_latest_record(index='account', query={"term": {"botName": self.trader_name}})
+            account_json = es_get_latest_record(index='sim_account', query={"term": {"traderName": self.trader_name}})
             self.account = SimAccount()
             fill_doc_type(self.account, account_json)
 

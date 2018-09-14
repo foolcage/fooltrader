@@ -3,7 +3,9 @@ import enum
 
 from talib import abstract
 
-from fooltrader.trader.model import TradingSignalType, Model, ModelType, TradingSignal
+from fooltrader.trader.account import SimAccountService
+from fooltrader.trader.common import TradingSignal, TradingSignalType
+from fooltrader.trader.model import Model, ModelType
 
 SMA = abstract.Function('sma')
 
@@ -20,8 +22,10 @@ class CrossMaModel(Model):
     last_status = None
     model_type = ModelType.TECHNICAL_MODEL
 
-    def __init__(self, security_id, trading_level) -> None:
+    def __init__(self, security_id, trading_level, trader_name, timestamp) -> None:
         super().__init__(security_id, trading_level)
+        self.account_service = SimAccountService(trader_name=trader_name, model_name='cross_ma_model',
+                                                 timestamp=timestamp)
 
     # keep_status = []
 

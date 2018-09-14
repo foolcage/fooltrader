@@ -3,83 +3,15 @@ import enum
 
 import pandas as pd
 
+from fooltrader.api.technical import get_close_time
 from fooltrader.trader.account import SimAccountService
 from fooltrader.utils.time_utils import to_pd_timestamp
-
-
-class TradingSignalType(enum.Enum):
-    TRADING_SIGNAl_LONG = 'trading_signal_long'
-    TRADING_SIGNAl_SHORT = 'trading_signal_short'
-    TRADING_SIGNAl_KEEP_LONG = 'trading_signal_keep_long'
-    TRADING_SIGNAl_KEEP_SHORT = 'trading_signal_keep_short'
-
-
-class TradingLevel(enum.Enum):
-    LEVEL_1MIN = '1m'
-    LEVEL_5MIN = '5m'
-    LEVEL_15MIN = '15m'
-    LEVEL_30MIN = '30m'
-    LEVEL_1HOUR = '1h'
-    LEVEL_4HOUR = '4h'
-    LEVEL_1DAY = 'day'
-    LEVEL_1WEEK = 'week'
-
-    def to_second(self):
-        return int(self.to_ms() / 1000)
-
-    def to_ms(self):
-        if self == TradingLevel.LEVEL_1MIN:
-            return 60 * 1000
-        if self == TradingLevel.LEVEL_5MIN:
-            return 5 * 60 * 1000
-        if self == TradingLevel.LEVEL_15MIN:
-            return 15 * 60 * 1000
-        if self == TradingLevel.LEVEL_30MIN:
-            return 30 * 60 * 1000
-        if self == TradingLevel.LEVEL_1HOUR:
-            return 60 * 60 * 1000
-        if self == TradingLevel.LEVEL_4HOUR:
-            return 4 * 60 * 60 * 1000
-        if self == TradingLevel.LEVEL_1DAY:
-            return 24 * 60 * 60 * 1000
-        if self == TradingLevel.LEVEL_1WEEK:
-            return 7 * 24 * 60 * 60 * 1000
-
-    def __ge__(self, other):
-        if self.__class__ is other.__class__:
-            return self.to_ms() >= other.to_ms()
-        return NotImplemented
-
-    def __gt__(self, other):
-
-        if self.__class__ is other.__class__:
-            return self.to_ms() > other.to_ms()
-        return NotImplemented
-
-    def __le__(self, other):
-        if self.__class__ is other.__class__:
-            return self.to_ms() <= other.to_ms()
-        return NotImplemented
-
-    def __lt__(self, other):
-        if self.__class__ is other.__class__:
-            return self.to_ms() < other.to_ms()
-        return NotImplemented
 
 
 class ModelType(enum.Enum):
     TECHNICAL_MODEL = 'technical_model'
     FUNDAMENTAL_MODEL = 'fundamental_model'
     NEWS_MODEL = 'news_model'
-
-
-class TradingSignal:
-    def __init__(self, security_id, start_timestamp, end_timestamp, trading_signal_type, current_price):
-        self.security_id = security_id
-        self.start_timestamp = start_timestamp
-        self.end_timestamp = end_timestamp
-        self.trading_signal_type = trading_signal_type
-        self.current_price = current_price
 
 
 class Model(object):
@@ -91,11 +23,14 @@ class Model(object):
     model_type = None
     current_state = None
     current_trading_signal = None
-    account_service = SimAccountService()
+    close_hour = None
+    close_minute = None
+    account_service = None
 
     def __init__(self, security_id, trading_level) -> None:
         self.security_id = security_id
         self.trading_level = trading_level
+        self.close_hour, self.close_minute = get_close_time(self.security_id)
 
     def set_history_data(self, history_data):
         self.history_data = pd.DataFrame(history_data)
@@ -113,6 +48,9 @@ class Model(object):
         self.make_decision()
 
         self.account_service.handle_trading_signal(self.current_trading_signal)
+
+        if self.trading_level.is_last_data_of_day(self.close_hour, self.close_minute, self.current_timestamp):
+            self.account_service.calculate_closing_account(self.current_timestamp)
 
     def evaluate_fetch_interval(self, end_timestamp):
         if not self.current_timestamp:

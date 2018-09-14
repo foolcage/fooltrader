@@ -157,6 +157,14 @@ def to_security_item(security_item, exchange=None):
     return security_item
 
 
+def get_close_time(security_item):
+    security_item = to_security_item(security_item)
+    if security_item['type'] == 'coin':
+        return 0, 0
+    if security_item['type'] == 'stock':
+        return 15, 0
+
+
 # tick
 def get_ticks(security_item, the_date=None, start_date=None, end_date=None):
     """

@@ -7,7 +7,8 @@ from fooltrader.api.esapi import esapi
 from fooltrader.api.technical import to_security_item
 from fooltrader.models.technical_model import CrossMaModel
 from fooltrader.trader.account import SimAccountService
-from fooltrader.trader.model import TradingLevel
+from fooltrader.trader.common import TradingLevel
+
 from fooltrader.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 
 
@@ -18,7 +19,7 @@ class Trader(object):
     models = []
     trading_level = None
     security_item = None
-    account_service = SimAccountService()
+    account_service = None
 
     def __init__(self) -> None:
         if self.start_timestamp:
@@ -68,7 +69,8 @@ class TestTrader(Trader):
     start_timestamp = '2018-05-28'
     trading_level = TradingLevel.LEVEL_1DAY
 
-    models = [CrossMaModel(trading_level=trading_level)]
+    models = [CrossMaModel(security_id=security_item, trading_level=trading_level, trader_name='test_trader',
+                           timestamp=start_timestamp)]
 
     def on_next_period(self):
         super().on_next_period()

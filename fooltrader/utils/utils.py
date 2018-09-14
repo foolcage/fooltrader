@@ -5,7 +5,6 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-import arrow
 import pandas as pd
 
 from fooltrader.contract.data_contract import TICK_COL
@@ -191,6 +190,7 @@ def get_report_period(the_date=datetime.datetime.today().date()):
         return "{}{}".format(the_date.year, '-03-31')
     else:
         return "{}{}".format(the_date.year - 1, '-12-31')
+
 
 def drop_duplicate(the_list):
     return list(set(the_list))
