@@ -1,36 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean
+from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean, InnerDoc
 from elasticsearch_dsl import MetaField
 
 
-class SimAccount(DocType):
-    # 机器人名字
-    traderName = Keyword()
-    # 所用的模型
-    modelName = Keyword()
-    # 可用现金
-    cash = Float()
-    # 具体仓位
-    positions = Nested()
-    # 市值
-    value = Float()
-    # 市值+cash
-    allValue = Float()
-    # 时间
-    timestamp = Date()
-
-    # 收盘计算
-    closing = Boolean()
-
-    class Meta:
-        index = 'sim_account'
-        doc_type = 'doc'
-        all = MetaField(enabled=False)
-        dynamic = MetaField('strict')
-
-
-class Position(DocType):
+class Position(InnerDoc):
     # 证券id
     securityId = Keyword()
 
@@ -54,8 +28,8 @@ class Position(DocType):
     # 交易类型(0代表T+0,1代表T+1)
     tradingT = Short()
 
-    def __init__(self, meta=None, security_id=None, trading_t=1, **kwargs):
-        super().__init__(meta, **kwargs)
+    def __init__(self, security_id=None, trading_t=0, **kwargs):
+        super().__init__(**kwargs)
         self.securityId = security_id
         self.longAmount = 0
         self.availableLong = 0
@@ -67,6 +41,32 @@ class Position(DocType):
         self.profit = 0
         self.value = 0
         self.tradingT = trading_t
+
+
+class SimAccount(DocType):
+    # 机器人名字
+    traderName = Keyword()
+    # 所用的模型
+    modelName = Keyword()
+    # 可用现金
+    cash = Float()
+    # 具体仓位
+    positions = Nested(Position)
+    # 市值
+    value = Float()
+    # 市值+cash
+    allValue = Float()
+    # 时间
+    timestamp = Date()
+
+    # 收盘计算
+    closing = Boolean()
+
+    class Meta:
+        index = 'sim_account'
+        doc_type = 'doc'
+        all = MetaField(enabled=False)
+        dynamic = MetaField('strict')
 
 
 class Order(DocType):
