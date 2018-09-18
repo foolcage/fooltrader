@@ -2,10 +2,10 @@
 from elasticsearch_dsl import Keyword, MetaField, Boolean, Date, Float
 from marshmallow import Schema, fields
 
-from fooltrader.domain import BaseDocType
+from fooltrader.domain import BaseDocument
 
 
-class PriceSubscription(BaseDocType):
+class PriceSubscription(BaseDocument):
     """
         {
             "id": 123,
@@ -59,7 +59,7 @@ class PriceSubscriptionSchema(Schema):
     actions = fields.List(fields.String)
 
 
-class CrossSubscription(BaseDocType):
+class CrossSubscription(BaseDocument):
     id = Keyword()
     timestamp = Date()
     userId = Keyword()
@@ -76,7 +76,7 @@ class CrossSubscription(BaseDocType):
         dynamic = MetaField('strict')
 
 
-class SubscriptionTriggered(BaseDocType):
+class SubscriptionTriggered(BaseDocument):
     id = Keyword()
     timestamp = Date()
 

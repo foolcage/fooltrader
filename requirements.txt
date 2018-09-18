@@ -7,7 +7,7 @@ Twisted == 17.5.0
 
 demjson == 2.2.4
 
-elasticsearch-dsl == 6.1.0
+elasticsearch-dsl == 6.2.1
 
 kafka_python == 1.4.3
 

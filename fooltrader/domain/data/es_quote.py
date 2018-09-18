@@ -3,7 +3,7 @@
 from elasticsearch_dsl import Keyword, Date, Float
 from elasticsearch_dsl import MetaField
 
-from fooltrader.domain import BaseDocType
+from fooltrader.domain import BaseDocument
 
 
 # ***********************************************************
@@ -12,7 +12,7 @@ from fooltrader.domain import BaseDocType
 # 股票元信息
 
 
-class StockMeta(BaseDocType):
+class StockMeta(BaseDocument):
     id = Keyword()
     timestamp = Date()
 
@@ -36,7 +36,7 @@ class StockMeta(BaseDocType):
 
 
 # 指数元信息
-class IndexMeta(BaseDocType):
+class IndexMeta(BaseDocument):
     id = Keyword()
     timestamp = Date()
 
@@ -54,7 +54,7 @@ class IndexMeta(BaseDocType):
 
 
 # 数字货币元信息
-class CoinMeta(BaseDocType):
+class CoinMeta(BaseDocument):
     id = Keyword()
     type = Keyword()
     exchange = Keyword()
@@ -73,7 +73,7 @@ class CoinMeta(BaseDocType):
 # ***********************************************************
 # technical related
 # ***********************************************************
-class StockTickItem(BaseDocType):
+class StockTickItem(BaseDocument):
     id = Keyword()
     timestamp = Date()
     securityId = Keyword()
@@ -87,7 +87,7 @@ class StockTickItem(BaseDocType):
 
 
 # 股票K线
-class StockKData(BaseDocType):
+class StockKData(BaseDocument):
     id = Keyword()
     timestamp = Date()
     securityId = Keyword()
@@ -123,7 +123,7 @@ class StockKData(BaseDocType):
 
 
 # 数字货币K线
-class CoinKData(BaseDocType):
+class CoinKData(BaseDocument):
     id = Keyword()
     timestamp = Date()
     timestamp1 = Date()
@@ -143,7 +143,7 @@ class CoinKData(BaseDocType):
         dynamic = MetaField('strict')
 
 
-class CommonKData(BaseDocType):
+class CommonKData(BaseDocument):
     id = Keyword()
     timestamp = Date()
     datetime = Date()
@@ -165,7 +165,7 @@ class CommonKData(BaseDocType):
         dynamic = MetaField('strict')
 
 
-class EosAccount(BaseDocType):
+class EosAccount(BaseDocument):
     id = Keyword()
     timestamp = Date()
     updateTimestamp = Date()
@@ -176,7 +176,7 @@ class EosAccount(BaseDocType):
     unstackingEos = Float()
 
 
-class EosUserStatistic(BaseDocType):
+class EosUserStatistic(BaseDocument):
     id = Keyword()
     userId = Keyword()
     timestamp = Date()
@@ -200,7 +200,7 @@ class EosUserStatistic(BaseDocType):
         dynamic = MetaField('strict')
 
 
-class CommonStatistic(BaseDocType):
+class CommonStatistic(BaseDocument):
     id = Keyword()
     timestamp = Date()
     updateTimestamp = Date()
@@ -227,7 +227,7 @@ class CommonStatistic(BaseDocType):
 
 
 # 股票指数K线
-class IndexKData(BaseDocType):
+class IndexKData(BaseDocument):
     id = Keyword()
     timestamp = Date()
     securityId = Keyword()

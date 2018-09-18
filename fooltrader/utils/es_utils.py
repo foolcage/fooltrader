@@ -52,7 +52,7 @@ def es_get_latest_timestamp(index, time_field='timestamp', query=None):
 def es_delete(index, query=None):
     if query:
         body = {"query": query}
-        es_client.delete_by_query(index=index, body=body)
+        es_client.delete_by_query(index=index, body=body,ignore_unavailable=True)
     else:
         es_client.delete(index=index)
 

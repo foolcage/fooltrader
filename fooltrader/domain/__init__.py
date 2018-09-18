@@ -1,14 +1,14 @@
 import logging
 from datetime import datetime
 
-from elasticsearch_dsl import DocType
+from elasticsearch_dsl import Document
 
 from fooltrader.utils.time_utils import to_time_str, TIME_FORMAT_ISO8601
 
 logger = logging.getLogger(__name__)
 
 
-class BaseDocType(DocType):
+class BaseDocument(Document):
     def exist(self, index):
         if self.get(id=self['id'], index=index, ignore=404):
             return True

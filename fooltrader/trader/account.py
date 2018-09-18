@@ -58,29 +58,29 @@ class SimAccountService(AccountService):
 
     def handle_trading_signal(self, trading_signal):
         if trading_signal:
+            security_id = trading_signal.security_id
+            current_price = trading_signal.current_price
+            current_timestamp = trading_signal.start_timestamp
+            current_position = self.get_current_position(security_id)
             if trading_signal.trading_signal_type == TradingSignalType.TRADING_SIGNAl_LONG:
-                try:
-                    self.close_short(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
-                                     current_timestamp=trading_signal.start_timestamp)
-                except Exception as e:
-                    pass
+                if current_position and current_position['availableShort'] > 0:
+                    self.close_short(security_id=security_id, current_price=current_price,
+                                     current_timestamp=current_timestamp)
                 try:
                     self.buy(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
                              current_timestamp=trading_signal.start_timestamp)
                 except Exception as e:
-                    pass
+                    self.logger.exception(e)
 
             if trading_signal.trading_signal_type == TradingSignalType.TRADING_SIGNAl_SHORT:
+                if current_position and current_position['availableLong'] > 0:
+                    self.close_long(security_id=security_id, current_price=current_price,
+                                    current_timestamp=current_timestamp)
                 try:
-                    self.close_long(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
-                                    current_timestamp=trading_signal.start_timestamp)
+                    self.sell(security_id=security_id, current_price=current_price,
+                              current_timestamp=current_timestamp)
                 except Exception as e:
-                    pass
-                try:
-                    self.sell(security_id=trading_signal.security_id, current_price=trading_signal.current_price,
-                              current_timestamp=trading_signal.start_timestamp)
-                except Exception as e:
-                    pass
+                    self.logger.exception(e)
 
     def get_account(self, refresh=True):
         if refresh:
@@ -96,7 +96,6 @@ class SimAccountService(AccountService):
         for position in account.positions:
             if position.securityId == security_id:
                 return position
-        return Position(security_id=security_id)
 
     # 计算收盘账户
     def calculate_closing_account(self, the_date):
@@ -208,6 +207,8 @@ class SimAccountService(AccountService):
         # 简单起见，目前只支持这种方式
         if order_price == 0:
             current_position = self.get_current_position(security_id=security_id)
+            if not current_position:
+                current_position = Position(security_id=security_id)
 
             # 按数量交易
             if order_amount > 0:
@@ -260,9 +261,14 @@ class SimAccountService(AccountService):
                         raise Exception("not enough money")
                 # 开空
                 elif order_type == ORDER_TYPE_SHORT:
-                    need_money = (order_amount * current_price) * (1 + self.slippage + self.buy_cost)
-                    if self.account.cash >= need_money:
-                        self.account.cash -= need_money
+                    cost = current_price * (1 + self.slippage + self.buy_cost)
+                    want_buy = self.account.cash * order_pct
+
+                    if want_buy >= cost:
+                        # 买的数量
+                        order_amount = want_buy // cost
+                        # 使用的现金
+                        self.account.cash -= (want_buy - want_buy % cost)
                         self.update_position(current_position, order_amount, current_price, order_type)
                     else:
                         raise Exception("not enough money")

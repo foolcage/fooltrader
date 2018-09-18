@@ -3,10 +3,10 @@
 from elasticsearch_dsl import DocType, Keyword, Date, MetaField, Integer
 from elasticsearch_dsl import Float
 
-from fooltrader.domain import BaseDocType
+from fooltrader.domain import BaseDocument
 
 
-class BalanceSheet(BaseDocType):
+class BalanceSheet(BaseDocument):
     id = Keyword()
     securityId = Keyword()
     code = Keyword()
@@ -196,7 +196,7 @@ class BalanceSheet(BaseDocType):
         dynamic = MetaField('strict')
 
 
-class IncomeStatement(BaseDocType):
+class IncomeStatement(BaseDocument):
     id = Keyword()
     securityId = Keyword()
     code = Keyword()

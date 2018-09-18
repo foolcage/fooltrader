@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import DocType, Keyword, Float, Nested, Date, Long, Short, Boolean, InnerDoc
+from elasticsearch_dsl import Keyword, Float, Nested, Date, Long, Short, Boolean, InnerDoc
 from elasticsearch_dsl import MetaField
+
+from fooltrader.domain import BaseDocument
 
 
 class Position(InnerDoc):
@@ -43,7 +45,7 @@ class Position(InnerDoc):
         self.tradingT = trading_t
 
 
-class SimAccount(DocType):
+class SimAccount(BaseDocument):
     # 机器人名字
     traderName = Keyword()
     # 所用的模型
@@ -69,7 +71,7 @@ class SimAccount(DocType):
         dynamic = MetaField('strict')
 
 
-class Order(DocType):
+class Order(BaseDocument):
     # 订单id
     id = Keyword()
     # 交易员id

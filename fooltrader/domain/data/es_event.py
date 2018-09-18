@@ -3,10 +3,10 @@
 from elasticsearch_dsl import Keyword, Date, Float
 from elasticsearch_dsl import MetaField
 
-from fooltrader.domain import BaseDocType
+from fooltrader.domain import BaseDocument
 
 
-class FinanceForecastEvent(BaseDocType):
+class FinanceForecastEvent(BaseDocument):
     id = Keyword()
     timestamp = Date()
 
@@ -25,7 +25,7 @@ class FinanceForecastEvent(BaseDocType):
         dynamic = MetaField('strict')
 
 
-class FinanceReportEvent(BaseDocType):
+class FinanceReportEvent(BaseDocument):
     id = Keyword()
     timestamp = Date()
 
