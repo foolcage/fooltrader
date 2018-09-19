@@ -17,6 +17,8 @@ ORDER_TYPE_SHORT = 1
 ORDER_TYPE_CLOSE_LONG = 2
 ORDER_TYPE_CLOSE_SHORT = 3
 
+es_index_mapping('sim_account', SimAccount)
+
 
 class AccountService(object):
     logger = logging.getLogger(__name__)
@@ -65,7 +67,11 @@ class AccountService(object):
         current_timestamp = trading_signal.start_timestamp
         order_type = AccountService.trading_signal_to_order_type(trading_signal.trading_signal_type)
         if order_type:
-            self.order(security_id=security_id, current_price=current_price, current_timestamp=current_timestamp)
+            try:
+                self.order(security_id=security_id, current_price=current_price, current_timestamp=current_timestamp,
+                           order_type=order_type)
+            except Exception as e:
+                self.logger.exception(e)
 
 
 class SimAccountService(AccountService):
@@ -89,8 +95,6 @@ class SimAccountService(AccountService):
         if account:
             self.logger.warning("trader:{} has run before,old result would be deleted".format(trader_name))
             es_delete(index='sim_account', query={"term": {"traderName": trader_name}})
-
-        es_index_mapping('sim_account', SimAccount)
 
         self.account = SimAccount()
         self.account.traderName = trader_name
@@ -119,20 +123,23 @@ class SimAccountService(AccountService):
     # 计算收盘账户
     def calculate_closing_account(self, the_date):
         self.get_account()
+        self.account.value = 0
         for position in self.account.positions:
             kdata = esapi.es_get_kdata(security_item=position['securityId'], the_date=the_date)
             closing_price = kdata['close']
             position.availableLong = position.longAmount
             position.availableShort = position.shortAmount
 
-            # 做多导致的市值变化体现了value里
-            # 做空导致的市值变化体现在value和cash里
-            position.value = position.longAmount * closing_price + position.shortAmount * closing_price
+            if position.longAmount > 0:
+                position.value = position.longAmount * closing_price
+                self.account.value += position.value
+            elif position.shortAmount > 0:
+                position.value = 2 * (position.shortAmount * position.averageShortPrice)
+                position.value -= position.shortAmount * closing_price
+                self.account.value += position.value
 
-            self.account.cash += 2 * (position.shortAmount * (position.averageShortPrice - closing_price))
+        self.account.allValue = self.account.value + self.account.cash
 
-            position.averageShortPrice = closing_price
-            position.averageLongPrice = closing_price
         self.save_account(the_date)
 
     # 两种情况下会被调用：
@@ -192,8 +199,8 @@ class SimAccountService(AccountService):
             current_position.longAmount -= order_amount
 
         elif order_type == ORDER_TYPE_CLOSE_SHORT:
+            self.account.cash += 2 * (order_amount * current_position.averageShortPrice)
             self.account.cash -= order_amount * current_price(1 + self.slippage + self.sell_cost)
-            self.account.cash += order_amount * current_position.averageShortPrice
 
             current_position.availableShort -= order_amount
             current_position.shortAmount -= order_amount

@@ -70,6 +70,9 @@ class SimAccount(BaseDocument):
         all = MetaField(enabled=False)
         dynamic = MetaField('strict')
 
+    def save(self, using=None, index=None, validate=True, force=True, refresh='wait_for', **kwargs):
+        return super().save(using, index, validate, force, refresh=refresh, **kwargs)
+
 
 class Order(BaseDocument):
     # 订单id

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import enum
+import queue
 
 import pandas as pd
 
@@ -21,10 +22,11 @@ class Model(object):
     trading_level = None
     model_type = None
     current_state = None
-    current_trading_signal = None
     close_hour = None
     close_minute = None
     account_service = None
+
+    trading_signal_queue = queue.Queue()
 
     def __init__(self, security_id, trading_level) -> None:
         self.security_id = security_id
@@ -36,6 +38,9 @@ class Model(object):
         self.current_timestamp = to_pd_timestamp(history_data[-1]['timestamp'])
         self.current_data = history_data[-1]
 
+    def send_trading_signal(self, trading_signal):
+        self.trading_signal_queue.put(trading_signal)
+
     def append_data(self, data):
         if self.history_data is None:
             self.history_data = pd.DataFrame()
@@ -46,7 +51,13 @@ class Model(object):
 
         self.make_decision()
 
-        self.account_service.handle_trading_signal(self.current_trading_signal)
+        while True:
+            if self.trading_signal_queue.empty():
+                break
+            trading_signal = self.trading_signal_queue.get(block=False)
+            if trading_signal is None:
+                break
+            self.account_service.handle_trading_signal(trading_signal)
 
         if self.trading_level.is_last_data_of_day(self.close_hour, self.close_minute, self.current_timestamp):
             self.account_service.calculate_closing_account(self.current_timestamp)
@@ -57,14 +68,11 @@ class Model(object):
             return None, None
         time_delta = end_timestamp - self.current_timestamp
         if time_delta.total_seconds() >= self.trading_level.to_second():
-            return self.current_timestamp, end_timestamp
+            return self.current_timestamp + pd.Timedelta(seconds=self.trading_level.to_second()), end_timestamp
         return None, None
 
     def get_state(self):
         return self.current_state
-
-    def get_trading_singal(self):
-        return self.current_trading_signal
 
     def make_decision(self):
         pass

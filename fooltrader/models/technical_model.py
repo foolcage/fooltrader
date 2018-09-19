@@ -38,21 +38,26 @@ class CrossMaModel(Model):
             if self.last_status == ShortLongStatus.SHORT_ON_LONG:
                 start, end = self.signal_timestamp_interval()
 
-                self.current_trading_signal = TradingSignal(security_id=self.security_id,
-                                                            current_price=self.current_data['close'],
-                                                            start_timestamp=start,
-                                                            end_timestamp=end,
-                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_KEEP_LONG
-                                                            )
+                self.send_trading_signal(TradingSignal(security_id=self.security_id,
+                                                       current_price=self.current_data['close'],
+                                                       start_timestamp=start,
+                                                       end_timestamp=end,
+                                                       trading_signal_type=TradingSignalType.TRADING_SIGNAl_KEEP_LONG
+                                                       ))
 
             else:
                 # self.keep_status.append((self.current_timestamp, ShortLongStatus.SHORT_ON_LONG))
                 start, end = self.signal_timestamp_interval()
 
-                self.current_trading_signal = TradingSignal(security_id=self.security_id,
-                                                            current_price=self.current_data['close'],
-                                                            start_timestamp=start, end_timestamp=end,
-                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_LONG)
+                self.send_trading_signal(TradingSignal(security_id=self.security_id,
+                                                       current_price=self.current_data['close'],
+                                                       start_timestamp=start, end_timestamp=end,
+                                                       trading_signal_type=TradingSignalType.TRADING_SIGNAl_CLOSE_SHORT))
+
+                self.send_trading_signal(TradingSignal(security_id=self.security_id,
+                                                       current_price=self.current_data['close'],
+                                                       start_timestamp=start, end_timestamp=end,
+                                                       trading_signal_type=TradingSignalType.TRADING_SIGNAl_LONG))
 
             self.last_status = ShortLongStatus.SHORT_ON_LONG
 
@@ -60,19 +65,24 @@ class CrossMaModel(Model):
             if self.last_status == ShortLongStatus.LONG_ON_SHORT:
                 start, end = self.signal_timestamp_interval()
 
-                self.current_trading_signal = TradingSignal(security_id=self.security_id,
-                                                            current_price=self.current_data['close'],
-                                                            start_timestamp=start, end_timestamp=end,
-                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_KEEP_SHORT)
+                self.send_trading_signal(TradingSignal(security_id=self.security_id,
+                                                       current_price=self.current_data['close'],
+                                                       start_timestamp=start, end_timestamp=end,
+                                                       trading_signal_type=TradingSignalType.TRADING_SIGNAl_KEEP_SHORT))
 
 
             else:
                 # self.keep_status.append((self.current_timestamp, ShortLongStatus.LONG_ON_SHORT))
                 start, end = self.signal_timestamp_interval()
 
-                self.current_trading_signal = TradingSignal(security_id=self.security_id,
-                                                            current_price=self.current_data['close'],
-                                                            start_timestamp=start, end_timestamp=end,
-                                                            trading_signal_type=TradingSignalType.TRADING_SIGNAl_SHORT)
+                self.send_trading_signal(TradingSignal(security_id=self.security_id,
+                                                       current_price=self.current_data['close'],
+                                                       start_timestamp=start, end_timestamp=end,
+                                                       trading_signal_type=TradingSignalType.TRADING_SIGNAl_CLOSE_LONG))
+
+                self.send_trading_signal(TradingSignal(security_id=self.security_id,
+                                                       current_price=self.current_data['close'],
+                                                       start_timestamp=start, end_timestamp=end,
+                                                       trading_signal_type=TradingSignalType.TRADING_SIGNAl_SHORT))
 
             self.last_status = ShortLongStatus.LONG_ON_SHORT

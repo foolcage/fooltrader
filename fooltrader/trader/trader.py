@@ -6,9 +6,7 @@ import pandas as pd
 from fooltrader.api.esapi import esapi
 from fooltrader.api.technical import to_security_item
 from fooltrader.models.technical_model import CrossMaModel
-from fooltrader.trader.account import SimAccountService
 from fooltrader.trader.common import TradingLevel
-
 from fooltrader.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 
 
@@ -61,7 +59,7 @@ class Trader(object):
             self.current_timestamp += pd.Timedelta(seconds=self.trading_level.to_second())
 
             if self.current_timestamp > now_pd_timestamp():
-                time.sleep(10)
+                time.sleep(self.trading_level.to_second() / 2)
 
 
 class TestTrader(Trader):
