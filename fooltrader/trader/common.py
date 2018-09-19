@@ -7,6 +7,8 @@ class TradingSignalType(enum.Enum):
     TRADING_SIGNAl_SHORT = 'trading_signal_short'
     TRADING_SIGNAl_KEEP_LONG = 'trading_signal_keep_long'
     TRADING_SIGNAl_KEEP_SHORT = 'trading_signal_keep_short'
+    TRADING_SIGNAl_CLOSE_LONG = 'trading_signal_close_long'
+    TRADING_SIGNAl_CLOSE_SHORT = 'trading_signal_close_short'
 
 
 class TradingLevel(enum.Enum):
