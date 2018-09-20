@@ -19,6 +19,8 @@ class BaseDocument(Document):
         # assign now if no timestamp given
         if not self.timestamp:
             self.timestamp = to_time_str(datetime.now(), time_fmt=TIME_FORMAT_ISO8601)
+        if self.id:
+            self.meta['id'] = self.id
 
         if force or not self.exist(index=index):
             return super().save(using, index, validate, **kwargs)

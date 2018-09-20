@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from elasticsearch_dsl import Keyword, Float, Nested, Date, Long, Short, Boolean, InnerDoc
+from elasticsearch_dsl import Keyword, Float, Nested, Date, Short, Boolean, InnerDoc
 from elasticsearch_dsl import MetaField
 
 from fooltrader.domain import BaseDocument
@@ -11,20 +11,20 @@ class Position(InnerDoc):
     securityId = Keyword()
 
     # 做多数量
-    longAmount = Long()
+    longAmount = Float()
     # 可平多数量
-    availableLong = Long()
+    availableLong = Float()
     # 平均做多价格
-    averageLongPrice = Long()
+    averageLongPrice = Float()
 
     # 做空数量
-    shortAmount = Long()
+    shortAmount = Float()
     # 可平空数量
-    availableShort = Long()
+    availableShort = Float()
     # 平均做空价格
-    averageShortPrice = Long()
+    averageShortPrice = Float()
 
-    profit = Long()
+    profit = Float()
     # 市值 或者 占用的保证金(方便起见，总是100%)
     value = Float()
     # 交易类型(0代表T+0,1代表T+1)
@@ -46,6 +46,7 @@ class Position(InnerDoc):
 
 
 class SimAccount(BaseDocument):
+    id = Keyword()
     # 机器人名字
     traderName = Keyword()
     # 所用的模型
@@ -88,7 +89,7 @@ class Order(BaseDocument):
     # 价格
     price = Float()
     # 数量
-    amount = Long()
+    amount = Float()
     # 状态
     status = Keyword()
     # 时间

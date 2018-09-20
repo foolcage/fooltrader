@@ -2,20 +2,23 @@
 
 import logging
 import math
+import queue
+import threading
 
+import elasticsearch.helpers
+
+from fooltrader import es_client
 from fooltrader.api.esapi import esapi
-from fooltrader.api.esapi.esapi import es_get_sim_account
 from fooltrader.domain.business.es_account import SimAccount, Position
 from fooltrader.trader.common import TradingSignalType
 from fooltrader.trader.errors import InvalidOrderError, NotEnoughMoneyError, NotEnoughPositionError
 from fooltrader.utils.es_utils import es_get_latest_record, es_delete, es_index_mapping
 from fooltrader.utils.time_utils import to_pd_timestamp
-from fooltrader.utils.utils import fill_doc_type
 
-ORDER_TYPE_LONG = 0
-ORDER_TYPE_SHORT = 1
-ORDER_TYPE_CLOSE_LONG = 2
-ORDER_TYPE_CLOSE_SHORT = 3
+ORDER_TYPE_LONG = 'order_long'
+ORDER_TYPE_SHORT = 'order_short'
+ORDER_TYPE_CLOSE_LONG = 'order_close_long'
+ORDER_TYPE_CLOSE_SHORT = 'order_close_short'
 
 es_index_mapping('sim_account', SimAccount)
 
@@ -75,6 +78,8 @@ class AccountService(object):
 
 
 class SimAccountService(AccountService):
+    account_queue = queue.Queue()
+
     def __init__(self, trader_name,
                  model_name,
                  timestamp,
@@ -101,29 +106,47 @@ class SimAccountService(AccountService):
         self.account.modelName = model_name
         self.account.cash = self.base_capital
         self.account.positions = []
-        self.account.value = self.base_capital
+        self.account.allValue = self.base_capital
+        self.account.value = 0
         self.account.timestamp = timestamp
-        self.account.save()
 
-    def get_account(self, refresh=True):
-        if refresh:
-            account_json = es_get_sim_account(trader_name=self.trader_name, model_name=self.model_name, size=1)['data'][
-                0]
-            self.account = SimAccount()
-            fill_doc_type(self.account, account_json)
+        self.account_to_queue()
 
-        return self.account
+        t = threading.Thread(target=self.saving_account_worker)
+        t.start()
+
+    def account_to_queue(self):
+        self.account_queue.put(self.account.to_dict(include_meta=True))
+
+    def saving_account_worker(self):
+        actions = []
+
+        while True:
+            try:
+                account_json = self.account_queue.get(timeout=5)
+                actions.append(account_json)
+            except Exception as e:
+                if actions:
+                    while True:
+                        resp = elasticsearch.helpers.bulk(es_client, actions)
+                        self.logger.info(
+                            "index to {} success:{} failed:{}".format("sim_account", resp[0], len(resp[1])))
+                        if resp[1]:
+                            self.logger.error("index to {} error:{}".format("sim_account", resp[1]))
+                            continue
+                        else:
+                            actions = []
+                            break
 
     def get_current_position(self, security_id):
-        account = self.get_account()
-        for position in account.positions:
+        for position in self.account.positions:
             if position.securityId == security_id:
                 return position
 
     # 计算收盘账户
     def calculate_closing_account(self, the_date):
-        self.get_account()
         self.account.value = 0
+        self.account.allValue = 0
         for position in self.account.positions:
             kdata = esapi.es_get_kdata(security_item=position['securityId'], the_date=the_date)
             closing_price = kdata['close']
@@ -139,15 +162,10 @@ class SimAccountService(AccountService):
                 self.account.value += position.value
 
         self.account.allValue = self.account.value + self.account.cash
+        self.account.closing = True
+        self.account.timestamp = the_date
 
-        self.save_account(the_date)
-
-    # 两种情况下会被调用：
-    # 1)操作导致账户更新
-    # 2)当日收盘
-    def save_account(self, timestamp):
-        self.account.timestamp = timestamp
-        self.account.save()
+        self.account_to_queue()
 
     def update_account(self, security_id, new_position, timestamp):
         # 先去掉之前的position
@@ -155,8 +173,10 @@ class SimAccountService(AccountService):
         # 更新为新的position
         positions.append(new_position)
         self.account.positions = positions
+
         self.account.timestamp = to_pd_timestamp(timestamp)
-        self.account.save()
+
+        self.account_to_queue()
 
     def update_position(self, current_position, order_amount, current_price, order_type):
         if order_type == ORDER_TYPE_LONG:
@@ -193,14 +213,14 @@ class SimAccountService(AccountService):
                 current_position.availableShort += order_amount
 
         elif order_type == ORDER_TYPE_CLOSE_LONG:
-            self.account.cash += (order_amount * current_price(1 - self.slippage - self.sell_cost))
+            self.account.cash += (order_amount * current_price * (1 - self.slippage - self.sell_cost))
 
             current_position.availableLong -= order_amount
             current_position.longAmount -= order_amount
 
         elif order_type == ORDER_TYPE_CLOSE_SHORT:
             self.account.cash += 2 * (order_amount * current_position.averageShortPrice)
-            self.account.cash -= order_amount * current_price(1 + self.slippage + self.sell_cost)
+            self.account.cash -= order_amount * current_price * (1 + self.slippage + self.sell_cost)
 
             current_position.availableShort -= order_amount
             current_position.shortAmount -= order_amount
@@ -277,6 +297,9 @@ class SimAccountService(AccountService):
             elif 0 < order_pct <= 1:
                 # 开多
                 if order_type == ORDER_TYPE_LONG:
+                    if current_position.shortAmount > 0:
+                        raise InvalidOrderError("close the short position before open long")
+
                     cost = current_price * (1 + self.slippage + self.buy_cost)
                     want_pay = self.account.cash * order_pct
                     # 买的数量
@@ -287,6 +310,9 @@ class SimAccountService(AccountService):
                         raise NotEnoughMoneyError()
                 # 开空
                 elif order_type == ORDER_TYPE_SHORT:
+                    if current_position.longAmount > 0:
+                        raise InvalidOrderError("close the long position before open short")
+
                     cost = current_price * (1 + self.slippage + self.buy_cost)
                     want_pay = self.account.cash * order_pct
 
@@ -299,7 +325,11 @@ class SimAccountService(AccountService):
                 # 平多
                 elif order_type == ORDER_TYPE_CLOSE_LONG:
                     if current_position.availableLong > 1:
-                        order_amount = math.floor(current_position.availableLong * order_pct)
+                        if order_pct == 1.0:
+                            order_amount = current_position.availableLong
+                        else:
+                            order_amount = math.floor(current_position.availableLong * order_pct)
+
                         if order_amount != 0:
                             self.update_position(current_position, order_amount, current_price, order_type)
                         else:
@@ -310,7 +340,11 @@ class SimAccountService(AccountService):
                 # 平空
                 elif order_type == ORDER_TYPE_CLOSE_SHORT:
                     if current_position.availableShort > 1:
-                        order_amount = math.floor(current_position.availableShort * order_pct)
+                        if order_pct == 1.0:
+                            order_amount = current_position.availableShort
+                        else:
+                            order_amount = math.floor(current_position.availableShort * order_pct)
+
                         if order_amount != 0:
                             self.update_position(current_position, order_amount, current_price, order_type)
                         else:
