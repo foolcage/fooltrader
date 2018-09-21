@@ -21,6 +21,22 @@ class TradingLevel(enum.Enum):
     LEVEL_1DAY = 'day'
     LEVEL_1WEEK = 'week'
 
+    def floor_timestamp(self, pd_timestamp):
+        if self == TradingLevel.LEVEL_1MIN:
+            return pd_timestamp.floor('1min')
+        if self == TradingLevel.LEVEL_5MIN:
+            return pd_timestamp.floor('5min')
+        if self == TradingLevel.LEVEL_15MIN:
+            return pd_timestamp.floor('15min')
+        if self == TradingLevel.LEVEL_30MIN:
+            return pd_timestamp.floor('30min')
+        if self == TradingLevel.LEVEL_1HOUR:
+            return pd_timestamp.floor('1h')
+        if self == TradingLevel.LEVEL_4HOUR:
+            return pd_timestamp.floor('4h')
+        if self >= TradingLevel.LEVEL_1DAY:
+            return pd_timestamp.floor('1d')
+
     def is_last_data_of_day(self, hour, minute, pd_timestamp):
         if self == TradingLevel.LEVEL_1MIN:
             return pd_timestamp.hour == hour and pd_timestamp.minute + 1 == minute

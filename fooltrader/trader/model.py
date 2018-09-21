@@ -34,7 +34,7 @@ class Model(object):
     def __init__(self, security_id, trading_level, timestamp, trader_name) -> None:
         self.security_id = security_id
         self.trading_level = trading_level
-        self.current_timestamp = timestamp
+        self.current_timestamp = trading_level.floor_timestamp(to_pd_timestamp(timestamp))
 
         self.model_name = "{}_{}_{}".format(trader_name, type(self).__name__, trading_level.value)
 
@@ -55,6 +55,11 @@ class Model(object):
     def append_data(self, data):
         if self.history_data is None:
             self.history_data = pd.DataFrame()
+
+        # TODO:open this check latter
+        # delta = to_pd_timestamp(data['timestamp']) - to_pd_timestamp(self.current_data['timestamp'])
+        # if delta.total_seconds() != self.trading_level.to_second():
+        #     raise WrongOrderKdataError()
 
         self.history_data = self.history_data.append(data)
         self.current_timestamp = data.name

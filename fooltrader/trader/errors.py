@@ -17,3 +17,8 @@ class NotEnoughPositionError(TraderError):
 class InvalidOrderError(TraderError):
     def __init__(self, message="invalid order"):
         self.message = message
+
+
+class WrongOrderKdataError(TraderError):
+    def __init__(self, message="wrong order kdata"):
+        self.message = message

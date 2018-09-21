@@ -28,10 +28,12 @@ class Trader(object):
     account_service = None
 
     history_data_size = 250
+    missing_data = False
 
     def __init__(self) -> None:
         if self.start_timestamp:
             self.start_timestamp = to_pd_timestamp(self.start_timestamp)
+            self.start_timestamp = self.trading_level.floor_timestamp(self.start_timestamp)
             self.current_timestamp = self.start_timestamp
         else:
             self.start_timestamp = now_pd_timestamp()
@@ -60,14 +62,23 @@ class Trader(object):
 
     def on_next_period(self):
         for model in self.models:
-            from_timestamp, end_timestamp = model.evaluate_fetch_interval(self.current_timestamp)
-            if from_timestamp and end_timestamp:
-                datas = esapi.es_get_kdata(self.security_item, level=model.trading_level.value,
-                                           start_date=from_timestamp, end_date=end_timestamp)['data']
-                for data in datas:
-                    series_data = pd.Series(data)
-                    series_data.name = to_pd_timestamp(data['timestamp'])
-                    model.append_data(series_data)
+            start_timestamp, end_timestamp = model.evaluate_fetch_interval(self.current_timestamp)
+            if start_timestamp and end_timestamp:
+                retry_times = 10
+                while retry_times > 0:
+                    datas = esapi.es_get_kdata(self.security_item, level=model.trading_level.value,
+                                               start_date=start_timestamp, end_date=end_timestamp)['data']
+                    if not datas:
+                        logger.warning(
+                            "no kdata for security:{},trading_level:{},start_timestamp:{} end_timestamp:{} ".format(
+                                self.security_item['id'], model.trading_level, start_timestamp, end_timestamp))
+                        retry_times = -1
+                        continue
+                    for data in datas:
+                        series_data = pd.Series(data)
+                        series_data.name = to_pd_timestamp(data['timestamp'])
+                        model.append_data(series_data)
+                    break
 
     def run(self):
         while True:
@@ -76,10 +87,12 @@ class Trader(object):
 
             self.on_next_period()
 
+            # time just add for backtest
             self.current_timestamp += pd.Timedelta(seconds=self.trading_level.to_second())
 
             if self.current_timestamp > now_pd_timestamp():
-                time.sleep(self.trading_level.to_second() / 2)
+                delta = self.current_timestamp - now_pd_timestamp()
+                time.sleep(delta.total_seconds())
 
 
 class TestTrader(Trader):
