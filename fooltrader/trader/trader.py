@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import time
 
 import pandas as pd
@@ -9,20 +10,32 @@ from fooltrader.models.technical_model import CrossMaModel
 from fooltrader.trader.common import TradingLevel
 from fooltrader.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 
+logger = logging.getLogger(__name__)
+
 
 class Trader(object):
+    # backtest start time,would be now if not set
     start_timestamp = None
+    # backtest end time,would not stop if not net
     end_timestamp = None
+
     current_timestamp = None
-    models = []
+    # the trading level of the trader
     trading_level = None
+    # trading_level of model must <= self.trading_level
+    models = []
     security_item = None
     account_service = None
+
+    history_data_size = 250
 
     def __init__(self) -> None:
         if self.start_timestamp:
             self.start_timestamp = to_pd_timestamp(self.start_timestamp)
             self.current_timestamp = self.start_timestamp
+        else:
+            self.start_timestamp = now_pd_timestamp()
+
         if self.end_timestamp:
             self.end_timestamp = to_pd_timestamp(self.end_timestamp)
 
@@ -33,10 +46,17 @@ class Trader(object):
         for model in self.models:
             datas = \
                 esapi.es_get_kdata(self.security_item, level=model.trading_level.value,
-                                   start_date=self.start_timestamp, end_date=self.current_timestamp)[
+                                   end_date=self.start_timestamp, order_type='desc', size=self.history_data_size)[
                     'data']
             if datas:
                 model.set_history_data(datas)
+
+            if not datas:
+                logger.warning(
+                    "to {}, {} no history data ".format(self.start_timestamp, self.security_item['id']))
+            elif len(datas) < self.history_data_size:
+                logger.warning(
+                    "to {}, {} history data size:{}".format(self.start_timestamp, self.security_item['id'], len(datas)))
 
     def on_next_period(self):
         for model in self.models:
@@ -64,7 +84,7 @@ class Trader(object):
 
 class TestTrader(Trader):
     security_item = 'coin_binance_EOS-USDT'
-    start_timestamp = '2018-05-28'
+    start_timestamp = '2018-06-28'
     trading_level = TradingLevel.LEVEL_1DAY
 
     models = [CrossMaModel(security_id=security_item, trading_level=trading_level, trader_name='test_trader',

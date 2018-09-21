@@ -5,7 +5,9 @@ import queue
 import pandas as pd
 
 from fooltrader.api.technical import get_close_time
+from fooltrader.trader.account import SimAccountService
 from fooltrader.utils.time_utils import to_pd_timestamp
+from fooltrader.utils.utils import index_df_with_time
 
 
 class ModelType(enum.Enum):
@@ -25,16 +27,25 @@ class Model(object):
     close_hour = None
     close_minute = None
     account_service = None
+    model_name = None
 
     trading_signal_queue = queue.Queue()
 
-    def __init__(self, security_id, trading_level) -> None:
+    def __init__(self, security_id, trading_level, timestamp, trader_name) -> None:
         self.security_id = security_id
         self.trading_level = trading_level
+        self.current_timestamp = timestamp
+
+        self.model_name = "{}_{}_{}".format(trader_name, type(self).__name__, trading_level.value)
+
+        self.account_service = SimAccountService(trader_name=trader_name, model_name=self.model_name,
+                                                 timestamp=timestamp)
+
         self.close_hour, self.close_minute = get_close_time(self.security_id)
 
     def set_history_data(self, history_data):
         self.history_data = pd.DataFrame(history_data)
+        self.history_data = index_df_with_time(self.history_data)
         self.current_timestamp = to_pd_timestamp(history_data[-1]['timestamp'])
         self.current_data = history_data[-1]
 

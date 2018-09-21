@@ -114,7 +114,7 @@ def es_get_accounts(main_chain='eos', user_id=None, start_vol=None, end_vol=None
 
 
 def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, end_date=None, level='day', fields=None,
-                 from_idx=0, size=500, csv=False):
+                 from_idx=0, size=500, csv=False, order_type='asc'):
     """
     get kdata.
 
@@ -173,7 +173,7 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
             .source(include=fields) \
             .filter('term', code=security_item['code']) \
             .filter('range', timestamp=time_range_condition) \
-            .sort({"timestamp": {"order": "asc"}})
+            .sort({"timestamp": {"order": order_type}})
 
         resp = s[from_idx:from_idx + size].execute()
 
