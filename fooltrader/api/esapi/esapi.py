@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import math
 
 from elasticsearch_dsl import Search
 
@@ -11,23 +10,52 @@ from fooltrader.contract.es_contract import get_es_kdata_index, get_cryptocurren
     get_cryptocurrency_daily_user_statistic_index, get_es_statistic_index
 from fooltrader.domain.business.es_account import SimAccount
 from fooltrader.domain.business.es_subscription import PriceSubscription
-from fooltrader.utils.es_utils import es_resp_to_payload
 from fooltrader.utils.time_utils import to_time_str
 
 
-def es_get_sim_account(trader_name, model_name, the_date=None, start_date=None, end_date=None, from_idx=0, size=500,
-                       order='timestamp'):
+def es_resp_to_payload(resp, csv=False):
+    datas = [hit['_source'].to_dict() for hit in resp['hits']['hits']]
+
+    if csv:
+        datas = [[data['timestamp'], data['open'], data['high'], data['low'], data['close'], data['volume']] for data in
+                 datas]
+
+    return {
+        'total': resp['hits']['total'],
+        'data': datas
+    }
+
+
+def es_range(s, start_date, end_date, order_field='timestamp', order_type='asc', from_idx=0, size=500):
+    time_range_condition = {}
+    if start_date:
+        time_range_condition['gte'] = start_date
+    if end_date:
+        time_range_condition['lt'] = end_date
+
+    if time_range_condition:
+        s = s.filter('range', timestamp=time_range_condition)
+
+    s = s.sort({order_field: {"order": order_type}})
+
+    resp = s[from_idx:from_idx + size].execute()
+
+    return es_resp_to_payload(resp)
+
+
+def es_get_sim_account(trader_name, model_name=None, the_date=None, start_date=None, end_date=None, from_idx=0,
+                       size=500,
+                       order_field='timestamp', order_type='asc'):
     s = SimAccount.search()
     if trader_name:
         s = s.filter('term', traderName=trader_name)
     if model_name:
         s = s.filter('term', modelName=model_name)
+    if the_date:
+        s = s.filter('term', timestamp=the_date)
 
-    s = s.sort({order: {"order": "desc"}})
-
-    resp = s[from_idx:from_idx + size].execute()
-
-    return es_resp_to_payload(resp)
+    return es_range(s, start_date=start_date, end_date=end_date, order_field=order_field, order_type=order_type,
+                    from_idx=from_idx, size=size)
 
 
 def es_get_subscription(user_id=None, security_id=None, from_idx=0, size=500):
@@ -163,21 +191,11 @@ def es_get_kdata(security_item, exchange=None, the_date=None, start_date=None, e
         doc_id = '{}_{}'.format(security_item['id'], to_time_str(the_date))
         return es_client.get_source(index=index, doc_type='doc', id=doc_id, _source_include=fields)
     elif start_date or end_date:
-        time_range_condition = {}
-        if end_date:
-            time_range_condition['lt'] = end_date
-        if start_date:
-            time_range_condition['gte'] = start_date
-
         s = Search(using=es_client, index=index, doc_type='doc') \
             .source(include=fields) \
-            .filter('term', code=security_item['code']) \
-            .filter('range', timestamp=time_range_condition) \
-            .sort({"timestamp": {"order": order_type}})
-
-        resp = s[from_idx:from_idx + size].execute()
-
-        return es_resp_to_payload(resp, csv)
+            .filter('term', code=security_item['code'])
+        return es_range(s, start_date=start_date, end_date=end_date, order_field='timestamp', order_type=order_type,
+                        from_idx=from_idx, size=size)
 
 
 def es_get_statistic(security_item, the_date=None, start_date=None, end_date=None, level='day',
@@ -202,14 +220,19 @@ def es_get_statistic(security_item, the_date=None, start_date=None, end_date=Non
 
 
 if __name__ == '__main__':
-    print(es_get_kdata('300027', the_date='2017-09-04'))
-    print(es_get_kdata('300027', the_date='2017-09-04', fields=['close']))
-    kdata = es_get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=0, size=10)
-
-    for item in kdata['hits']:
-        print(item)
-    steps = math.ceil(kdata['total'] / 10)
-    for i in range(1, steps + 1):
-        the_data = es_get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=i * 10)
-        for item in the_data['hits']:
-            print(item)
+    # print(es_get_sim_account(trader_name='test_trader'))
+    # print(es_get_sim_account(trader_name='test_trader', model_name='test_trader_CrossMaModel_day'))
+    # print(es_get_sim_account(trader_name='test_trader', model_name='test_trader_CrossMaModel_day',the_date='2018-05-29'))
+    print(es_get_sim_account(trader_name='test_trader', model_name='test_trader_CrossMaModel_day',
+                             start_date='2018-08-29'))
+    # print(es_get_kdata('300027', the_date='2017-09-04'))
+    # print(es_get_kdata('300027', the_date='2017-09-04', fields=['close']))
+    # kdata = es_get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=0, size=10)
+    #
+    # for item in kdata['hits']:
+    #     print(item)
+    # steps = math.ceil(kdata['total'] / 10)
+    # for i in range(1, steps + 1):
+    #     the_data = es_get_kdata('300028', start_date='2017-09-04', end_date='2017-12-31', from_idx=i * 10)
+    #     for item in the_data['hits']:
+    #         print(item)

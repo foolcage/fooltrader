@@ -4,6 +4,7 @@ from elasticsearch_dsl import Keyword, Float, Nested, Date, Short, Boolean, Inne
 from elasticsearch_dsl import MetaField
 
 from fooltrader.domain import BaseDocument
+from fooltrader.utils.time_utils import to_time_str, TIME_FORMAT_ISO8601
 
 
 class Position(InnerDoc):
@@ -73,6 +74,12 @@ class SimAccount(BaseDocument):
 
     def save(self, using=None, index=None, validate=True, force=True, refresh='wait_for', **kwargs):
         return super().save(using, index, validate, force, refresh=refresh, **kwargs)
+
+    def to_dict(self, include_meta=False, skip_empty=True):
+        self.id = "{}_{}_{}".format(self.traderName, self.modelName,
+                                    to_time_str(self.timestamp, time_fmt=TIME_FORMAT_ISO8601))
+
+        return super().to_dict(include_meta, skip_empty)
 
 
 class Order(BaseDocument):

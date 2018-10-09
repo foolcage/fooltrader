@@ -67,16 +67,3 @@ def es_index_mapping(index_name, doc_type, force=False):
     else:
         if force:
             index.upgrade()
-
-
-def es_resp_to_payload(resp, csv=False):
-    datas = [hit['_source'].to_dict() for hit in resp['hits']['hits']]
-
-    if csv:
-        datas = [[data['timestamp'], data['open'], data['high'], data['low'], data['close'], data['volume']] for data in
-                 datas]
-
-    return {
-        'total': resp['hits']['total'],
-        'data': datas
-    }
