@@ -8,12 +8,12 @@ import scrapy
 from scrapy import Request
 from scrapy import signals
 
-from fooltrader import to_time_str
 from fooltrader.api.technical import get_security_list
 from fooltrader.contract.data_contract import KDATA_COLUMN_163, KDATA_INDEX_COLUMN_163, \
     KDATA_INDEX_COL, KDATA_STOCK_COL
 from fooltrader.contract.files_contract import get_kdata_path
 from fooltrader.settings import US_STOCK_CODES
+from fooltrader.utils.time_utils import to_time_str
 
 
 class AmericaStockKdataSpider(scrapy.Spider):
@@ -83,7 +83,7 @@ class AmericaStockKdataSpider(scrapy.Spider):
                 pathname_ = os.path.dirname(filename_)
                 if not os.path.isdir(pathname_):
                     os.makedirs(pathname_)
-                    
+
                 df_current = pd.DataFrame()
 
             tmp_str = response.text
