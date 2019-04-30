@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/foolcage/fooltrader.svg?branch=master)](https://travis-ci.org/foolcage/fooltrader)
 
+## 该项目状态为deprecated,请移步新项目[zvt](https://github.com/zvtvz/zvt)  
+
 **Read this in other languages: [English](README-en.md).**  
 # fooltrader:trade as a fool
 >"要在市场上生存，就必须远离聪明，因为，你的聪明在市场面前一钱不值"------缠中说禅  
