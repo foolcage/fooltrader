@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/foolcage/fooltrader.svg?branch=master)](https://travis-ci.org/foolcage/fooltrader)
 
+## This project is deprecated, please move on to the new project [zvt] (https://github.com/zvtvz/zvt)
+
 **Read this in other languages: [中文](README.md).**  
 # fooltrader:trade as a fool
 >"To survive in the market, you must stay away from being smart because your intelligence is worthless in the market"------zen in chaos

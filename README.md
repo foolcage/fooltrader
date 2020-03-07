@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/foolcage/fooltrader.svg?branch=master)](https://travis-ci.org/foolcage/fooltrader)
 
-## 该项目状态为deprecated,请移步新项目[zvt](https://github.com/zvtvz/zvt)  
+## 该项目已停止更新,请移步新项目[zvt](https://github.com/zvtvz/zvt)  
 
 **Read this in other languages: [English](README-en.md).**  
 # fooltrader:trade as a fool
@@ -508,6 +508,22 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
 * 集成vnpy的交易接口
 * 港股数据抓取
 
-# 联系方式  
+## 💌请作者喝杯咖啡
+
+如果你觉得项目对你有帮助,可以请作者喝杯咖啡  
+<img src="https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/alipay-cn.png" width="25%" alt="Alipay">　　　　　
+<img src="https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/wechat-cn.png" width="25%" alt="Wechat">
+
+## 🤝联系方式  
+
 QQ群:300911873  
-如果你喜欢该项目,请加星支持一下,并在申请入群时告知github user name.  
+
+个人微信:foolcage 添加暗号:zvt  
+<img src="https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/wechat.jpeg" width="25%" alt="Wechat">
+
+------
+微信公众号:  
+<img src="https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/gongzhonghao.jpg" width="25%" alt="Wechat">
+
+知乎专栏:  
+https://zhuanlan.zhihu.com/automoney
