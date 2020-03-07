@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/foolcage/fooltrader.svg?branch=master)](https://travis-ci.org/foolcage/fooltrader)
 
-## 该项目已停止更新,请移步新项目[zvt](https://github.com/zvtvz/zvt)  
+## 该项目已停止更新,请移步新项目[https://github.com/zvtvz/zvt](https://github.com/zvtvz/zvt)  
 
 **Read this in other languages: [English](README-en.md).**  
 # fooltrader:trade as a fool
