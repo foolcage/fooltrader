@@ -23,7 +23,7 @@ pytdx == 1.55
 
 apscheduler == 3.4.0
 
-requests == 2.18.4
+requests == 2.20.0
 
 ccxt == 1.14.224
 
