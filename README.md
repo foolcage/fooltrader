@@ -2,6 +2,9 @@
 
 ## 该项目已停止更新,请移步新项目[https://github.com/zvtvz/zvt](https://github.com/zvtvz/zvt)  
 
+如果有人想继续该项目，只需要知道其核心点即可：  
+## 构建标准的数据schema,然后实现各种connector导入 **你熟悉的系统** 进行分析
+
 **Read this in other languages: [English](README-en.md).**  
 # fooltrader:trade as a fool
 >"要在市场上生存，就必须远离聪明，因为，你的聪明在市场面前一钱不值"------缠中说禅  
@@ -516,9 +519,7 @@ curl -XPOST 'localhost:9200/income_statement/doc/_search?pretty&filter_path=hits
 
 ## 🤝联系方式  
 
-QQ群:300911873  
-
-个人微信:foolcage 添加暗号:zvt  
+加微信入群:foolcage 添加暗号:zvt  
 <img src="https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/wechat.jpeg" width="25%" alt="Wechat">
 
 ------
