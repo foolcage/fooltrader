@@ -3,7 +3,7 @@
 
 Scrapy == 1.5.0
 
-Twisted == 17.5.0
+Twisted == 22.10.0
 
 demjson == 2.2.4
 
