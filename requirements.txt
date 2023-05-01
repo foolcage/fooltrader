@@ -27,7 +27,7 @@ requests == 2.20.0
 
 ccxt == 1.14.224
 
-Flask == 1.0
+Flask == 2.3.2
 
 marshmallow
 
